@@ -38,6 +38,23 @@
 }
 html { background:#0d0a14; }
 body { background:var(--bg); background-image:radial-gradient(120% 80% at 50% -10%, rgba(194,90,107,0.10), transparent 60%), radial-gradient(100% 60% at 50% 110%, rgba(216,166,87,0.05), transparent 55%); background-attachment:fixed; color:var(--text); font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:16px; line-height:1.5; min-height:100vh; overscroll-behavior:none; }
+/* ── Fond d'ambiance qui évolue avec le niveau (subtil, non flashy) ── */
+#page-game { position:relative; }
+.bg-ambient {
+  position:absolute; inset:0; z-index:-1; pointer-events:none; overflow:hidden;
+  background-image:
+    radial-gradient(130% 55% at 50% -8%, var(--lvl-glow, rgba(91,156,246,.08)), transparent 62%),
+    radial-gradient(110% 55% at 50% 108%, var(--lvl-glow2, rgba(91,156,246,.045)), transparent 60%);
+  transition: background-image 1.6s ease;
+  animation: bgBreathe 11s ease-in-out infinite;
+}
+@keyframes bgBreathe { 0%,100%{opacity:.7} 50%{opacity:1} }
+.bg-ambient.lvl-1 { --lvl-glow:rgba(91,156,246,.08);  --lvl-glow2:rgba(91,156,246,.045); }
+.bg-ambient.lvl-2 { --lvl-glow:rgba(62,207,142,.08);  --lvl-glow2:rgba(62,207,142,.045); }
+.bg-ambient.lvl-3 { --lvl-glow:rgba(240,192,96,.09);  --lvl-glow2:rgba(240,192,96,.05); }
+.bg-ambient.lvl-4 { --lvl-glow:rgba(240,128,64,.10);  --lvl-glow2:rgba(240,128,64,.055); }
+.bg-ambient.lvl-5 { --lvl-glow:rgba(var(--accent-rgb),.11); --lvl-glow2:rgba(var(--accent-rgb),.06); }
+@media (prefers-reduced-motion: reduce) { .bg-ambient { animation:none; } }
 .page { display:none; min-height:100vh; padding:20px 16px 40px; max-width:480px; margin:0 auto; }
 .page.active { display:block; }
 .page-header { text-align:center; padding:28px 0 18px; position:relative; z-index:1; }
@@ -804,6 +821,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 
 <!-- PAGE JEU -->
 <div class="page" id="page-game">
+  <div class="bg-ambient lvl-1" id="bg-ambient"></div>
   <div class="game-top">
     <div id="g-level" class="level-badge lvl-1">Niveau 1</div><br>
     <span id="g-player" class="player-badge">👤 Joueur</span>
@@ -844,6 +862,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <button class="admin-tab active" onclick="adminTab('gages',this)">🎴 Gages</button>
     <button class="admin-tab" onclick="adminTab('pratiques',this)">🔖 Pratiques</button>
     <button class="admin-tab" onclick="adminTab('accessoires',this)">🎭 Accessoires</button>
+    <button class="admin-tab" id="atab-bonus-nav" onclick="adminTab('bonus',this)">🎁 Bonus</button>
   </div>
   <div id="admin-content"></div>
   <button class="btn ghost" style="margin-top:14px" onclick="goTo('page-home')">← Retour</button>
@@ -3433,10 +3452,16 @@ var curPlayer = 1;
 var timerSecs=0, timerLeft=0, timerRun=false, timerInt=null;
 
 // ── localStorage keys ──
-var KEYS = { gages:'cg_v28', prat:'cp_v28', acc:'ca_v28', hidden:'hbg_v28' };
+var KEYS = { gages:'cg_v28', prat:'cp_v28', acc:'ca_v28', hidden:'hbg_v28', bonus:'cb_v28' };
+// ── PRÉFÉRENCES GAGES (👍/👎 donnés en fin de partie) ──
+// Valeur 1 = aimé (boosté dans les prochaines parties), -1 = moins aimé (exclu des prochaines parties)
+// Ne concerne jamais les gages 100% perso, surprise, ni les sessions en mode Découverte/Brise-glace.
+var GPREFS_KEY = 'gprefs_v28';
 
 function loadCustom(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }
 var customGages    = loadCustom(KEYS.gages)  || [];
+var gagePrefs      = loadCustom(GPREFS_KEY)  || {};
+var _endRatings = {}; // retours 👍/👎 en cours de saisie sur l'écran de fin de partie
 // ── MES GAGES GARANTIS 100% (admin) ──
 var MY_GAGES_KEY = 'myg_v28';
 var myGages = loadCustom(MY_GAGES_KEY) || [];
@@ -4634,7 +4659,9 @@ function launchGame() {
     if(!G.acc.length) G.acc = ['Aucun'];
   }
   var _ea=document.getElementById('err-acc'); if(_ea) _ea.textContent = '';
-  G.level=1; G.gageIdx=0; G.scores={}; G.usedKama=[]; G.playedTexts=new Set(); G.progressLog=[]; G._kamaShown=0; G._prevGages=[]; G._recentGages=[];
+  G.level=1; G.gageIdx=0; G.scores={}; G.usedKama=[]; G.playedTexts=new Set(); G.progressLog=[]; G._kamaShown=0; G._prevGages=[]; G._recentGages=[]; G._sessionSeenGages=[]; G._lastBonusTitle=null;
+  G._pendingBonusCard=null; G._pendingBonusWinner=null; G._bonusChoiceCtx=null;
+  _endRatings = {};
   G.players.forEach(function(p){ G.scores[p.prenom]=0; });
   loadPlayedHistory();
   // Solo mode: init practice tracking for progression
@@ -4678,6 +4705,11 @@ function setupGameUI() {
 }
 
 function el(id){ return document.getElementById(id); }
+function setGameLevelBg(lvl){
+  var bg = document.getElementById('bg-ambient');
+  if(!bg) return;
+  bg.className = 'bg-ambient lvl-' + (lvl||1);
+}
 
 // ── GAME LOGIC ──
 var LVL_MAX_DEFAULT = {1:5,2:4,3:4,4:3,5:99};
@@ -4913,7 +4945,8 @@ function interleave(pool) {
 function allGages() {
   var base=GAGES_BASE.filter(function(_,i){ return hiddenBaseGages.indexOf(i)<0; });
   // Les gages 100% perso sont injectés uniquement via la sélection en début de partie, pas dans le pool aléatoire
-  return base.concat(customGages.filter(function(g){ return !g._perso100; }));
+  // Les gages notés 👎 en fin de partie précédente sont exclus du pool (jamais les perso100/surprise, qui n'y sont de toute façon pas notables)
+  return base.concat(customGages.filter(function(g){ return !g._perso100; })).filter(function(g){ return gagePrefs[g.texte] !== -1; });
 }
 
 
@@ -4965,6 +4998,47 @@ function pushFinale(player, picked, pool5) {
   } else {
     pool5.push(Object.assign({},picked.data,{_p:player.prenom,_ch:false,_kama:false}));
   }
+}
+
+// ── Niveau 5, cas "femme finish" — gage 1/2 : Homme → Femme, jamais pénétration ni Kâmasûtra ──
+// Préférence : sexe oral, puis masturbation, puis n'importe quel autre gage compatible (hors pen/kama).
+function pickNonPenKamaGage(player, all5){
+  if(!player) return null;
+  var excluded = ['penetration_h','penetration_f','kamasutra'];
+  var base = all5.filter(function(g){
+    return !g.solo && !g._kama && gageOk(g, player, 5) &&
+      !(g.pratiques && g.pratiques.some(function(p){ return excluded.indexOf(p)>=0; }));
+  });
+  var oral = shuffle(base.filter(function(g){
+    return g.pratiques && g.pratiques.some(function(p){ return p.indexOf('oral')===0; });
+  }));
+  if(oral.length) return oral[0];
+  var masturb = shuffle(base.filter(function(g){
+    return g.pratiques && g.pratiques.some(function(p){ return p.indexOf('masturb')===0; });
+  }));
+  if(masturb.length) return masturb[0];
+  var autres = shuffle(base);
+  if(autres.length) return autres[0];
+  return null;
+}
+
+// ── Niveau 5, cas "femme finish" — gage 2/2 : Femme → Homme, gage de fin (finish) ──
+function pickFinishGage(femmePlayer, all5){
+  if(!femmePlayer) return null;
+  var spermePrats = ['sperme_gout_1','sperme_gout_2','finish_corps'];
+  var cands = shuffle(all5.filter(function(g){
+    return !g.solo && !g._kama && g.genre==='Femme' &&
+      g.pratiques && g.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; }) &&
+      gageOk(g, femmePlayer, 5);
+  }));
+  if(cands.length) return cands[0];
+  // Filet de sécurité : élargir aux gages Mixte contenant une pratique finish
+  var fallback = shuffle(all5.filter(function(g){
+    return !g.solo && !g._kama && (g.genre==='Femme'||g.genre==='Mixte') &&
+      g.pratiques && g.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; }) &&
+      gageOk(g, femmePlayer, 5, true);
+  }));
+  return fallback.length ? fallback[0] : null;
 }
 // Brise-glace: progression très douce, pas de pratiques avancées en niv 1-2
 var DISC_PRATS = {
@@ -5288,72 +5362,44 @@ function prepareGages() {
       ks.forEach(function(k){pool5.push(Object.assign({},k,{texte:'Kâmasûtra',niveau:5,genre:'Mixte',pratiques:['kamasutra'],accessoires:[],modes:[],solo:false,_p:G.players[0].prenom,_ch:false,_kama:true}));});
     }
   } else {
-    // Find femme player with sperme coché
+    // ── NIVEAU 5 (FINALE) — logique simplifiée ──
+    // CAS A (priorité) : la femme a coché "finish" (sperme_gout_1/2 ou finish_corps)
+    //   → EXACTEMENT 2 gages : 1) Homme→Femme (jamais pénétration/Kâmasûtra — oral, masturbation ou autre gage)
+    //                           2) Femme→Homme (gage de finish) — c'est TOUJOURS le tout dernier gage de la partie.
+    // CAS B : la femme n'a PAS coché "finish"
+    //   B1) Si pénétration OU Kâmasûtra est cochée par TOUS les joueurs → 1 SEUL gage mixte pénétration/Kâmasûtra.
+    //   B2) Sinon (pénétration non cochée, par les deux ou par un seul) → 2 gages, un par joueur, selon les pratiques réellement sélectionnées.
     var femmePlayer=G.players.filter(function(p){return p.genre==='Femme';})[0]||null;
-    var hasSperme=femmePlayer&&(femmePlayer.pratiques.indexOf('sperme_gout_1')>=0||femmePlayer.pratiques.indexOf('sperme_gout_2')>=0||femmePlayer.pratiques.indexOf('finish_corps')>=0);
-
-    var allHaveFin=G.players.every(function(p){
+    var hommePlayer=G.players.filter(function(p){return p.genre==='Homme';})[0]||null;
+    var hasFinish=femmePlayer&&(femmePlayer.pratiques.indexOf('sperme_gout_1')>=0||femmePlayer.pratiques.indexOf('sperme_gout_2')>=0||femmePlayer.pratiques.indexOf('finish_corps')>=0);
+    var allHavePenKama=G.players.every(function(p){
       return p.pratiques.indexOf('penetration_h')>=0||p.pratiques.indexOf('penetration_f')>=0||p.pratiques.indexOf('kamasutra')>=0;
     });
 
-    if(allHaveFin){
-      // Shared finale: pen or kama
-      var picked5=pickFinale(G.players[0], G.usedKama, all5);
-      pushFinale(G.players[0], picked5, pool5);
+    if(hommePlayer && femmePlayer && hasFinish){
+      // CAS A — 2 gages, finish toujours en dernier
+      var g1=pickNonPenKamaGage(hommePlayer, all5);
+      if(g1) pool5.push(Object.assign({},g1,{_p:hommePlayer.prenom,_ch:false,_kama:false}));
+      var g2=pickFinishGage(femmePlayer, all5);
+      if(g2) pool5.push(Object.assign({},g2,{_p:femmePlayer.prenom,_ch:false,_kama:false}));
+    } else if(hommePlayer && femmePlayer && allHavePenKama){
+      // CAS B1 — 1 seul gage mixte, pénétration ou Kâmasûtra
+      var picked5=pickFinale(hommePlayer, G.usedKama, all5);
+      pushFinale(hommePlayer, picked5, pool5);
     } else {
-      // Per-player finale
+      // CAS B2 — 2 gages, un par joueur, selon leurs pratiques sélectionnées (couvre aussi couples non hétéro / trans / trio)
       G.players.forEach(function(player){
         var picked=pickFinale(player, G.usedKama, all5);
         pushFinale(player, picked, pool5);
       });
     }
 
-    // ── FINISH CORPS : injection ordonnée ──
-    var hasFinishCorps = femmePlayer && femmePlayer.pratiques.indexOf('finish_corps') >= 0;
-    var hasPenetF = femmePlayer && femmePlayer.pratiques.indexOf('penetration_f') >= 0;
-    var hasOralActif = femmePlayer && femmePlayer.pratiques.indexOf('oral_actif') >= 0;
-    var hommePlayer = G.players.filter(function(p){return p.genre==='Homme';})[0]||null;
-    var hasPenetH = hommePlayer && hommePlayer.pratiques.indexOf('penetration_h') >= 0;
-
-    if(hasFinishCorps) {
-      // 1) Gage mixte pénétration+finish OU oral+finish en PREMIER (selon pratiques cochées)
-      var mixPenFin = shuffle(all5.filter(function(g){
-        if(g.solo || g._kama) return false;
-        if(!gageOk(g, femmePlayer||G.players[0], 5)) return false;
-        var prats = g.pratiques || [];
-        if(prats.indexOf('finish_corps') < 0) return false;
-        // Accepter si pénétration ou oral_actif dans le gage
-        var hasPen = prats.indexOf('penetration_h') >= 0 || prats.indexOf('penetration_f') >= 0;
-        var hasOral = prats.indexOf('oral_actif') >= 0;
-        // N'afficher oral+finish que si femme a oral coché, et pen+finish que si pénétration cochée
-        if(hasOral && !hasOralActif) return false;
-        if(hasPen && !hasPenetF && !hasPenetH) return false;
-        return hasPen || hasOral;
-      }));
-      if(mixPenFin.length) {
-        pool5.unshift(Object.assign({},mixPenFin[0],{_p:femmePlayer?femmePlayer.prenom:G.players[0].prenom,_ch:false,_kama:false}));
-      }
-      // 2) Si pénétration_f cochée → gage jouissance femme AVANT finish homme
-      if(hasPenetF && femmePlayer) {
-        var jouissF = shuffle(all5.filter(function(g){
-          return !g.solo && (g.genre==='Femme'||g.genre==='Mixte') &&
-            g.pratiques && (g.pratiques.indexOf('penetration_f')>=0||g.pratiques.indexOf('orgasme_f')>=0) &&
-            g.pratiques.indexOf('finish_corps')<0 &&
-            gageOk(g, femmePlayer, 5);
-        }));
-        if(jouissF.length) pool5.splice(pool5.length-1,0,Object.assign({},jouissF[0],{_p:femmePlayer.prenom,_ch:false,_kama:false}));
-      }
-    }
-
-    // If femme has sperme/finish coché → add sperme gage at the END
-    if(hasSperme){
-      var spermePrats=['sperme_gout_1','sperme_gout_2','finish_corps'];
-      var spermeG=shuffle(all5.filter(function(g){
-        return !g.solo&&g.genre==='Femme'&&
-          g.pratiques&&g.pratiques.some(function(p){return spermePrats.indexOf(p)>=0;})&&
-          gageOk(g,femmePlayer,5);
-      }));
-      if(spermeG.length) pool5.push(Object.assign({},spermeG[0],{_p:femmePlayer.prenom,_ch:false,_kama:false}));
+    // Filet de sécurité : le niveau 5 ne doit jamais rester vide
+    if(!pool5.length){
+      G.players.forEach(function(player){
+        var picked=pickFinale(player, G.usedKama, all5);
+        pushFinale(player, picked, pool5);
+      });
     }
   }
   G.gagesByLevel[5]=pool5;
@@ -5371,6 +5417,30 @@ function prepareGages() {
       var arr = G.gagesByLevel[lv];
       var pos = Math.floor(Math.random() * (arr.length + 1));
       arr.splice(pos, 0, Object.assign({}, mg, { _p: ap ? ap.prenom : '', _ch:false, _kama:false }));
+    }
+  }
+
+  // ── BOOST DES GAGES "AIMÉS" (👍 donnés en fin de partie précédente) ──
+  // Ne s'applique jamais en mode Découverte/Brise-glace (pratiques pas encore choisies par le couple)
+  // et jamais aux gages 100% perso (déjà garantis via le mécanisme ci-dessus).
+  if(G.mode !== 'brise_glace' && G.mode !== 'decouverte'){
+    var likedTexts = Object.keys(gagePrefs).filter(function(t){ return gagePrefs[t]===1; });
+    if(likedTexts.length){
+      var likedSet = {}; likedTexts.forEach(function(t){ likedSet[t]=1; });
+      var likedPool = GAGES_BASE.concat(customGages).filter(function(g){
+        return likedSet[g.texte] && !g._perso100 && customGageCompatible(g);
+      });
+      [1,2,3,4,5].forEach(function(lv){
+        if(!G.gagesByLevel[lv]) return;
+        var arr = G.gagesByLevel[lv];
+        var already = {}; arr.forEach(function(g){ already[g.texte]=1; });
+        var cands = likedPool.filter(function(g){ return (g.niveau||1)===lv && !already[g.texte]; });
+        if(!cands.length) return;
+        var pick = cands[Math.floor(Math.random()*cands.length)];
+        var ap2 = G.players[Math.floor(Math.random()*G.players.length)] || G.players[0];
+        var pos2 = Math.floor(Math.random() * (arr.length + 1));
+        arr.splice(pos2, 0, Object.assign({}, pick, { _p: ap2 ? ap2.prenom : '', _ch:false, _kama:false, _liked:true }));
+      });
     }
   }
 }
@@ -5403,6 +5473,7 @@ function displayGage() {
   var partner=G.players.filter(function(p){return p.prenom!==player.prenom;})[0]||player;
   var lvlNames=['','Sensuel','Chaleur','Brûlant','Intense','Finish'];
   var levelBadge=el('g-level');
+  setGameLevelBg(G.level);
   if(G.mode==='brise_glace'){
     levelBadge.className='level-badge lvl-'+G.level;
     levelBadge.textContent='🧊 Brise-glace';
@@ -5416,6 +5487,12 @@ function displayGage() {
   el('g-challenge').classList.toggle('hidden',!gage._ch);
   // Mark as played for history
   markPlayed(gage.texte);
+  if(!gage._kama && gage.texte){
+    G._sessionSeenGages = G._sessionSeenGages || [];
+    if(!G._sessionSeenGages.some(function(s){ return s.texte===gage.texte; })){
+      G._sessionSeenGages.push({ texte:gage.texte, niveau:gage.niveau, perso100:!!gage._perso100, surprise:!!gage._ch });
+    }
+  }
   var cardWrap = el('g-card');
   // Animate out then in
   cardWrap.classList.remove('card-enter');
@@ -5440,7 +5517,11 @@ function displayGage() {
       if(gage.texte&&gage.texte.charAt(0)==='🎓') soundGuide();
     renderGageCard(gage, player, partner);
       var secs=extractTimer(gage.texte);
+      if(gage._bonusTimerX2 && secs){ secs = secs*2; }
       if(secs){showTimer(secs);}else{el('g-timer').classList.add('hidden');}
+      if(gage._bonusTimerX2) showFavToast('⏱️ Bonus actif : durée doublée !');
+      else if(gage._bonusChoice) showFavToast('🔀 Bonus actif : gage choisi par l\'adversaire !');
+      else if(gage._bonusSurprise) showFavToast('🎯 Bonus actif : gage surprise !');
     }
     requestAnimationFrame(function(){ cardWrap.classList.add('card-enter'); });
   }, G.gageIdx===0 ? 0 : 180);
@@ -5453,7 +5534,7 @@ function displayGage() {
   el('g-progress').style.width=pct+'%';
   var lvlLabel=el('lvl-prog-label');
   if(lvlLabel) lvlLabel.textContent=(G.gageIdx+1)+'/'+pool.length;
-  el('g-counter').textContent='Niveau '+G.level+'/5'+(gage._ch?' ⚡':'')+(gage._kama?' 🪷':'');
+  el('g-counter').textContent='Niveau '+G.level+'/5'+(gage._ch?' ⚡':'')+(gage._kama?' 🪷':'')+(gage._bonusTimerX2?' ⏱️x2':'')+(gage._bonusChoice?' 🔀':'')+(gage._bonusSurprise?' 🎯':'');
   // Show "edit players" link on very first gage
   var editBtn=document.getElementById('btn-edit-players');
   if(editBtn) editBtn.style.display=(G.gageIdx===0&&G.level===1)?'block':'none';
@@ -5680,7 +5761,8 @@ function prevGage() {
   if(nb) nb.classList.remove('hidden');
 }
 
-function nextGage(){
+function nextGage(skipSound){
+  if(!skipSound) soundGageNext();
   stopTimer();
   saveGameState();
   var pool=G.gagesByLevel[G.level]||[];
@@ -5719,7 +5801,7 @@ function validateGage(){
   }
   soundGageValidate();
   if(G.scores[p.prenom]>=50){showVictory(p.prenom,G.scores[p.prenom]);return;}
-  nextGage();
+  nextGage(true);
 }
 
 function changeGage(){
@@ -6058,6 +6140,32 @@ function showEnd(){
     var memHTML=bestMem
       ?'<div class="end-memory">'+bestMem.action.replace(/[*][*]([^*]+)[*][*]/g,'$1').substring(0,120)+(bestMem.action.length>120?'…':'')+'</div>'
       :'';
+
+    // ── Retours 👍/👎 sur les gages de cette partie (affine les prochaines) ──
+    _endRatings = {};
+    var rateFbHTML = '';
+    var isDiscoverySession = (G.mode==='brise_glace' || G.mode==='decouverte');
+    if(!isDiscoverySession){
+      var rateable = (G._sessionSeenGages||[]).filter(function(s){ return !s.perso100 && !s.surprise; });
+      if(rateable.length){
+        var rows = rateable.map(function(s,i){
+          var preview=(s.texte||'').replace(/\{prenom\}/g,'vous').replace(/\{partenaire\}/g,'partenaire').replace(/\*\*([^*]+)\*\*/g,'$1');
+          if(preview.length>72) preview=preview.slice(0,72)+'…';
+          return '<div class="end-rate-row" data-texte="'+encodeURIComponent(s.texte)+'" style="display:flex;align-items:center;gap:8px;padding:7px 0;'+(i?'border-top:1px solid var(--border)':'')+'">'
+            + '<span style="flex:1;font-size:12.5px;line-height:1.4;text-align:left">'+preview+'</span>'
+            + '<button type="button" class="end-rate-btn" data-v="1" onclick="rateEndGage(this,1)" style="background:none;border:1.5px solid var(--border);border-radius:8px;width:32px;height:32px;font-size:15px;cursor:pointer;flex:0 0 auto">👍</button>'
+            + '<button type="button" class="end-rate-btn" data-v="-1" onclick="rateEndGage(this,-1)" style="background:none;border:1.5px solid var(--border);border-radius:8px;width:32px;height:32px;font-size:15px;cursor:pointer;flex:0 0 auto">👎</button>'
+            + '</div>';
+        }).join('');
+        rateFbHTML = '<div style="background:rgba(91,156,246,.06);border:1px solid rgba(91,156,246,.2);border-radius:12px;padding:14px;margin-bottom:14px;text-align:left">'
+          + '<div style="font-size:13px;color:var(--text);margin-bottom:4px;font-weight:600">⭐ Qu\'avez-vous pensé de ces gages ?</div>'
+          + '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Vos 👍 reviendront plus souvent, vos 👎 seront écartés des prochaines parties.</div>'
+          + '<div id="end-gage-rate-list">'+rows+'</div>'
+          + '<button type="button" class="btn ghost sm" onclick="saveEndGageRatings()" style="width:100%;margin-top:10px;font-size:12.5px">✓ Enregistrer mes retours</button>'
+          + '</div>';
+      }
+    }
+
     el('g-card').innerHTML='<div class="end-souvenir">'
       +'<div style="font-size:40px;margin-bottom:10px">'+(modeEmoji[G.mode]||'❤️')+'</div>'
       +'<div class="end-souvenir-title">Partie terminée !</div>'
@@ -6074,6 +6182,7 @@ function showEnd(){
         +'<div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px">💡 Pour continuer la soirée</div>'
         +tip
       +'</div>'
+      +rateFbHTML
       +'<div style="background:rgba(240,192,96,.06);border:1px solid rgba(240,192,96,.2);border-radius:12px;padding:14px;margin-bottom:14px">'
         +'<div style="font-size:13px;color:var(--text);margin-bottom:10px">💬 Vous avez aimé cette partie ?</div>'
         +'<button class="btn" onclick="openFeedback()" style="width:100%;font-size:14px;padding:11px;margin:0">Donner mon avis</button>'
@@ -6081,6 +6190,30 @@ function showEnd(){
       +'<button class="btn ghost" onclick="goTo(\'page-home\')" style="width:100%">← Retour à l’accueil</button>'
       +'</div>';
   }}
+function rateEndGage(btn, v){
+  var row = btn.closest('.end-rate-row');
+  if(!row) return;
+  var texte = decodeURIComponent(row.getAttribute('data-texte'));
+  if(_endRatings[texte] === v){ delete _endRatings[texte]; }
+  else { _endRatings[texte] = v; }
+  row.querySelectorAll('.end-rate-btn').forEach(function(b){
+    var bv = parseInt(b.getAttribute('data-v'),10);
+    var active = _endRatings[texte] === bv;
+    b.style.background = active ? (bv>0?'rgba(62,207,142,.18)':'rgba(194,90,107,.18)') : 'none';
+    b.style.borderColor = active ? (bv>0?'var(--success)':'var(--accent)') : 'var(--border)';
+  });
+}
+function saveEndGageRatings(){
+  var n = Object.keys(_endRatings).length;
+  Object.keys(_endRatings).forEach(function(t){ gagePrefs[t] = _endRatings[t]; });
+  saveCustom(GPREFS_KEY, gagePrefs);
+  var saveBtn = document.querySelector('[onclick="saveEndGageRatings()"]');
+  if(saveBtn){
+    saveBtn.textContent = n ? '✓ Retours enregistrés !' : '✓ Enregistré (rien de coché)';
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = '0.65';
+  }
+}
 function showVictory(name,pts){
   savePlayedHistory();
   var others = Object.keys(G.scores).filter(function(n){return n!==name;});
@@ -6335,6 +6468,7 @@ function adminTab(tab, btn) {
   if(tab==='gages') { cnt.innerHTML = renderAdminGages(); initAdminGageForm(); }
   else if(tab==='pratiques') { cnt.innerHTML = renderAdminPrat(); }
   else if(tab==='accessoires') { cnt.innerHTML = renderAdminAcc(); }
+  else if(tab==='bonus') { cnt.innerHTML = renderAdminBonus(); }
 }
 
 function renderAdminGages() {
@@ -6757,6 +6891,103 @@ function deleteAcc(cat,name){
   saveCustom(KEYS.acc,customAcc);adminTab('accessoires',null);
 }
 
+// ══════════════ ADMIN — CARTES BONUS (mode Compétition) ══════════════
+var _bonusEditIdx = -1;
+function renderAdminBonus(){
+  var html='<p style="font-size:12px;color:var(--muted);margin-bottom:10px">Ces cartes sortent au hasard pour le/la leader à chaque fin de niveau, en mode Compétition. Si tu choisis un accessoire, la carte ne sort que si le couple l\'a coché en début de partie.</p>';
+  html+='<div style="display:flex;gap:8px;margin-bottom:12px">'
+    +'<button class="btn sm ghost" onclick="showBonusForm()" style="flex:1">➕ Nouvelle</button>'
+    +'<button class="btn sm ghost" onclick="showBonusList()" style="flex:1">📋 Liste (<span id="bonus-count">'+bonusCards.length+'</span>)</button>'
+    +'</div>';
+
+  var accOptions = ['<option value="">— Aucun (toujours disponible) —</option>'];
+  var ad = getAccData();
+  Object.keys(ad).forEach(function(cat){
+    (ad[cat]||[]).forEach(function(a){ accOptions.push('<option value="'+a+'">'+a+'</option>'); });
+  });
+
+  html+='<div id="bonus-form-wrap">'
+    +'<label class="field-label">Icône (emoji)</label><input type="text" id="nb-icon" placeholder="🎁" maxlength="4">'
+    +'<label class="field-label">Titre</label><input type="text" id="nb-title" placeholder="Ex: Massage imposé">'
+    +'<label class="field-label">Description</label><textarea id="nb-desc" placeholder="Description de l\'effet du bonus..." style="min-height:70px"></textarea>'
+    +'<label class="field-label">Accessoire requis (optionnel)</label><select id="nb-acc">'+accOptions.join('')+'</select>'
+    +'<label class="field-label">Effet automatique (optionnel)</label><select id="nb-effect">'
+      +'<option value="">— Aucun (le couple applique manuellement) —</option>'
+      +'<option value="timerx2">⏱️ Double la durée du prochain gage de l\'adversaire</option>'
+      +'<option value="choice3">🔀 Le prochain gage de l\'adversaire est choisi parmi 3</option>'
+      +'<option value="surprise">🎯 Le prochain gage de l\'adversaire est remplacé au hasard</option>'
+    +'</select>'
+    +'<p style="font-size:11px;color:var(--muted);margin-top:4px">Un effet automatique s\'applique vraiment dans le jeu, au prochain gage de l\'adversaire du/de la leader. Sans effet, la carte reste une instruction que le couple applique lui-même.</p>'
+    +'<div class="btn-row"><button class="btn ghost sm" id="nb-cancel" style="display:none" onclick="cancelBonusEdit()">Annuler</button><button class="btn sm" id="nb-save" onclick="saveBonus()">➕ Ajouter</button></div>'
+    +'</div>';
+
+  var effectLabel = { timerx2:'⏱️ auto : durée x2', choice3:'🔀 auto : choix parmi 3', surprise:'🎯 auto : remplacement surprise' };
+  html+='<div id="bonus-list-wrap" class="hidden">';
+  bonusCards.forEach(function(c,i){
+    html+='<div class="admin-list-item"><div class="admin-list-row">'
+      +'<div class="admin-list-text"><strong>'+(c.icon||'🎁')+' '+c.title+'</strong>'
+      +(c.accessoire?' <span style="font-size:10px;color:var(--muted)">— nécessite: '+c.accessoire+'</span>':'')
+      +(c.effect?' <span style="font-size:10px;color:var(--success)">— '+(effectLabel[c.effect]||c.effect)+'</span>':'')
+      +'<br><span style="font-size:12px;color:var(--muted)">'+c.desc+'</span></div>'
+      +'<div class="admin-list-btns"><button class="btn info sm" style="padding:6px 10px" onclick="editBonusByIdx('+i+')">✏️</button><button class="btn danger sm" style="padding:6px 10px" onclick="deleteBonusByIdx('+i+')">✕</button></div>'
+      +'</div></div>';
+  });
+  html+='<button class="btn ghost sm" style="width:100%;margin-top:10px" onclick="resetBonusCards()">↺ Réinitialiser aux 27 cartes par défaut</button>';
+  html+='</div>';
+  return html;
+}
+function showBonusForm(){ document.getElementById('bonus-form-wrap').classList.remove('hidden'); document.getElementById('bonus-list-wrap').classList.add('hidden'); }
+function showBonusList(){ document.getElementById('bonus-form-wrap').classList.add('hidden'); document.getElementById('bonus-list-wrap').classList.remove('hidden'); }
+function cancelBonusEdit(){
+  _bonusEditIdx = -1;
+  ['nb-icon','nb-title','nb-desc'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  var acc=document.getElementById('nb-acc'); if(acc) acc.value='';
+  var eff=document.getElementById('nb-effect'); if(eff) eff.value='';
+  var cancel=document.getElementById('nb-cancel'); if(cancel) cancel.style.display='none';
+  var save=document.getElementById('nb-save'); if(save) save.textContent='➕ Ajouter';
+}
+function editBonusByIdx(i){
+  var c = bonusCards[i]; if(!c) return;
+  _bonusEditIdx = i;
+  showBonusForm();
+  document.getElementById('nb-icon').value = c.icon||'';
+  document.getElementById('nb-title').value = c.title||'';
+  document.getElementById('nb-desc').value = c.desc||'';
+  document.getElementById('nb-acc').value = c.accessoire||'';
+  document.getElementById('nb-effect').value = c.effect||'';
+  document.getElementById('nb-cancel').style.display='';
+  document.getElementById('nb-save').textContent='💾 Enregistrer';
+}
+function deleteBonusByIdx(i){
+  var c = bonusCards[i]; if(!c) return;
+  if(!confirm('Supprimer la carte "'+c.title+'" ?')) return;
+  bonusCards.splice(i,1);
+  saveBonusCards();
+  adminTab('bonus', document.getElementById('atab-bonus-nav'));
+  showBonusList();
+}
+function saveBonus(){
+  var icon=document.getElementById('nb-icon').value.trim()||'🎁';
+  var title=document.getElementById('nb-title').value.trim();
+  var desc=document.getElementById('nb-desc').value.trim();
+  var accessoire=document.getElementById('nb-acc').value;
+  var effect=document.getElementById('nb-effect').value;
+  if(!title||!desc){ alert('Titre et description sont obligatoires.'); return; }
+  var card = { icon:icon, title:title, desc:desc };
+  if(accessoire) card.accessoire = accessoire;
+  if(effect) card.effect = effect;
+  if(_bonusEditIdx >= 0 && bonusCards[_bonusEditIdx]){
+    bonusCards[_bonusEditIdx] = card;
+  } else {
+    bonusCards.push(card);
+  }
+  saveBonusCards();
+  cancelBonusEdit();
+  adminTab('bonus', document.getElementById('atab-bonus-nav'));
+  showBonusList();
+  showFavToast('✓ Carte bonus enregistrée');
+}
+
 
 // ── SWIPE MOBILE ──
 (function(){
@@ -6956,28 +7187,60 @@ function openTestGage() {
 // ══ BONUS CARDS ══
 var BONUS_CARDS = [
   {icon:"👅",title:"Plaisir oral imposé",desc:"Votre adversaire doit vous faire un cunnilingus ou une fellation pendant 1 min 30 — maintenant, avant le prochain gage."},
-  {icon:"🔀",title:"Gage au choix",desc:"Vous choisissez le prochain gage de votre adversaire parmi 3 gages que vous tirez au sort — il/elle doit réaliser celui que vous sélectionnez."},
+  {icon:"🔀",title:"Gage au choix",desc:"Vous choisissez le prochain gage de votre adversaire parmi 3 gages que vous tirez au sort — il/elle doit réaliser celui que vous sélectionnez.",effect:"choice3"},
   {icon:"🪢",title:"Mains liées",desc:"Votre adversaire réalise son prochain gage de pénétration ou de masturbation avec les mains attachées dans le dos."},
   {icon:"👁️",title:"Yeux bandés",desc:"Votre adversaire réalise son prochain gage les yeux bandés — toutes les sensations sont amplifiées."},
   {icon:"🤫",title:"Silence total",desc:"Votre adversaire doit réaliser son prochain gage sans émettre aucun son — pas de gémissements, pas de paroles."},
-  {icon:"⏱️",title:"Durée doublée",desc:"Le prochain gage de votre adversaire doit être réalisé pendant le double de sa durée normale."},
+  {icon:"⏱️",title:"Durée doublée",desc:"Le prochain gage de votre adversaire doit être réalisé pendant le double de sa durée normale.",effect:"timerx2"},
   {icon:"🔁",title:"Échange de rôle",desc:"Pour le prochain gage, les rôles sont inversés — dominant devient soumis et vice versa."},
   {icon:"💋",title:"Embrasser partout",desc:"Votre adversaire doit déposer 20 baisers sur votre corps — vous choisissez les zones — avant son prochain gage."},
   {icon:"🌶️",title:"Intensité max",desc:"Le prochain gage de votre adversaire doit être réalisé à intensité maximale — pression, rythme, profondeur au maximum supportable."},
-  {icon:"🎯",title:"Gage surprise",desc:"Vous piochez un gage au hasard dans la liste complète et votre adversaire doit le réaliser à la place de son prochain gage."},
+  {icon:"🎯",title:"Gage surprise",desc:"Vous piochez un gage au hasard dans la liste complète et votre adversaire doit le réaliser à la place de son prochain gage.",effect:"surprise"},
   {icon:"🔀",title:"Technique imposée",desc:"Vous choisissez la technique exacte pour le prochain gage de votre adversaire — prise, rythme, angle, position — il/elle exécute vos instructions."},
   {icon:"🪞",title:"Commentaire obligatoire",desc:"Votre adversaire doit décrire à voix haute ce qu'il/elle ressent pendant tout son prochain gage — sans s'arrêter."},
-  {icon:"🧊",title:"Glaçon d'abord",desc:"Avant son prochain gage, votre adversaire doit passer un glaçon sur les zones qui seront stimulées — vous tenez le glaçon."},
-  {icon:"🫴",title:"Massage imposé",desc:"Votre adversaire vous masse avec de l'huile les zones de votre choix pendant 2 min — avant de réaliser son prochain gage."},
+  {icon:"🧊",title:"Glaçon d'abord",desc:"Avant son prochain gage, votre adversaire doit passer un glaçon sur les zones qui seront stimulées — vous tenez le glaçon.",accessoire:"Glaçons"},
+  {icon:"🫴",title:"Massage imposé",desc:"Votre adversaire vous masse avec de l'huile les zones de votre choix pendant 2 min — avant de réaliser son prochain gage.",accessoire:"Huile de massage"},
   {icon:"👣",title:"Soin des pieds",desc:"Votre adversaire doit masser vos pieds pendant 1 min 30 puis embrasser chaque orteil avant son prochain gage."},
   {icon:"🔗",title:"Contact permanent",desc:"Pendant tout son prochain gage, votre adversaire doit maintenir un contact physique avec vous en permanence — corps collés."},
   {icon:"📢",title:"Instruction vocale",desc:"Pendant son prochain gage, votre adversaire doit vous demander la permission avant chaque changement de rythme ou de position."},
-  {icon:"🕯️",title:"Bougie de massage",desc:"Avant son prochain gage, votre adversaire doit vous masser avec de la cire chaude de bougie de massage sur la zone de votre choix."}
+  {icon:"🕯️",title:"Bougie de massage",desc:"Avant son prochain gage, votre adversaire doit vous masser avec de la cire chaude de bougie de massage sur la zone de votre choix.",accessoire:"Bougie"},
+  {icon:"🍓",title:"Dégustation",desc:"Votre adversaire doit manger sur votre corps ce que vous choisissez — avant son prochain gage.",accessoire:"Fraises"},
+  {icon:"🍫",title:"Gourmandise",desc:"Votre adversaire étale et lèche sur votre corps l'ingrédient de son choix pendant 1 min — avant son prochain gage.",accessoire:"Nutella"},
+  {icon:"🥂",title:"Toast complice",desc:"Avant son prochain gage, votre adversaire doit vous servir un verre et trinquer avec vous en vous regardant dans les yeux.",accessoire:"Champagne"},
+  {icon:"⛓️",title:"Attaché(e) pour de bon",desc:"Votre adversaire réalise l'intégralité de son prochain gage attaché(e) aux poignets — vous décidez de la position.",accessoire:"Menottes"},
+  {icon:"🎵",title:"Rythme imposé",desc:"Votre adversaire doit caler tous ses mouvements sur le rythme de la musique pendant son prochain gage.",accessoire:"Musique"},
+  {icon:"🪶",title:"Chatouilles",desc:"Avant son prochain gage, votre adversaire doit vous caresser tout le corps avec la plume pendant 1 min, sans jamais s'arrêter.",accessoire:"Plume"},
+  {icon:"🗣️",title:"Compliment forcé",desc:"Votre adversaire doit vous dire à voix haute 3 choses qu'il/elle adore sur votre corps avant de commencer son prochain gage."},
+  {icon:"🌡️",title:"Chaud-froid",desc:"Avant son prochain gage, votre adversaire alterne un glaçon puis sa bouche chaude sur la zone de votre choix, 3 fois de suite.",accessoire:"Glaçons"},
+  {icon:"🫦",title:"Striptease imposé",desc:"Votre adversaire doit se déshabiller lentement devant vous, au rythme de la musique, avant son prochain gage.",accessoire:"Musique"}
 ];
+
+// ── Cartes bonus éditables (admin) — seedées depuis BONUS_CARDS au premier chargement ──
+var bonusCards = loadCustom(KEYS.bonus);
+if(!bonusCards || !bonusCards.length){
+  bonusCards = BONUS_CARDS.map(function(c){ return Object.assign({}, c); });
+}
+function saveBonusCards(){ saveCustom(KEYS.bonus, bonusCards); }
+function resetBonusCards(){
+  if(!confirm('Réinitialiser la liste aux 27 cartes bonus par défaut ? Tes ajouts/modifs seront perdus.')) return;
+  bonusCards = BONUS_CARDS.map(function(c){ return Object.assign({}, c); });
+  saveBonusCards();
+  adminTab('bonus', document.getElementById('atab-bonus-nav'));
+}
 
 function drawBonusCard(winnerName) {
   soundBonus();
-  var card=BONUS_CARDS[Math.floor(Math.random()*BONUS_CARDS.length)];
+  var deck = (bonusCards && bonusCards.length) ? bonusCards : BONUS_CARDS;
+  var pool = deck.filter(function(c){ return !c.accessoire || (G.acc||[]).indexOf(c.accessoire) >= 0; });
+  if(!pool.length) pool = deck; // filet de sécurité si l'admin a tout gaté sur des accessoires manquants
+  if(G._lastBonusTitle && pool.length > 1){
+    var noRepeat = pool.filter(function(c){ return c.title !== G._lastBonusTitle; });
+    if(noRepeat.length) pool = noRepeat;
+  }
+  var card=pool[Math.floor(Math.random()*pool.length)];
+  G._lastBonusTitle = card.title;
+  G._pendingBonusCard = card;
+  G._pendingBonusWinner = winnerName;
   document.getElementById("bonus-icon").textContent=card.icon;
   document.getElementById("bonus-winner").textContent="🏆 "+winnerName+" — BONUS !";
   document.getElementById("bonus-title").textContent=card.title;
@@ -6985,13 +7248,101 @@ function drawBonusCard(winnerName) {
   document.getElementById("bonus-overlay").classList.add("show");
 }
 
+// ── Adversaire du leader qui a tiré le bonus (celui/celle qui subit l'effet) ──
+function pickBonusAdversary(winnerName){
+  var others = G.players.filter(function(p){ return p.prenom !== winnerName; });
+  if(!others.length) return null;
+  return others[Math.floor(Math.random()*others.length)].prenom;
+}
+// ── Cherche le prochain gage (non-kama) déjà prévu pour ce joueur, à partir du niveau cible ──
+function findNextGageSlot(targetName, fromLvl){
+  for(var lvl=fromLvl; lvl<=5; lvl++){
+    var arr = G.gagesByLevel[lvl] || [];
+    for(var i=0;i<arr.length;i++){
+      if(arr[i]._p === targetName && !arr[i]._kama) return {lvl:lvl, idx:i, gage:arr[i]};
+    }
+  }
+  return null;
+}
+
 function closeBonusCard() {
   document.getElementById("bonus-overlay").classList.remove("show");
+  var card = G._pendingBonusCard, winnerName = G._pendingBonusWinner;
+  G._pendingBonusCard = null; G._pendingBonusWinner = null;
+  var toLvl = G._pendingLevelTransition ? G._pendingLevelTransition.to : G.level;
+
+  if(card && card.effect==='timerx2'){
+    var target1 = pickBonusAdversary(winnerName);
+    var slot1 = target1 ? findNextGageSlot(target1, toLvl) : null;
+    if(slot1) slot1.gage._bonusTimerX2 = true;
+    proceedBonusTransition();
+  } else if(card && card.effect==='surprise'){
+    var target2 = pickBonusAdversary(winnerName);
+    var slot2 = target2 ? findNextGageSlot(target2, toLvl) : null;
+    if(slot2){
+      var tp2 = G.players.filter(function(p){return p.prenom===target2;})[0];
+      var pool2 = allGages().filter(function(g){
+        return !g.solo && tp2 && gageOk(g, tp2, g.niveau||1) && g.texte!==slot2.gage.texte;
+      });
+      if(pool2.length){
+        var picked2 = pool2[Math.floor(Math.random()*pool2.length)];
+        G.gagesByLevel[slot2.lvl][slot2.idx] = Object.assign({}, picked2, {_p:target2,_ch:false,_kama:false,_bonusSurprise:true});
+      }
+    }
+    proceedBonusTransition();
+  } else if(card && card.effect==='choice3'){
+    if(!openBonusChoicePicker(winnerName, toLvl)) proceedBonusTransition();
+    // sinon : on attend le choix du leader via pickBonusChoice()
+  } else {
+    proceedBonusTransition();
+  }
+}
+
+function proceedBonusTransition(){
   if(G._pendingLevelTransition){
     var from=G._pendingLevelTransition.from,to=G._pendingLevelTransition.to;
     G._pendingLevelTransition=null;
     _showLevelTransitionOverlay(from,to);
   }
+}
+
+// ── Bonus "Gage au choix" : présente 3 gages candidats pour le prochain tour de l'adversaire ──
+function openBonusChoicePicker(winnerName, toLvl){
+  var target = pickBonusAdversary(winnerName);
+  var slot = target ? findNextGageSlot(target, toLvl) : null;
+  if(!slot) return false;
+  var targetPlayer = G.players.filter(function(p){return p.prenom===target;})[0];
+  if(!targetPlayer) return false;
+  var pool = shuffle(allGages().filter(function(g){
+    return !g.solo && gageOk(g, targetPlayer, slot.lvl) && g.texte !== slot.gage.texte;
+  }));
+  var cands = pool.slice(0,3);
+  if(cands.length < 2) return false; // pas assez d'options pour un vrai choix
+  G._bonusChoiceCtx = { lvl:slot.lvl, idx:slot.idx, target:target, cands:cands };
+  var tgtEl = document.getElementById('bc-target');
+  if(tgtEl) tgtEl.textContent = target;
+  var wrap = document.getElementById('bc-options');
+  if(wrap){
+    wrap.innerHTML = cands.map(function(c,i){
+      var preview=(c.texte||'').replace(/\{prenom\}/g,target).replace(/\{partenaire\}/g,'partenaire').replace(/\*\*([^*]+)\*\*/g,'$1');
+      if(preview.length>140) preview=preview.slice(0,140)+'…';
+      return '<button type="button" class="btn ghost sm" style="text-align:left;white-space:normal;height:auto;line-height:1.4" onclick="pickBonusChoice('+i+')">'+preview+'</button>';
+    }).join('');
+  }
+  document.getElementById('bonus-choice-overlay').classList.add('show');
+  return true;
+}
+function pickBonusChoice(i){
+  var ctx = G._bonusChoiceCtx;
+  if(!ctx) return;
+  var picked = ctx.cands[i];
+  var arr = G.gagesByLevel[ctx.lvl];
+  if(arr && arr[ctx.idx] && picked){
+    arr[ctx.idx] = Object.assign({}, picked, {_p:ctx.target,_ch:false,_kama:false,_bonusChoice:true});
+  }
+  G._bonusChoiceCtx = null;
+  document.getElementById('bonus-choice-overlay').classList.remove('show');
+  proceedBonusTransition();
 }
 
 // ══ PROFILE QUICK ══
@@ -7073,6 +7424,7 @@ function soundBonus(){playTone(392,0.13,'square',0.06);playTone(523,0.13,'square
 function soundGuide(){playTone(440,0.13,'sine',0.09);playTone(550,0.22,'sine',0.09,0.11);}
 function soundGageValidate(){playTone(523,0.1,'sine',0.11);playTone(659,0.22,'sine',0.09,0.09);}
 function soundGagePass(){playTone(350,0.1,'sine',0.08);playTone(262,0.16,'sine',0.06,0.1);}
+function soundGageNext(){playTone(400,0.08,'sine',0.06);}
 function soundTimerEnd(){playTone(880,0.07,'sine',0.14);playTone(659,0.07,'sine',0.11,0.08);playTone(880,0.2,'sine',0.1,0.17);}
 
 // ══ KAMA EXPAND ══
@@ -8137,6 +8489,15 @@ applyLang();
     <div class="bonus-title" id="bonus-title">Titre du bonus</div>
     <div class="bonus-desc" id="bonus-desc">Description</div>
     <button class="btn" onclick="closeBonusCard()">✨ Accepter le bonus</button>
+  </div>
+</div>
+
+<!-- BONUS: CHOIX PARMI 3 GAGES -->
+<div class="bonus-overlay" id="bonus-choice-overlay">
+  <div class="bonus-card">
+    <div class="bonus-icon">🔀</div>
+    <div class="bonus-winner">Choisissez le prochain gage de <span id="bc-target"></span></div>
+    <div id="bc-options" style="display:flex;flex-direction:column;gap:10px;margin:14px 0;text-align:left"></div>
   </div>
 </div>
 
