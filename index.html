@@ -37,24 +37,8 @@
   --shadow:0 10px 28px rgba(80,40,40,.12);
 }
 html { background:#0d0a14; }
-body { background:var(--bg); background-image:radial-gradient(120% 80% at 50% -10%, rgba(194,90,107,0.10), transparent 60%), radial-gradient(100% 60% at 50% 110%, rgba(216,166,87,0.05), transparent 55%); background-attachment:fixed; color:var(--text); font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:16px; line-height:1.5; min-height:100vh; overscroll-behavior:none; }
-/* ── Fond d'ambiance qui évolue avec le niveau (subtil, non flashy) ── */
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:16px; line-height:1.5; min-height:100vh; overscroll-behavior:none; }
 #page-game { position:relative; }
-.bg-ambient {
-  position:absolute; inset:0; z-index:-1; pointer-events:none; overflow:hidden;
-  background-image:
-    radial-gradient(130% 55% at 50% -8%, var(--lvl-glow, rgba(91,156,246,.08)), transparent 62%),
-    radial-gradient(110% 55% at 50% 108%, var(--lvl-glow2, rgba(91,156,246,.045)), transparent 60%);
-  transition: background-image 1.6s ease;
-  animation: bgBreathe 11s ease-in-out infinite;
-}
-@keyframes bgBreathe { 0%,100%{opacity:.7} 50%{opacity:1} }
-.bg-ambient.lvl-1 { --lvl-glow:rgba(91,156,246,.08);  --lvl-glow2:rgba(91,156,246,.045); }
-.bg-ambient.lvl-2 { --lvl-glow:rgba(62,207,142,.08);  --lvl-glow2:rgba(62,207,142,.045); }
-.bg-ambient.lvl-3 { --lvl-glow:rgba(240,192,96,.09);  --lvl-glow2:rgba(240,192,96,.05); }
-.bg-ambient.lvl-4 { --lvl-glow:rgba(240,128,64,.10);  --lvl-glow2:rgba(240,128,64,.055); }
-.bg-ambient.lvl-5 { --lvl-glow:rgba(var(--accent-rgb),.11); --lvl-glow2:rgba(var(--accent-rgb),.06); }
-@media (prefers-reduced-motion: reduce) { .bg-ambient { animation:none; } }
 .page { display:none; min-height:100vh; padding:20px 16px 40px; max-width:480px; margin:0 auto; }
 .page.active { display:block; }
 .page-header { text-align:center; padding:28px 0 18px; position:relative; z-index:1; }
@@ -654,6 +638,11 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
       <span class="icon">🏆</span><div class="label">Compétition</div><div class="sub">Plus de points = des bonus pour toi 😉</div>
       <span class="mode-badge premium">✦ Premium</span>
     </div>
+    <div class="mode-card mode-premium" id="mc-story" onclick="selectMode('story')" style="position:relative">
+      <span class="mode-lock" id="lock-story">🔒</span>
+      <span class="icon">🎭</span><div class="label">Histoire</div><div class="sub">Rôles, mise en scène, votre histoire</div>
+      <span class="mode-badge premium">✦ Premium</span>
+    </div>
     <div class="mode-card mode-premium" id="mc-live" onclick="selectMode('live')" style="position:relative">
       <span class="mode-lock" id="lock-live">🔒</span>
       <span class="icon">🔴</span><div class="label">Live Streamer</div><div class="sub">Jouez avec vos viewers</div>
@@ -807,6 +796,18 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   </div>
 </div>
 
+<!-- PAGE RÔLES (Mode Histoire) -->
+<div class="page" id="page-roles">
+  <div class="page-header"><h1 id="roles-header">🎭 Choisissez votre rôle</h1></div>
+  <p style="text-align:center;color:var(--muted);margin-bottom:12px;font-size:13px">Votre histoire — et les gages — s'adapteront à vos rôles, vos pratiques et vos accessoires.</p>
+  <div id="roles-content"></div>
+  <div class="error-msg" id="err-roles"></div>
+  <div class="btn-row">
+    <button class="btn ghost" id="roles-back-btn" onclick="rolesBack()">← Retour</button>
+    <button class="btn success" onclick="confirmRoles()">Suivant →</button>
+  </div>
+</div>
+
 <!-- PAGE GAGES PERSONNALISÉS (optionnelle) -->
 <div class="page" id="page-customgages">
   <div class="page-header"><h1>Gages personnalisés</h1></div>
@@ -821,7 +822,6 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 
 <!-- PAGE JEU -->
 <div class="page" id="page-game">
-  <div class="bg-ambient lvl-1" id="bg-ambient"></div>
   <div class="game-top">
     <div id="g-level" class="level-badge lvl-1">Niveau 1</div><br>
     <span id="g-player" class="player-badge">👤 Joueur</span>
@@ -859,10 +859,11 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 <div class="page" id="page-admin">
   <div class="page-header"><h1>⚙️ Administration</h1></div>
   <div class="admin-tabs">
-    <button class="admin-tab active" onclick="adminTab('gages',this)">🎴 Gages</button>
+    <button class="admin-tab active" id="atab-gages-nav" onclick="adminTab('gages',this)">🎴 Gages</button>
     <button class="admin-tab" onclick="adminTab('pratiques',this)">🔖 Pratiques</button>
     <button class="admin-tab" onclick="adminTab('accessoires',this)">🎭 Accessoires</button>
     <button class="admin-tab" id="atab-bonus-nav" onclick="adminTab('bonus',this)">🎁 Bonus</button>
+    <button class="admin-tab" id="atab-mem-nav" onclick="adminTab('memoire',this)">🧠 Mémoire</button>
   </div>
   <div id="admin-content"></div>
   <button class="btn ghost" style="margin-top:14px" onclick="goTo('page-home')">← Retour</button>
@@ -876,11 +877,534 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
    Niveau 4 et 5 uniquement
 ═══════════════════════════════════════════════════ */
 
+/* ═══════════════════ RÔLES (Mode Histoire) ═══════════════════
+   10 rôles par genre. Chaque rôle a un fragment "ouverture" (utilisé dans
+   l'intro de chapitre) et "action" (utilisé dans la ligne d'ambiance des gages).
+   accAffinite = accessoires qui, combinés à ce rôle, déclenchent une ligne d'ambiance sur-mesure.
+═══════════════════════════════════════════════════ */
+var ROLES = {
+  Homme: [
+    {id:'h_detenu',   emoji:'🔒', label:'Détenu',            article:'le détenu',            ouverture:"vient d'être enfermé dans sa cellule, seul avec ses pensées",           action:["tire sur ses liens en fixant","ne quitte pas des yeux"],     accAffinite:['Menottes']},
+    {id:'h_policier', emoji:'👮', label:'Policier',           article:'le policier',           ouverture:"referme la porte de la cellule d'un geste autoritaire",                action:["s'approche d'un pas assuré de","toise longuement"],    accAffinite:['Menottes']},
+    {id:'h_patron',   emoji:'💼', label:'Patron',             article:'le patron',             ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:['Cravate','Bureau']},
+    {id:'h_livreur',  emoji:'📦', label:'Livreur',            article:'le livreur',            ouverture:"sonne à la porte avec un paquet... et un sourire en coin",             action:["tend le paquet avant de glisser une main vers","s'attarde sur le pas de la porte, un sourire pour"], accAffinite:[]},
+    {id:'h_prof',     emoji:'🎓', label:'Professeur',         article:'le professeur',         ouverture:"garde son élève après les cours pour un entretien particulier",        action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:['Lunettes']},
+    {id:'h_medecin',  emoji:'🩺', label:'Médecin',            article:'le médecin',            ouverture:"invite sa patiente à s'allonger pour un examen approfondi",           action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Bandeau']},
+    {id:'h_pompier',  emoji:'🚒', label:'Pompier',            article:'le pompier',            ouverture:"vient d'éteindre l'incendie et reprend son souffle, torse nu",         action:["soulève dans ses bras musclés","attire contre son torse encore essoufflé"],    accAffinite:[]},
+    {id:'h_chef',     emoji:'👨‍🍳', label:'Chef cuisinier',   article:'le chef',               ouverture:"prépare un dernier plat, rien que pour elle, cuisine fermée",          action:["fait glisser un doigt gourmand sur","approche une bouchée des lèvres de"], accAffinite:['Chantilly','Nutella','Fraises']},
+    {id:'h_inconnu',  emoji:'🍸', label:'Inconnu au bar',     article:"l'inconnu du bar",      ouverture:"s'installe au bar et lui offre un verre sans un mot",                  action:["pose sa main sur la hanche de","se penche à l'oreille de"],    accAffinite:['Champagne','Vin']},
+    {id:'h_masseur',  emoji:'💆‍♂️', label:'Masseur',          article:'le masseur',            ouverture:"prépare la table de massage et fait chauffer l'huile",                action:["masse lentement les épaules de","fait glisser ses mains le long du dos de"],   accAffinite:['Huile de massage','Bougie']},
+    {id:'h_patient',  emoji:'🤒', label:'Patient',            article:'le patient',            ouverture:"attend, alité, que sa garde le rejoigne",                              action:["tend la main vers","attire doucement contre lui"],   accAffinite:['Bandeau']}
+  ],
+  Femme: [
+    {id:'f_policiere',emoji:'👮‍♀️', label:'Policière',        article:'la policière',          ouverture:"verrouille la porte de la cellule d'un geste autoritaire",             action:["s'approche d'un pas assuré de","toise longuement"],    accAffinite:['Menottes']},
+    {id:'f_infirmiere',emoji:'💉', label:'Infirmière',        article:"l'infirmière",          ouverture:"vient prendre la température de son patient, un peu trop souvent",    action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Bandeau']},
+    {id:'f_patronne', emoji:'💼', label:'Patronne',           article:'la patronne',           ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:['Cravate','Bureau']},
+    {id:'f_etudiante',emoji:'📚', label:'Étudiante',          article:"l'étudiante",           ouverture:"reste après les cours pour un entretien particulier",                 action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:['Lunettes']},
+    {id:'f_menage',   emoji:'🧹', label:'Femme de ménage',    article:'la femme de ménage',    ouverture:"fait le ménage quand son patron rentre plus tôt que prévu",           action:["laisse tomber le plumeau pour effleurer","s'arrête de ranger pour dévisager"], accAffinite:['Plume']},
+    {id:'f_seductrice',emoji:'🖤', label:'Séductrice mystérieuse', article:'la séductrice',    ouverture:"apparaît dans la pénombre, masquée, sans un mot",                 action:["glisse un doigt ganté le long de","tourne lentement autour de"], accAffinite:['Masque','Bandeau']},
+    {id:'f_prof',     emoji:'🎓', label:'Professeure',        article:'la professeure',        ouverture:"garde son élève après les cours pour un entretien particulier",       action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:['Lunettes']},
+    {id:'f_masseuse', emoji:'💆‍♀️', label:'Masseuse',         article:'la masseuse',           ouverture:"prépare la table de massage et fait chauffer l'huile",                action:["masse lentement les épaules de","fait glisser ses mains le long du dos de"],   accAffinite:['Huile de massage','Bougie']},
+    {id:'f_voisine',  emoji:'🏠', label:'Voisine',            article:'la voisine',            ouverture:"sonne pour emprunter du sel... et reste sur le pas de la porte",       action:["pose sa main sur le torse de","s'attarde un peu trop longtemps près de"],     accAffinite:['Vin']},
+    {id:'f_inconnue', emoji:'🍸', label:'Inconnue au bar',    article:"l'inconnue du bar",     ouverture:"s'installe au bar et lui glisse un regard qui ne trompe pas",         action:["pose sa main sur la cuisse de","se penche à l'oreille de"],    accAffinite:['Champagne','Vin']},
+    {id:'f_cliente',  emoji:'🛍️', label:'Cliente',           article:'la cliente',            ouverture:"attend, un peu impatiente, que le service commence",                 action:["s'approche, curieuse, de","laisse échapper un souffle devant"],   accAffinite:[]}
+  ]
+};
+// Connecteurs d'intensité par niveau, combinés génériquement avec les fragments de rôle ci-dessus
+var STORY_LEVEL_INTRO = {
+  1: "Vous venez à peine de vous croiser. Encore habillés, la tension s'installe doucement.",
+  2: "Le jeu de rôle s'intensifie — les premiers vêtements commencent à tomber.",
+  3: "Vous ne jouez plus vraiment un rôle : le désir a pris le dessus.",
+  4: "Plus aucune retenue. L'histoire vous échappe, et c'est très bien comme ça.",
+  5: "Le dénouement de votre histoire — le moment que vous attendiez tous les deux."
+};
+
+/* ═══════════════════ DUOS DE RÔLES CURÉS — histoires écrites sur-mesure ═══════════════════
+   Au lieu de laisser chaque joueur choisir un rôle au hasard (100 combinaisons génériques),
+   le jeu propose un DUO cohérent, avec une vraie histoire écrite pour cette paire précise.
+   Chaque duo est lié à un rôle Homme + un rôle Femme existant dans ROLES, et couvre les
+   couples hétéros à 2 joueurs. Les autres configurations (gay, lesbien, trans, trio, solo)
+   retombent automatiquement sur le générateur générique par rôle (voir buildStoryGame).
+   Compatibilité pratiques : un gage n'apparaît que si TOUTES ses pratiques listées sont
+   cochées par au moins un des deux joueurs (union du couple) — comme pour les gages perso.
+   Compatibilité accessoires : idem, seulement si listé et non vide.
+═══════════════════════════════════════════════════ */
+var STORY_DUOS = [
+{ id:'detenu_policiere', homme:'h_detenu', femme:'f_policiere', emoji:'🔒👮‍♀️', title:'Garde à vue',
+  premise:"Une cellule, un interrogatoire qui n'en finit pas, et une policière qui reste bien après la fin de son service.",
+  scenes:{
+    1:[
+      {texte:"{prenom}, à travers les barreaux, murmure à {partenaire} qu'elle n'a aucune idée de ce qu'elle risque en s'approchant autant. Elle s'approche quand même.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} ouvre la cellule sans un mot, la referme derrière elle, et regarde {partenaire} droit dans les yeux — aucun des deux ne parle pendant **20 secondes**.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} passe un doigt le long des barreaux, lentement, sans quitter {partenaire} des yeux. Le règlement dit une chose ; son regard en dit une autre.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom}, menotté ou non, s'approche autant que sa laisse le lui permet, et chuchote à {partenaire} ce qu'il ferait s'il était libre.",genre:'Homme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom}, à genoux devant {partenaire}, prouve qu'il n'a besoin d'aucune arme pour la faire céder — sexe oral, **2 minutes**, sans qu'elle ne dise un mot.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} abandonne son uniforme un bouton à la fois, sans quitter son rôle, et guide la bouche de {partenaire} exactement où elle le veut — **90 secondes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} caresse {partenaire} par-dessus le tissu, lentement, comme pour prolonger l'interrogatoire — **1 minute**, avant d'aller plus loin.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
+      {texte:"{prenom}, dos au mur, laisse {partenaire} décider du rythme — elle le caresse, **1 minute**, en gardant son uniforme.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} attache les poignets de {partenaire} au montant du lit de camp — un cliquetis, puis plus rien d'autre à faire que ressentir.",genre:'Femme',pratiques:[],accessoires:['Menottes']},
+      {texte:"{prenom}, menotté, laisse {partenaire} faire absolument tout ce qu'elle veut pendant **2 minutes** — masturbation, bouche, à sa guise.",genre:'Homme',pratiques:['masturb_passif'],accessoires:['Menottes']},
+      {texte:"{prenom} stimule doucement {partenaire} plus bas, du bout des doigts, avec beaucoup de lubrifiant — l'interrogatoire vire au jeu, **1 minute**.",genre:'Femme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} renverse les rôles un instant : c'est {partenaire} qui la plaque contre les barreaux, essoufflée, avant qu'elle ne reprenne le contrôle.",genre:'Homme',pratiques:[],accessoires:[]}
+    ],
+    4:[
+      {texte:"{prenom}, menottes ou pas, pénètre {partenaire} contre le mur de la cellule — rythme qui s'accélère, **2 minutes**, aucun des deux ne joue plus la comédie.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} reprend le dessus, assise sur {partenaire}, menant totalement le rythme pendant **2 minutes** — cette fois, c'est elle qui décide de tout.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} plaque {partenaire} contre les barreaux et le pénètre analement, lentement — rythme qui s'installe, **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
+      {texte:"{prenom} donne un ordre net à {partenaire}, qui obéit sans discuter — la hiérarchie n'a jamais été aussi claire, **1 minute**.",genre:'Femme',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, en policière jusqu'au bout, amène {partenaire} à la jouissance — bouche ou main, à sa convenance, durée libre, plus aucune barrière entre eux.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} terminent l'interrogatoire pour de bon — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+},
+{ id:'medecin_infirmiere', homme:'h_medecin', femme:'f_infirmiere', emoji:'🩺💉', title:'Consultation tardive',
+  premise:"Le dernier patient est parti depuis longtemps. Le médecin et son infirmière restent seuls dans le cabinet — et la fatigue n'est pas la seule chose qui les rapproche.",
+  scenes:{
+    1:[
+      {texte:"{prenom} range ses instruments un par un, très lentement, en sachant parfaitement que {partenaire} l'observe depuis la porte.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} s'approche par derrière et dénoue la blouse de {partenaire}, un lien à la fois, sans dire un mot.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom}, assis sur la table d'examen, attire {partenaire} entre ses jambes et l'embrasse comme il n'aurait jamais osé pendant les heures de garde.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} chuchote à {partenaire} qu'elle a remarqué son regard toute la journée — puis l'embrasse avant qu'il ne puisse répondre.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom} allonge {partenaire} sur la table d'examen pour un dernier contrôle, très approfondi — sexe oral, **2 minutes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} s'agenouille, blouse encore boutonnée, et prend soin de {partenaire} à sa manière — sexe oral, **90 secondes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} ausculte {partenaire} d'une main de plus en plus experte, de plus en plus bas, pendant **1 minute**.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]},
+      {texte:"{prenom} guide la main de {partenaire}, en professionnelle qui connaît son sujet, pendant **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} bande les yeux de {partenaire} — 'pour tester ses réflexes', dit-elle — avant de continuer bien plus bas.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} verse un peu d'huile chaude sur {partenaire}, prétextant décontracter des muscles noués — le geste devient tout sauf médical.",genre:'Homme',pratiques:[],accessoires:['Huile de massage']},
+      {texte:"{prenom} stimule délicatement {partenaire} plus bas, doigts lubrifiés, très attentif à chaque réaction, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} et {partenaire} échangent les rôles un instant — c'est elle qui l'ausculte, main experte, jusqu'à le faire perdre son sérieux professionnel.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]}
+    ],
+    4:[
+      {texte:"{prenom}, sur la table d'examen, pénètre {partenaire} lentement — rythme qui monte crescendo, **2 minutes**, le cabinet est fermé depuis longtemps.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} prend les commandes, assise sur {partenaire}, décidant seule du rythme des **2 prochaines minutes**.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} pénètre analement {partenaire}, avec toute la douceur d'un vrai protocole — rythme qui monte, **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
+      {texte:"{prenom} prend un ton sans appel et ordonne à {partenaire} de ne plus bouger — 'ordre du médecin', **1 minute**.",genre:'Femme',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, en infirmière dévouée jusqu'au bout, amène {partenaire} à la jouissance par la bouche, durée libre.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} oublient enfin la blouse et le badge — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+},
+{ id:'infirmiere_patient', homme:'h_patient', femme:'f_infirmiere', emoji:'💉🤒', title:'Chambre 204',
+  premise:"Une chambre d'hôpital, une garde de nuit interminable, et une infirmière qui repasse un peu trop souvent voir son patient.",
+  scenes:{
+    1:[
+      {texte:"{prenom} entre pour la troisième fois de la soirée sous prétexte de vérifier sa tension — {partenaire} ne dit rien, mais sourit.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom}, alité, attrape doucement la main de {partenaire} au moment où elle ajuste sa perfusion, et ne la lâche plus.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} s'assoit au bord du lit, bien plus près que nécessaire, et demande à {partenaire} s'il a besoin d'autre chose.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} attire {partenaire} contre lui, doucement, en lui promettant de ne rien dire à personne.",genre:'Homme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom} se glisse sous les draps, discrète, et s'occupe de {partenaire} d'une manière qui n'a rien de médical — sexe oral, **2 minutes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom}, plus vaillant qu'il ne le laisse paraître, attire {partenaire} sur le lit et prend soin d'elle à son tour — sexe oral, **90 secondes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} caresse {partenaire} sous la couverture, doucement, l'oreille aux aguets du couloir, **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
+      {texte:"{prenom} guide la main de {partenaire} sous sa blouse pendant **1 minute**, en gardant un œil sur la porte entrouverte.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} bande les yeux de {partenaire} — 'pour l'aider à se détendre', dit-elle avec un sourire qui ne trompe personne.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} verse un peu d'huile tiède sur les épaules de {partenaire}, prétextant un massage thérapeutique.",genre:'Homme',pratiques:[],accessoires:['Huile de massage']},
+      {texte:"{prenom} stimule délicatement {partenaire} plus bas, avec beaucoup de douceur et de lubrifiant, **1 minute**.",genre:'Femme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} verrouille la porte de la chambre du bout du pied, sans lâcher {partenaire} des mains.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    4:[
+      {texte:"{prenom}, la perfusion oubliée, pénètre {partenaire} lentement — rythme qui monte, **2 minutes**, tant pis pour le silence de l'hôpital.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} grimpe sur {partenaire}, prudente au début puis bien moins, menant le rythme pendant **2 minutes**.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} se retourne et laisse {partenaire} le pénétrer analement, doucement, rythme qui s'installe, **2 minutes**.",genre:'Homme',pratiques:['anal_passif_2'],accessoires:[]},
+      {texte:"{prenom} chuchote un ordre à {partenaire}, qui obéit sans un bruit — le couloir de l'hôpital est juste derrière la porte, **1 minute**.",genre:'Femme',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, dévouée jusqu'au bout de la nuit, amène {partenaire} à la jouissance par la bouche, durée libre.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} oublient l'hôpital entier — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+},
+{ id:'patron_employee', homme:'h_patron', femme:'f_patronne', emoji:'💼', title:'Heures supplémentaires',
+  premise:"Le bureau est vide depuis 20h. Le patron a gardé son employée sous un prétexte de dossier urgent — le dossier peut attendre.",
+  scenes:{
+    1:[
+      {texte:"{prenom} referme la porte du bureau à clé et demande à {partenaire} si elle a vraiment cru qu'il s'agissait d'un dossier.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} s'assoit sur le bureau de {partenaire}, croise les jambes, et attend qu'il fasse le premier pas.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} desserre sa cravate lentement, sans quitter {partenaire} des yeux, et la laisse tomber sur le clavier.",genre:'Homme',pratiques:[],accessoires:['Cravate']},
+      {texte:"{prenom} s'approche par derrière pendant qu'il travaille encore, et pose les mains sur ses épaules — plus longtemps que nécessaire.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom} s'agenouille sous le bureau de {partenaire}, en pleine 'réunion urgente' — sexe oral, **2 minutes**, sans un bruit.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} pousse les dossiers de {partenaire} et l'installe sur le bureau pour s'occuper d'elle à son tour — sexe oral, **90 secondes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} caresse {partenaire} par-dessus le pantalon, sous le bureau, pendant que quelqu'un pourrait encore rôder dans le couloir.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
+      {texte:"{prenom} guide la main de {partenaire} sous sa jupe pendant **1 minute**, sans jamais quitter l'écran des yeux — pour la forme.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} attache les poignets de {partenaire} à la chaise de bureau avec sa cravate — 'pour qu'elle apprenne la patience'.",genre:'Homme',pratiques:[],accessoires:['Cravate']},
+      {texte:"{prenom} donne à {partenaire} **10 petites fessées** contre le bureau, juste assez fort pour marquer le jeu, avant de l'embrasser.",genre:'Femme',pratiques:['fetish_actif_1'],accessoires:[]},
+      {texte:"{prenom} stimule {partenaire} plus bas, du bout des doigts, avec beaucoup de lubrifiant, sur le tapis du bureau, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} renverse les rôles : c'est elle qui donne les ordres maintenant, et {partenaire} obéit, amusé.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    4:[
+      {texte:"{prenom}, sur le bureau balayé d'un revers de main, pénètre {partenaire} — rythme qui s'intensifie, **2 minutes**.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} prend le contrôle total, assise sur {partenaire} dans son propre fauteuil, décidant du rythme pendant **2 minutes**.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} pénètre analement {partenaire}, penché sur le bureau, rythme qui s'installe, **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
+      {texte:"{prenom} donne un ordre sec à {partenaire}, qui s'exécute — la hiérarchie du bureau n'a jamais été aussi claire, **1 minute**.",genre:'Femme',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, employée modèle jusqu'au bout, amène {partenaire} à la jouissance par la bouche, durée libre.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} finissent sur le tapis du bureau — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+},
+{ id:'prof_etudiante', homme:'h_prof', femme:'f_etudiante', emoji:'🎓', title:'Retenue',
+  premise:"Le dernier cours du soir. L'étudiante est restée pour un 'entretien particulier' — le professeur sait qu'il ne devrait pas, et reste quand même.",
+  scenes:{
+    1:[
+      {texte:"{prenom} referme le livre lentement et demande à {partenaire} ce qu'elle attend vraiment de cet entretien.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} s'assoit sur le bureau, juste devant {partenaire}, bien plus près qu'une élève ne le devrait.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} retire ses lunettes, les pose sur la table, et se penche vers {partenaire} sans un mot.",genre:'Homme',pratiques:[],accessoires:['Lunettes']},
+      {texte:"{prenom} murmure à {partenaire} qu'elle a tout fait pour rester après les cours, et que ce n'était pas pour la grammaire.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom} s'agenouille devant {partenaire}, entre les rangées vides, et lui donne la meilleure note de sa vie — sexe oral, **2 minutes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} s'assoit sur le bureau et attire {partenaire} entre ses jambes pour un cours qui n'est dans aucun programme — sexe oral, **90 secondes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} caresse {partenaire} sous la table, doucement, comme si de rien n'était, pendant **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
+      {texte:"{prenom} guide la main de {partenaire} sous son pull pendant **1 minute**, la porte de la salle encore entrouverte.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} bande les yeux de {partenaire} avec son propre foulard — 'interro surprise', murmure-t-elle.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} attache les poignets de {partenaire} au dossier de la chaise, en guise de punition symbolique.",genre:'Homme',pratiques:[],accessoires:['Menottes']},
+      {texte:"{prenom} stimule doucement {partenaire} plus bas, avec beaucoup de lubrifiant, sur le bureau du prof, **1 minute**.",genre:'Femme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} donne à {partenaire} **10 petites fessées**, juste assez fort pour marquer le jeu, avant de la récompenser d'un baiser.",genre:'Homme',pratiques:['fetish_actif_1'],accessoires:[]}
+    ],
+    4:[
+      {texte:"{prenom}, sur le bureau, pénètre {partenaire} lentement — rythme qui monte crescendo, **2 minutes**, la salle vide autour d'eux.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} prend le contrôle, assise sur le bureau du professeur, décidant du rythme des **2 prochaines minutes**.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} pénètre analement {partenaire}, penchée sur le bureau, rythme qui s'installe doucement, **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
+      {texte:"{prenom} prend un ton qui n'admet aucune réplique et ordonne à {partenaire} de rester immobile, **1 minute**.",genre:'Homme',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, élève la plus assidue qu'il ait jamais eue, amène {partenaire} à la jouissance par la bouche, durée libre.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} finissent la leçon pour de bon — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+},
+{ id:'masseur_cliente', homme:'h_masseur', femme:'f_cliente', emoji:'💆‍♂️🛍️', title:'Le dernier rendez-vous',
+  premise:"Le dernier créneau de la journée. La table de massage est prête, l'huile chauffe déjà — et cette cliente n'est pas venue que pour se détendre.",
+  scenes:{
+    1:[
+      {texte:"{prenom} s'allonge sur la table, une serviette pour toute pudeur, et demande à {partenaire} de prendre tout son temps.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} fait chauffer l'huile entre ses mains, longuement, avant de les poser sur les épaules de {partenaire}.",genre:'Homme',pratiques:[],accessoires:['Huile de massage']},
+      {texte:"{prenom} allume une bougie près de la table et tamise la lumière avant de commencer, sans un mot de trop.",genre:'Homme',pratiques:[],accessoires:['Bougie']},
+      {texte:"{prenom} murmure à {partenaire} qu'elle a demandé ce créneau précis exprès pour être seule avec lui.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom} descend ses mains bien plus bas que prévu par la prestation, et {partenaire} ne dit rien pour l'arrêter — masturbation, **1 minute**.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]},
+      {texte:"{prenom} se retourne sur la table et attire {partenaire} vers elle pour lui rendre la pareille — sexe oral, **90 secondes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} s'agenouille au bout de la table et prend soin de {partenaire} d'une tout autre manière — sexe oral, **2 minutes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} guide la main de {partenaire} sur elle-même pendant **1 minute**, allongée sur la table encore tiède d'huile.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} verse un filet d'huile chaude entre les omoplates de {partenaire} avant de continuer, bien plus bas.",genre:'Homme',pratiques:[],accessoires:['Huile de massage']},
+      {texte:"{prenom} bande les yeux de {partenaire} — 'pour intensifier chaque sensation', dit-elle avec un sourire.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} stimule doucement {partenaire} plus bas, doigts glissants d'huile, très attentif à chaque réaction, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} se redresse et prend les commandes, poussant {partenaire} sur la table pour changer de rôle.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    4:[
+      {texte:"{prenom}, sur la table encore glissante d'huile, pénètre {partenaire} lentement — rythme qui monte, **2 minutes**.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} grimpe sur {partenaire}, menant tout le rythme des **2 prochaines minutes**, la bougie toujours allumée.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} pénètre analement {partenaire}, huile encore chaude sur la peau, rythme qui s'installe, **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
+      {texte:"{prenom} guide {partenaire} d'une voix posée, presque professionnelle, exactement là où elle veut l'emmener, **1 minute**.",genre:'Femme',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, en professionnel jusqu'au bout, amène {partenaire} à la jouissance par la bouche, durée libre.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} terminent la séance pour de bon — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+},
+{ id:'livreur_cliente', homme:'h_livreur', femme:'f_cliente', emoji:'📦🛍️', title:'Livraison surprise',
+  premise:"Un colis, une signature, et une cliente qui trouve soudain toutes les raisons du monde de ne pas laisser partir le livreur tout de suite.",
+  scenes:{
+    1:[
+      {texte:"{prenom} tend le paquet à {partenaire} et remarque qu'elle met un temps anormalement long à le prendre.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} demande à {partenaire} s'il a le temps d'entrer un instant — 'pour vérifier que rien n'est cassé'.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} referme la porte derrière lui, pose le colis, et attend de voir ce qu'elle veut vraiment.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} s'appuie contre le chambranle, un sourire aux lèvres, et lui demande s'il livre toujours aussi lentement.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom} s'agenouille dans l'entrée, sans même attendre le salon — sexe oral, **2 minutes**, le paquet encore sur la console.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} la soulève contre le mur de l'entrée et s'occupe d'elle à son tour — sexe oral, **90 secondes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} caresse {partenaire} par-dessus l'uniforme, contre la porte à peine fermée, pendant **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
+      {texte:"{prenom} guide la main de {partenaire} sous sa robe pendant **1 minute**, sans même être passés du couloir.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} bande les yeux de {partenaire} avec le ruban du paquet — 'surprise sur surprise', dit-elle en riant.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} stimule doucement {partenaire} plus bas, du bout des doigts, avec beaucoup de lubrifiant, contre le mur de l'entrée, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} le pousse contre la porte fermée et prend le contrôle, curieuse de voir jusqu'où il est prêt à rester en retard.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} verse un peu de champagne, trinque avec {partenaire}, et continue avant même d'avoir reposé le verre.",genre:'Homme',pratiques:[],accessoires:['Champagne']}
+    ],
+    4:[
+      {texte:"{prenom}, toujours dans l'entrée, pénètre {partenaire} contre le mur — rythme qui s'accélère, **2 minutes**, le camion tourne dehors.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} prend le dessus, menant le rythme des **2 prochaines minutes** — tant pis pour la tournée de livraisons.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} pénètre analement {partenaire}, contre le mur de l'entrée, rythme qui s'installe, **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
+      {texte:"{prenom} lui donne un ordre simple, presque en riant, et {partenaire} obéit sans se faire prier, **1 minute**.",genre:'Femme',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, service jusqu'au bout, amène {partenaire} à la jouissance par la bouche, durée libre.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} finissent contre la porte d'entrée — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+},
+{ id:'inconnus_bar', homme:'h_inconnu', femme:'f_inconnue', emoji:'🍸', title:'Dernier verre',
+  premise:"Deux inconnus, un bar qui ferme bientôt, et un regard échangé qui dit clairement qu'aucun des deux ne rentrera seul ce soir.",
+  scenes:{
+    1:[
+      {texte:"{prenom} pose un verre devant {partenaire} sans qu'elle ait rien commandé, et attend de voir si elle le boit.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} se rapproche sur le tabouret, juste assez pour que leurs genoux se frôlent, sans un mot.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} trinque avec {partenaire}, la regarde droit dans les yeux en buvant, et ne la lâche plus du regard.",genre:'Homme',pratiques:[],accessoires:['Champagne']},
+      {texte:"{prenom} murmure à l'oreille de {partenaire} qu'elle n'a pas pour habitude de suivre des inconnus — juste pour ce soir.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom} l'entraîne vers les toilettes du bar, verrouille la porte, et s'agenouille sans perdre une seconde — sexe oral, **2 minutes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} la plaque contre le mur des toilettes et s'occupe d'elle à son tour — sexe oral, **90 secondes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} caresse {partenaire} par-dessus le vêtement, dans la pénombre du fond de la salle, pendant **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
+      {texte:"{prenom} guide la main de {partenaire} sous sa jupe, discrètement, au comptoir même, pendant **1 minute**.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} bande les yeux de {partenaire} avec sa propre écharpe avant de continuer, dans le taxi qui les ramène.",genre:'Homme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} garde son masque de la soirée déguisée — le mystère reste entier, même dans l'intimité.",genre:'Femme',pratiques:[],accessoires:['Masque']},
+      {texte:"{prenom} stimule doucement {partenaire} plus bas, avec beaucoup de lubrifiant, contre le mur des toilettes, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} prend le contrôle, curieuse de voir jusqu'où cet inconnu est prêt à la suivre cette nuit.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    4:[
+      {texte:"{prenom}, à peine rentrés, pénètre {partenaire} contre la porte d'entrée — rythme qui s'intensifie, **2 minutes**.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} prend le dessus, menant le rythme des **2 prochaines minutes** — aucun des deux ne connaît encore le prénom de l'autre.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} pénètre analement {partenaire}, contre la porte encore verrouillée, rythme qui s'installe, **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
+      {texte:"{prenom} murmure un ordre à {partenaire}, qui s'exécute sans poser de question — l'inconnu du soir se révèle plus direct qu'attendu, **1 minute**.",genre:'Mixte',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, inconnu·e jusqu'au bout de la nuit, amène {partenaire} à la jouissance par la bouche, durée libre.",genre:'Mixte',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} finissent ensemble, sans savoir s'ils se reverront — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+},
+{ id:'pompier_voisine', homme:'h_pompier', femme:'f_voisine', emoji:'🚒🏠', title:'Sauvetage',
+  premise:"Une petite frayeur dans la cuisine, un pompier venu vérifier que tout va bien, et une voisine qui n'a soudain plus si peur du feu.",
+  scenes:{
+    1:[
+      {texte:"{prenom} vérifie une dernière fois qu'il ne reste aucune trace de fumée, torse encore nu, pendant que {partenaire} l'observe sans détour.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} lui prépare un verre pour le remercier, mais reste plantée devant lui bien après qu'il soit vide.",genre:'Femme',pratiques:[],accessoires:['Vin']},
+      {texte:"{prenom} pose sa main sur le torse encore chaud de {partenaire}, prétextant vérifier qu'il n'est pas blessé.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} attire {partenaire} contre lui pour la rassurer — et ne la lâche plus, alors que le danger est déjà passé.",genre:'Homme',pratiques:[],accessoires:[]}
+    ],
+    2:[
+      {texte:"{prenom} s'agenouille dans la cuisine encore fumante, sans un mot — sexe oral, **2 minutes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} la soulève sur le plan de travail et prend soin d'elle à son tour — sexe oral, **90 secondes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} caresse {partenaire} par-dessus le pantalon de l'uniforme encore couvert de suie, pendant **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
+      {texte:"{prenom} guide la main de {partenaire} sous son tablier de cuisine pendant **1 minute**, la casserole encore fumante sur la cuisinière.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
+    ],
+    3:[
+      {texte:"{prenom} verse un peu d'huile apaisante sur les brûlures imaginaires de {partenaire}, prétexte parfait pour continuer plus bas.",genre:'Femme',pratiques:[],accessoires:['Huile de massage']},
+      {texte:"{prenom} bande les yeux de {partenaire} — 'pour évacuer en sécurité', plaisante-t-il — avant de continuer sans elle.",genre:'Homme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} stimule doucement {partenaire} plus bas, du bout des doigts, avec beaucoup de lubrifiant, sur le plan de travail, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
+      {texte:"{prenom} le pousse contre le frigo et prend le contrôle, plus téméraire qu'elle ne l'aurait cru.",genre:'Femme',pratiques:[],accessoires:[]}
+    ],
+    4:[
+      {texte:"{prenom}, sur le plan de travail de la cuisine, pénètre {partenaire} — rythme qui s'accélère, **2 minutes**, l'alarme incendie loin derrière eux.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} prend le dessus, menant le rythme des **2 prochaines minutes**, torse contre torse, plus aucune trace de fumée entre eux.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} pénètre analement {partenaire}, sur le plan de travail, rythme qui s'installe doucement, **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
+      {texte:"{prenom} lui donne un ordre franc, du ton de quelqu'un habitué à gérer l'urgence — {partenaire} obéit sans hésiter, **1 minute**.",genre:'Homme',pratiques:['domination_1'],accessoires:[]}
+    ],
+    5:[
+      {texte:"{prenom}, héros du quartier jusqu'au bout, amène {partenaire} à la jouissance par la bouche, durée libre.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} et {partenaire} finissent sur le plan de travail — pénétration, position au choix, durée libre, jusqu'à la fin.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+    ]
+  }
+}
+];
+
+
+/* ═══════════════════ GÉNÉRATEUR DE MISES EN SCÈNE (Mode Histoire) ═══════════════════
+   Le mode Histoire ne pioche PAS dans GAGES_BASE : chaque gage est une scène générée
+   à partir du rôle de l'acteur, du rôle du/de la partenaire, d'une pratique cochée par
+   le couple et compatible avec le niveau, et — si disponible — d'un accessoire.
+═══════════════════════════════════════════════════ */
+// Catégories de scène, classées par intensité croissante. "actif"/"passif" = IDs pratiques réels du jeu.
+// Une catégorie est jouable dès que l'ACTEUR a la version "actif" (ou l'un des deux si non genré) ET
+// que le/la PARTENAIRE a la version "passif" correspondante — sinon on retombe sur le niveau 1 (générique).
+var STORY_CATEGORIES = [
+  { id:'baisers', minLevel:1, maxLevel:5, actif:null, passif:null, // toujours jouable, pas de pratique requise
+    templates:[
+      "{prenom}, en restant {actorRole}, effleure la joue puis le cou de {partenaire} du bout des lèvres, très lentement, pendant **30 secondes**.",
+      "{prenom} retire UN seul vêtement de {partenaire}, sans un mot en dehors du personnage, puis dépose un baiser à l'endroit découvert.",
+      "{prenom} chuchote à l'oreille de {partenaire}, dans la peau {actorRoleDe}, ce que son personnage attend de cette rencontre.",
+      "{prenom} embrasse {partenaire} en gardant les mains dans le dos pendant **20 secondes** — seule la bouche a le droit de bouger.",
+      "{prenom}, {actorRole} jusqu'au bout des ongles, guide {partenaire} par la main vers un endroit de la pièce et l'y embrasse.",
+      "{prenom} trace une ligne du bout du doigt, du menton jusqu'au décolleté de {partenaire}, en restant dans le personnage.",
+      "{prenom} regarde {partenaire} droit dans les yeux **10 secondes** sans un mot, puis l'embrasse avec toute la conviction de son personnage de {actorRole}.",
+      "{prenom} déboutonne lentement UN vêtement de {partenaire}, un bouton à la fois, sans jamais sortir du rôle.",
+      "{prenom} passe une main dans les cheveux de {partenaire} et l'attire contre lui/elle, en restant {actorRole}.",
+      "{prenom} improvise une réplique qui colle parfaitement à son personnage de {actorRole}, puis scelle la phrase d'un baiser sur {partenaire}."
+    ]},
+  { id:'massage', minLevel:1, maxLevel:3, actif:'massage_actif', passif:'massage_passif',
+    templates:[
+      "{prenom}, en {actorRole}, masse les épaules et la nuque de {partenaire} pendant **1 minute**, sans quitter le personnage.",
+      "{prenom} fait glisser ses mains le long du dos de {partenaire}, lentement, avec tout le savoir-faire de son personnage de {actorRole}."
+    ]},
+  { id:'oral', minLevel:2, maxLevel:5, actif:'oral_actif', passif:'oral_passif',
+    templates:[
+      "{prenom}, dans la peau {actorRoleDe}, descend lentement vers {partenaire} et lui fait un sexe oral pendant **2 minutes** — sans sortir du rôle.",
+      "{prenom} s'agenouille devant {partenaire}, avec toute la conviction de son personnage de {actorRole}, et alterne langue et souffle pendant **90 secondes**.",
+      "{prenom}, toujours en {actorRole}, prend son temps : sexe oral sur {partenaire}, rythme lent puis rapide, **3 minutes**."
+    ]},
+  { id:'masturb', minLevel:2, maxLevel:5, actif:'masturb_actif', passif:'masturb_passif', actifF:'masturb_actif_f', passifF:'masturb_passif_f',
+    templates:[
+      "{prenom}, en {actorRole}, caresse le sexe de {partenaire} lentement pendant **1 minute**, sans jamais sortir du personnage.",
+      "{prenom} guide la main de {partenaire} sur son propre corps, avec toute la conviction de son personnage de {actorRole}, pendant **45 secondes**.",
+      "{prenom}, fidèle à son rôle de {actorRole}, alterne caresses lentes et rapides sur {partenaire} pendant **90 secondes**."
+    ]},
+  { id:'oro_anal', minLevel:3, maxLevel:5, actif:'oro_anal_actif', passif:'oro_anal_passif',
+    templates:[
+      "{prenom}, en {actorRole}, embrasse et stimule {partenaire} de la langue, un peu plus bas que d'habitude, **1 minute**."
+    ]},
+  { id:'anal_doux', minLevel:3, maxLevel:5, actif:'anal_actif_1', passif:'anal_passif_1',
+    templates:[
+      "{prenom}, dans la peau {actorRoleDe}, stimule doucement l'anus de {partenaire} du bout des doigts, avec beaucoup de lubrifiant, **1 minute**.",
+      "{prenom}, en {actorRole}, introduit délicatement un doigt lubrifié en restant très attentif/attentive aux réactions de {partenaire}, **45 secondes**."
+    ]},
+  { id:'fetish', minLevel:3, maxLevel:5, actif:'fetish_actif_1', passif:'fetish_passif_1',
+    templates:[
+      "{prenom}, {actorRole} jusqu'au bout, donne à {partenaire} **10 petites fessées** — juste assez fort pour marquer le jeu, pas plus.",
+      "{prenom} mordille légèrement l'épaule de {partenaire}, en restant dans la peau {actorRoleDe}, avant de l'embrasser pour se faire pardonner."
+    ]},
+  { id:'anal_plus', minLevel:4, maxLevel:5, actif:'anal_actif_2', passif:'anal_passif_2',
+    templates:[
+      "{prenom}, en {actorRole}, pénètre analement {partenaire} lentement — entre doucement, rythme choisi par {partenaire}, **2 minutes**."
+    ]},
+  { id:'domination', minLevel:4, maxLevel:5, actif:'domination_1', passif:'soumission_1',
+    templates:[
+      "{prenom}, dans la peau autoritaire {actorRoleDe}, donne UN ordre simple à {partenaire} — {partenaire} doit l'exécuter en restant dans le personnage.",
+      "{prenom}, dans la peau de son personnage de {actorRole} ce soir, décide de la position pour les **2 prochaines minutes** — {partenaire} suit, sans un mot en dehors du rôle."
+    ]},
+  { id:'penetration', minLevel:4, maxLevel:5, actif:'penetration_h', passif:'penetration_f',
+    templates:[
+      "{prenom}, en {actorRole}, pénètre {partenaire} lentement — entrée douce, rythme qui monte crescendo, **2 minutes**, toujours dans le personnage.",
+      "{prenom} et {partenaire} changent de position au moins une fois, sans sortir de leurs rôles respectifs, pendant **3 minutes** de pénétration."
+    ]}
+];
+// Intégration des accessoires : quand l'accessoire est disponible ET affine au rôle de l'un des deux,
+// remplace la fin de la phrase pour intégrer concrètement l'objet dans la mise en scène.
+var STORY_ACC_SCENE = {
+  'Menottes':      ["{prenom} attache les poignets de {partenaire} avant de continuer — un cliquetis, puis plus rien d'autre à faire que ressentir.", "{prenom} referme les menottes autour des poignets de {partenaire}, en restant {actorRole} jusqu'au bout."],
+  'Bandeau':       ["{prenom} bande les yeux de {partenaire} avant de continuer — dans le noir, chaque geste du personnage de {actorRole} devient plus intense.", "{prenom} noue le bandeau sur les yeux de {partenaire} — plus rien à voir, tout à ressentir."],
+  'Cravate':       ["{prenom} utilise sa cravate pour attacher les mains de {partenaire}, sans jamais sortir du personnage de {actorRole}.", "{prenom} desserre sa cravate, lentement, avant de s'en servir pour attacher {partenaire}."],
+  'Huile de massage':["{prenom} verse un filet d'huile chaude sur {partenaire} avant de continuer — le geste devient plus glissant, plus lent.", "{prenom} chauffe un peu d'huile entre ses mains avant de continuer sur {partenaire}."],
+  'Bougie':        ["{prenom} laisse tomber quelques gouttes de cire tiède près de la zone concernée, juste avant de continuer.", "{prenom} approche la bougie, juste assez près pour que {partenaire} sente la chaleur avant de continuer."],
+  'Plume':         ["{prenom} passe la plume sur la peau de {partenaire} avant de continuer, pour faire durer l'attente.", "{prenom} fait glisser la plume le long du corps de {partenaire}, très lentement, avant de continuer."],
+  'Fouet':         ["{prenom}, en {actorRole}, fait claquer le fouet une fois dans l'air avant de continuer — {partenaire} sait ce qui l'attend.", "{prenom} fait glisser le cuir du fouet sur la peau de {partenaire}, sans frapper, juste avant de continuer."],
+  'Champagne':     ["{prenom} verse une goutte de champagne sur {partenaire} et la boit avant de continuer.", "{prenom} trinque avec {partenaire}, un regard qui en dit long, avant de continuer."],
+  'Fraises':       ["{prenom} croque une fraise puis en pose un morceau sur {partenaire} avant de continuer, gourmand·e.", "{prenom} fait glisser une fraise sur les lèvres de {partenaire} avant de continuer."],
+  'Nutella':       ["{prenom} étale un peu de chocolat sur {partenaire} avant de continuer, et prend son temps pour tout faire disparaître.", "{prenom} trempe un doigt dans le chocolat et le porte aux lèvres de {partenaire} avant de continuer."],
+  'Masque':        ["{prenom} garde son masque — le mystère du personnage de {actorRole} reste entier même dans l'intimité.", "{prenom} ajuste son masque avant de continuer, {actorRole} jusqu'au bout."]
+};
+function storyPratOk(cat, actor, receiver){
+  if(!cat.actif) return true; // catégorie générique (baisers), toujours jouable
+  var actifIds = [cat.actif]; if(cat.actifF) actifIds.push(cat.actifF);
+  var passifIds = [cat.passif]; if(cat.passifF) passifIds.push(cat.passifF);
+  var actorHas = actifIds.some(function(id){ return actor.pratiques.indexOf(id)>=0; }) || passifIds.some(function(id){ return actor.pratiques.indexOf(id)>=0; });
+  var recvHas = passifIds.some(function(id){ return receiver.pratiques.indexOf(id)>=0; }) || actifIds.some(function(id){ return receiver.pratiques.indexOf(id)>=0; });
+  return actorHas && recvHas;
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function randomAction(role){
+  var acts = role.action;
+  if(Array.isArray(acts)) return acts[Math.floor(Math.random()*acts.length)];
+  return acts;
+}
+function deArt(article){
+  if(article.indexOf('le ')===0) return 'du '+article.slice(3);
+  if(article.indexOf("l'")===0) return 'de '+article;
+  return 'de '+article;
+}
+// Concatène un verbe d'action avec le rôle du/de la partenaire, en gérant la contraction "de"+"le X" -> "du X"
+function attachReceiver(action, article){
+  var trimmed = action.replace(/\s+$/,'');
+  if(/\bde$/.test(trimmed) && article.indexOf('le ')===0){
+    return trimmed.slice(0,-2)+'du '+article.slice(3);
+  }
+  return trimmed+' '+article;
+}
+function generateStorySceneGage(level, actorPlayer, receiverPlayer, usedTexts){
+  var actorRole = getRoleData(actorPlayer.role), receiverRole = getRoleData(receiverPlayer.role);
+  if(!actorRole || !receiverRole) return null;
+  var cands = STORY_CATEGORIES.filter(function(c){
+    return level>=c.minLevel && level<=c.maxLevel && storyPratOk(c, actorPlayer, receiverPlayer);
+  });
+  if(!cands.length) cands = STORY_CATEGORIES.filter(function(c){ return c.id==='baisers'; });
+  cands = shuffle(cands);
+  var accAvailable = (G.acc||[]).filter(function(a){ return STORY_ACC_SCENE[a] && ((actorRole.accAffinite||[]).indexOf(a)>=0 || (receiverRole.accAffinite||[]).indexOf(a)>=0); });
+  for(var ci=0; ci<cands.length; ci++){
+    var cat = cands[ci];
+    var tpls = shuffle(cat.templates.slice());
+    for(var ti=0; ti<tpls.length; ti++){
+      var body = tpls[ti].replace(/\{actorRole\}/g, actorRole.label.toLowerCase()).replace(/\{actorRoleDe\}/g, deArt(actorRole.article));
+      // Chance d'intégrer un accessoire disponible et thématique à la place du gabarit standard
+      if(accAvailable.length && Math.random()<0.3){
+        var accChoice = accAvailable[Math.floor(Math.random()*accAvailable.length)];
+        var accVariants = STORY_ACC_SCENE[accChoice];
+        var accLine = Array.isArray(accVariants) ? accVariants[Math.floor(Math.random()*accVariants.length)] : accVariants;
+        body = accLine.replace(/\{actorRole\}/g, actorRole.label.toLowerCase()).replace(/\{actorRoleDe\}/g, deArt(actorRole.article));
+      }
+      var full = body;
+      if(usedTexts.indexOf(full)<0){
+        return {
+          texte: full, niveau: level, genre: actorPlayer.genre==='Homme'?'Homme':(actorPlayer.genre==='Femme'?'Femme':'Mixte'),
+          pratiques: cat.actif ? [cat.actif] : [], accessoires: [], modes:['story'], solo:false
+        };
+      }
+    }
+  }
+  return null;
+}
+function generateStoryFinale(actorPlayer, receiverPlayer, usedTexts, exclusive){
+  var actorRole = getRoleData(actorPlayer.role), receiverRole = getRoleData(receiverPlayer.role);
+  if(!actorRole || !receiverRole) return null;
+  var pool = exclusive ? [
+    "{prenom}, en {actorRole}, amène {partenaire} jusqu'à la jouissance par la bouche, sans sortir du personnage — durée libre.",
+    "{prenom} et {partenaire} terminent leur histoire ensemble, personnage de {actorRole} au premier plan — position au choix, durée libre, jusqu'à la fin."
+  ] : [
+    "{prenom}, en {actorRole}, pénètre {partenaire} pour de bon — le personnage tombe peu à peu, rythme libre, jusqu'à la fin.",
+    "{prenom} et {partenaire} laissent leurs rôles s'effacer petit à petit — pénétration, position au choix, durée libre."
+  ];
+  pool = shuffle(pool);
+  for(var i=0;i<pool.length;i++){
+    var full = pool[i].replace(/\{actorRole\}/g, actorRole.label.toLowerCase()).replace(/\{actorRoleDe\}/g, deArt(actorRole.article));
+    if(usedTexts.indexOf(full)<0) return { texte: full, niveau:5, genre: actorPlayer.genre==='Homme'?'Homme':'Femme', pratiques: exclusive?['finish_corps']:['penetration_h','penetration_f'], accessoires:[], modes:['story'], solo:false };
+  }
+  return null;
+}
+// Épilogue partagé, hors personnage — clôture narrative commune, générée une seule fois
+function generateStoryEpilogue(playerA, playerB){
+  var texts = [
+    "🎭 Épilogue : le personnage tombe pour de bon. {prenom}, dis à {partenaire} une vraie chose que tu as adorée ce soir, puis embrassez-vous comme vous — plus comme vos rôles.",
+    "🎭 Dénouement : improvisez à voix haute, chacun votre tour, la fin de votre histoire — deux phrases chacun — puis laissez-vous aller sans plus aucun rôle à jouer. Durée libre."
+  ];
+  var pick = texts[Math.floor(Math.random()*texts.length)];
+  return { texte: pick, niveau:5, genre:'Mixte', pratiques:[], accessoires:[], modes:['story'], solo:false };
+}
+
 /* ═══════════════════ KÂMASÛTRA ═══════════════════
    SVG illustrations: homme=#3a7fd5, femme=#e87aaa
    Niveau 4 et 5 uniquement
 ═══════════════════════════════════════════════════ */
 const KAMASUTRA = [
+
 {name:"Le Missionnaire",pose:"missionnaire",difficulty:1,niveau:4,
  desc:"Elle est allongée sur le dos, lui au-dessus d'elle, face à face. La position la plus simple : on se regarde et on s'embrasse."},
 {name:"La Levrette",pose:"levrette",difficulty:1,niveau:4,
@@ -3449,6 +3973,7 @@ function markPlayed(texte){
   saveGameHistory();
 }
 var curPlayer = 1;
+var curRolePlayer = 1;
 var timerSecs=0, timerLeft=0, timerRun=false, timerInt=null;
 
 // ── localStorage keys ──
@@ -3462,6 +3987,27 @@ function loadCustom(k){ try{ return JSON.parse(localStorage.getItem(k)||'null');
 var customGages    = loadCustom(KEYS.gages)  || [];
 var gagePrefs      = loadCustom(GPREFS_KEY)  || {};
 var _endRatings = {}; // retours 👍/👎 en cours de saisie sur l'écran de fin de partie
+
+// ── MÉMOIRE IMPLICITE : quand un joueur passe ou change un gage, c'est un signal qu'il ne l'aime pas ──
+// Contrairement aux 👍/👎 (exclusion dure), ceci fait juste apparaître le gage BEAUCOUP MOINS souvent,
+// jamais totalement exclu — et c'est mémorisé par prénom, pour reconnaître un joueur qui revient jouer.
+var GMEM_KEY = 'gmem_v28';
+var gageMemory = loadCustom(GMEM_KEY) || {};
+function saveGageMemory(){ saveCustom(GMEM_KEY, gageMemory); }
+function recordGageSignal(gage, playerName, type){
+  if(!gage || gage._kama || !gage.texte || gage.texte.charAt(0)==='🎓') return;
+  var texte = gage.texte;
+  if(!gageMemory[texte]) gageMemory[texte] = { skips:0, changes:0, niveau:gage.niveau||1, byName:{} };
+  var entry = gageMemory[texte];
+  entry.niveau = gage.niveau||entry.niveau||1;
+  if(type==='skip') entry.skips++; else if(type==='change') entry.changes++;
+  if(playerName){
+    if(!entry.byName[playerName]) entry.byName[playerName] = {skips:0, changes:0};
+    if(type==='skip') entry.byName[playerName].skips++; else if(type==='change') entry.byName[playerName].changes++;
+  }
+  entry.lastSeen = Date.now();
+  saveGageMemory();
+}
 // ── MES GAGES GARANTIS 100% (admin) ──
 var MY_GAGES_KEY = 'myg_v28';
 var myGages = loadCustom(MY_GAGES_KEY) || [];
@@ -3927,7 +4473,7 @@ function liveCloseEditor(){ document.getElementById('live-editor-overlay').style
 
 function selectMode(m) {
   // Premium gate for non-free modes
-  var premiumModes = ['pimente','competition','decouverte','live'];
+  var premiumModes = ['pimente','competition','decouverte','live','story'];
   if(premiumModes.indexOf(m) >= 0 && !isPremium()) {
     G.mode = m;
     G._pendingLevel = null;
@@ -4601,6 +5147,15 @@ function finishSetup(){
   proceedAfterPlayers();
 }
 function proceedAfterPlayers(){
+  if(G.mode==='story' && !G._rolesChosen){
+    curRolePlayer = 1;
+    renderRolesPage();
+    goTo('page-roles');
+    return;
+  }
+  proceedAfterPlayersCore();
+}
+function proceedAfterPlayersCore(){
   var pool = perso100Gages();
   if(G._useCustomGages && pool.length){
     if(G._selectedPersoIds && G._selectedPersoIds.length){
@@ -4617,6 +5172,129 @@ function proceedAfterPlayers(){
   }
   G._selectedCustomGages = [];
   launchGame();
+}
+
+// ══════════════ MODE HISTOIRE : sélection des rôles ══════════════
+function isHeteroCouple(){
+  return G.players.length===2 &&
+    G.players.filter(function(p){return p.genre==='Homme';}).length===1 &&
+    G.players.filter(function(p){return p.genre==='Femme';}).length===1;
+}
+function getPH(){ return G.players.filter(function(p){return p.genre==='Homme';})[0]; }
+function getPF(){ return G.players.filter(function(p){return p.genre==='Femme';})[0]; }
+
+function pickRandomDuo(excludeId){
+  var pool = STORY_DUOS.filter(function(d){ return d.id!==excludeId; });
+  if(!pool.length) pool = STORY_DUOS;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function applyDuo(duo){
+  var pH = getPH(), pF = getPF();
+  if(!pH || !pF || !duo) return;
+  pH.role = duo.homme; pF.role = duo.femme;
+  G._storyDuo = duo.id;
+}
+
+function renderRolesPage(){
+  var box = document.getElementById('roles-content');
+  if(!box) return;
+  var header = document.getElementById('roles-header');
+
+  if(isHeteroCouple()){
+    if(!G._storyDuo || !STORY_DUOS.some(function(d){return d.id===G._storyDuo;})){
+      applyDuo(pickRandomDuo(null));
+    }
+    var duo = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
+    var pH = getPH(), pF = getPF();
+    var rH = getRoleData(duo.homme), rF = getRoleData(duo.femme);
+    if(header) header.textContent = duo.emoji+' '+duo.title;
+    var h = '<p style="text-align:center;color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:16px">'+duo.premise+'</p>';
+    h += '<div style="display:flex;gap:10px;margin-bottom:16px">';
+    h += '<div style="flex:1;background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:14px;text-align:center">'
+      + '<div style="font-size:26px">'+rH.emoji+'</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-top:4px">'+pH.prenom+'</div>'
+      + '<div style="font-size:14px;font-weight:700;margin-top:2px">'+rH.label+'</div>'
+      + '</div>';
+    h += '<div style="flex:1;background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:14px;text-align:center">'
+      + '<div style="font-size:26px">'+rF.emoji+'</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-top:4px">'+pF.prenom+'</div>'
+      + '<div style="font-size:14px;font-weight:700;margin-top:2px">'+rF.label+'</div>'
+      + '</div>';
+    h += '</div>';
+    h += '<button type="button" class="btn ghost sm" style="width:100%" onclick="rerollDuo()">🔀 Proposer une autre histoire</button>';
+    box.innerHTML = h;
+  } else {
+    // Configurations hors couple hétéro (gay, lesbien, trans, trio, solo) : retour au choix individuel par rôle
+    var player = G.players[curRolePlayer-1];
+    if(!player) return;
+    if(header) header.textContent = '🎭 '+player.prenom+' — Joueur '+curRolePlayer+'/'+G.players.length;
+    var options = (ROLES[player.genre] || []).slice();
+    if(player.genre==='Trans') options = ROLES.Homme.concat(ROLES.Femme);
+    var h2 = '<p style="text-align:center;color:var(--muted);font-size:12.5px;margin-bottom:12px">Choisissez discrètement — votre partenaire ne verra pas votre choix.</p>';
+    h2 += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    options.forEach(function(r){
+      var checked = player.role === r.id;
+      h2 += '<div class="role-card'+(checked?' sel':'')+'" onclick="selectRole(\''+r.id+'\')" '
+        + 'style="border:1.5px solid '+(checked?'var(--gold)':'var(--border)')+';border-radius:12px;padding:10px;text-align:center;cursor:pointer;'
+        + (checked?'background:rgba(240,192,96,0.08)':'background:var(--card2)')+'">'
+        + '<div style="font-size:22px">'+r.emoji+'</div>'
+        + '<div style="font-size:12px;margin-top:4px;font-weight:600">'+r.label+'</div>'
+        + '</div>';
+    });
+    h2 += '</div>';
+    box.innerHTML = h2;
+  }
+}
+function rerollDuo(){
+  applyDuo(pickRandomDuo(G._storyDuo));
+  renderRolesPage();
+}
+function selectRole(roleId){
+  var player = G.players[curRolePlayer-1];
+  if(!player) return;
+  player.role = roleId;
+  renderRolesPage();
+}
+function getRoleData(roleId){
+  if(!roleId) return null;
+  var all = ROLES.Homme.concat(ROLES.Femme);
+  for(var i=0;i<all.length;i++){ if(all[i].id===roleId) return all[i]; }
+  return null;
+}
+function rolesBack(){
+  if(isHeteroCouple()){
+    goTo('page-acc');
+    return;
+  }
+  if(curRolePlayer>1){
+    curRolePlayer--;
+    renderRolesPage();
+  } else {
+    goTo('page-acc');
+  }
+}
+function confirmRoles(){
+  var err = document.getElementById('err-roles');
+  if(isHeteroCouple()){
+    if(err) err.style.display='none';
+    G._rolesChosen = true;
+    proceedAfterPlayers();
+    return;
+  }
+  var player = G.players[curRolePlayer-1];
+  if(!player || !player.role){
+    if(err){ err.textContent = 'Choisissez un rôle pour continuer.'; err.style.display='block'; }
+    return;
+  }
+  if(err) err.style.display='none';
+  if(curRolePlayer < G.players.length){
+    curRolePlayer++;
+    renderRolesPage();
+    return;
+  }
+  curRolePlayer = 1;
+  G._rolesChosen = true;
+  proceedAfterPlayers();
 }
 
 function renderCustomGagePage(compat){
@@ -4661,6 +5339,9 @@ function launchGame() {
   var _ea=document.getElementById('err-acc'); if(_ea) _ea.textContent = '';
   G.level=1; G.gageIdx=0; G.scores={}; G.usedKama=[]; G.playedTexts=new Set(); G.progressLog=[]; G._kamaShown=0; G._prevGages=[]; G._recentGages=[]; G._sessionSeenGages=[]; G._lastBonusTitle=null;
   G._pendingBonusCard=null; G._pendingBonusWinner=null; G._bonusChoiceCtx=null;
+  G._rolesChosen=false;
+  G._storyDuo=null;
+  curRolePlayer=1;
   _endRatings = {};
   G.players.forEach(function(p){ G.scores[p.prenom]=0; });
   loadPlayedHistory();
@@ -4705,11 +5386,6 @@ function setupGameUI() {
 }
 
 function el(id){ return document.getElementById(id); }
-function setGameLevelBg(lvl){
-  var bg = document.getElementById('bg-ambient');
-  if(!bg) return;
-  bg.className = 'bg-ambient lvl-' + (lvl||1);
-}
 
 // ── GAME LOGIC ──
 var LVL_MAX_DEFAULT = {1:5,2:4,3:4,4:3,5:99};
@@ -4798,7 +5474,7 @@ function gageOk(g, player, lvl, ignorePrat) {
     // Classique ET pimenté (gages réguliers), 2 joueurs : règle actif/passif stricte
     // — pratique avec complément : joueur doit avoir p ET partenaire doit avoir _comp[p]
     // — pratique sans complément : les deux doivent l'avoir sélectionnée
-    if((G.mode==='classique' || G.mode==='pimente') && !isSoloGame() && G.players.length===2) {
+    if((G.mode==='classique' || G.mode==='pimente' || G.mode==='story') && !isSoloGame() && G.players.length===2) {
       var partner2 = G.players.find(function(p){ return p.prenom!==player.prenom; });
       var spermePrats = ['sperme_gout_1','sperme_gout_2','finish_corps'];
       var isSpermGage = g.pratiques.every(function(p){ return spermePrats.indexOf(p)>=0 || p==='oral_actif' || p==='oral_passif'; }) &&
@@ -4889,38 +5565,55 @@ function buildVariedPool(candidates, maxN, player) {
   var sel=[], rem=sh.slice();
   while(sel.length<maxN && rem.length>0) {
     var lastCat = sel.length ? getPratCat(sel[sel.length-1]) : '';
-    var best=-1, bestScore=-1;
+    // Mémoire implicite : ce joueur a déjà passé/changé certains de ces gages → on les met de côté CETTE manche
+    // avec une probabilité croissante (jamais 100%), pour qu'ils sortent bien moins souvent sans être jamais exclus.
+    var avoided = {};
     rem.forEach(function(g,i){
-      var sc = Math.random()*0.3;
-      // Category variety bonus
-      if(getPratCat(g)!==lastCat) sc+=2;
-      // Boost favoris pondéré par rang : 1er→+1.5, 2e→+1.0, 3e→+0.6
-      var FAV_W=[1.5,1.0,0.6];
-      if(g.pratiques&&g.pratiques.length){
-        var bestFavBoost=0;
-        g.pratiques.forEach(function(p){
-          var _comp=_bCMap[p];
-          if(G.mode==='classique'){
-            var plOk=player.pratiques.indexOf(p)>=0;
-            var p2Ok=partner2?(_comp?partner2.pratiques.indexOf(_comp)>=0:partner2.pratiques.indexOf(p)>=0):true;
-            if(!plOk||!p2Ok) return;
-          }
-          [favs,partnerFavs].forEach(function(flist){
-            [p,_comp].forEach(function(pid){
-              if(!pid) return;
-              var rk=flist.indexOf(pid);
-              if(rk>=0&&rk<3&&FAV_W[rk]>bestFavBoost) bestFavBoost=FAV_W[rk];
+      var mem = gageMemory[g.texte];
+      if(!mem) return;
+      var ownCount = mem.byName[player.prenom] ? (mem.byName[player.prenom].skips + mem.byName[player.prenom].changes) : 0;
+      var otherCount = (mem.skips+mem.changes) - ownCount;
+      var avoidProb = Math.min(ownCount*0.18, 0.75) + Math.min(otherCount*0.05, 0.15);
+      if(avoidProb>0 && Math.random()<avoidProb) avoided[i]=true;
+    });
+    var scoreRound = function(onlyUnavoided){
+      var best=-1, bestScore=-1;
+      rem.forEach(function(g,i){
+        if(onlyUnavoided && avoided[i]) return;
+        var sc = Math.random()*0.3;
+        // Category variety bonus
+        if(getPratCat(g)!==lastCat) sc+=2;
+        // Boost favoris pondéré par rang : 1er→+1.5, 2e→+1.0, 3e→+0.6
+        var FAV_W=[1.5,1.0,0.6];
+        if(g.pratiques&&g.pratiques.length){
+          var bestFavBoost=0;
+          g.pratiques.forEach(function(p){
+            var _comp=_bCMap[p];
+            if(G.mode==='classique'||G.mode==='story'){
+              var plOk=player.pratiques.indexOf(p)>=0;
+              var p2Ok=partner2?(_comp?partner2.pratiques.indexOf(_comp)>=0:partner2.pratiques.indexOf(p)>=0):true;
+              if(!plOk||!p2Ok) return;
+            }
+            [favs,partnerFavs].forEach(function(flist){
+              [p,_comp].forEach(function(pid){
+                if(!pid) return;
+                var rk=flist.indexOf(pid);
+                if(rk>=0&&rk<3&&FAV_W[rk]>bestFavBoost) bestFavBoost=FAV_W[rk];
+              });
             });
           });
-        });
-        if(bestFavBoost>0) sc+=bestFavBoost;
-      }
-      // Cooldown anti-répétition : malus si parmi les 8 derniers gages joués
-      if(G._recentGages&&G._recentGages.indexOf(g.texte)>=0) sc-=3;
-      // Already-played malus — strong push to avoid repeats
-      if(G.playedTexts.has(g.texte)) sc-=4;
-      if(sc>bestScore){bestScore=sc;best=i;}
-    });
+          if(bestFavBoost>0) sc+=bestFavBoost;
+        }
+        // Cooldown anti-répétition : malus si parmi les 8 derniers gages joués
+        if(G._recentGages&&G._recentGages.indexOf(g.texte)>=0) sc-=3;
+        // Already-played malus — strong push to avoid repeats
+        if(G.playedTexts.has(g.texte)) sc-=4;
+        if(sc>bestScore){bestScore=sc;best=i;}
+      });
+      return best;
+    };
+    var best = scoreRound(true);
+    if(best<0) best = scoreRound(false); // filet de sécurité : si tout a été écarté par le hasard, on retente sans le filtre mémoire
     if(best>=0){sel.push(rem[best]);rem.splice(best,1);}
     else break;
   }
@@ -4950,7 +5643,8 @@ function allGages() {
 }
 
 
-function pickFinale(player, usedKamaArr, all5) {
+function pickFinale(player, usedKamaArr, all5, excludeTexts) {
+  excludeTexts = excludeTexts || [];
   // If femme has finish/sperme checked → finale = masturb or oral only, no pénétration
   var spermePrats = ['sperme_gout_1','sperme_gout_2','finish_corps'];
   var femmeFinish = player.genre==='Femme' &&
@@ -4969,7 +5663,7 @@ function pickFinale(player, usedKamaArr, all5) {
   }
   if(hasPen){
     var penG=shuffle(all5.filter(function(g){
-      return !g.solo&&gageOk(g,player,5)&&g.pratiques&&
+      return !g.solo&&excludeTexts.indexOf(g.texte)<0&&gageOk(g,player,5)&&g.pratiques&&
         (g.pratiques.indexOf('penetration_h')>=0||g.pratiques.indexOf('penetration_f')>=0);
     }));
     if(penG.length) cands.push({type:'gage',data:penG[0]});
@@ -4978,12 +5672,17 @@ function pickFinale(player, usedKamaArr, all5) {
     // Femme finish: prefer oral/masturb finale
     var fallback = femmeFinish
       ? shuffle(all5.filter(function(g){
-          return !g.solo&&gageOk(g,player,5)&&g.pratiques&&g.pratiques.some(function(p){
+          return !g.solo&&excludeTexts.indexOf(g.texte)<0&&gageOk(g,player,5)&&g.pratiques&&g.pratiques.some(function(p){
             return p.indexOf('oral')===0||p.indexOf('masturb')===0;
           });
         }))
-      : shuffle(all5.filter(function(g){return !g.solo&&gageOk(g,player,5);}));
+      : shuffle(all5.filter(function(g){return !g.solo&&excludeTexts.indexOf(g.texte)<0&&gageOk(g,player,5);}));
     if(fallback.length) return {type:'gage',data:fallback[0]};
+    // Filet de sécurité : si l'exclusion a tout vidé, retenter sans exclusion plutôt que de renvoyer null
+    if(excludeTexts.length){
+      var fallback2 = shuffle(all5.filter(function(g){return !g.solo&&gageOk(g,player,5);}));
+      if(fallback2.length) return {type:'gage',data:fallback2[0]};
+    }
     return null;
   }
   return cands[Math.floor(Math.random()*cands.length)];
@@ -5213,17 +5912,191 @@ function getCoupleConfig() {
   return 'hetero';
 }
 
+function duoSceneCompatible(scene, pH, pF){
+  var union = pH.pratiques.concat(pF.pratiques);
+  if(scene.pratiques && scene.pratiques.length){
+    if(!scene.pratiques.every(function(p){ return union.indexOf(p)>=0; })) return false;
+  }
+  if(scene.accessoires && scene.accessoires.length){
+    if(!scene.accessoires.every(function(a){ return (G.acc||[]).indexOf(a)>=0; })) return false;
+  }
+  return true;
+}
+function duoActorName(scene, pH, pF){
+  if(scene.genre==='Homme') return pH.prenom;
+  if(scene.genre==='Femme') return pF.prenom;
+  return Math.random()<0.5 ? pH.prenom : pF.prenom;
+}
+function buildDuoLevel(duo, level, usedTexts, pH, pF){
+  var cands = shuffle((duo.scenes[level]||[]).filter(function(s){
+    return duoSceneCompatible(s,pH,pF) && usedTexts.indexOf(s.texte)<0;
+  }));
+  cands.forEach(function(s){ usedTexts.push(s.texte); });
+  return cands.map(function(s){
+    return Object.assign({}, s, {niveau:level, _p:duoActorName(s,pH,pF), _ch:false, _kama:false, modes:['story']});
+  });
+}
+function buildDuoChangePool(duo, level, usedTexts, pH, pF){
+  var alt = {}; alt[pH.prenom]=[]; alt[pF.prenom]=[];
+  // 1) Scènes compatibles de ce niveau, pas encore utilisées
+  shuffle((duo.scenes[level]||[]).filter(function(s){ return duoSceneCompatible(s,pH,pF) && usedTexts.indexOf(s.texte)<0; })).forEach(function(s){
+    var name = duoActorName(s,pH,pF);
+    usedTexts.push(s.texte);
+    alt[name].push(Object.assign({}, s, {niveau:level,_p:name,_ch:false,_kama:false,modes:['story']}));
+  });
+  // 2) Sinon, complète avec des scènes d'autres niveaux du MÊME duo (garde la cohérence de l'histoire)
+  [1,2,3,4].forEach(function(otherLvl){
+    if(otherLvl===level) return;
+    (duo.scenes[otherLvl]||[]).filter(function(s){ return duoSceneCompatible(s,pH,pF) && usedTexts.indexOf(s.texte)<0; }).forEach(function(s){
+      if(alt[pH.prenom].length + alt[pF.prenom].length >= 6) return;
+      var name = duoActorName(s,pH,pF);
+      usedTexts.push(s.texte);
+      alt[name].push(Object.assign({}, s, {niveau:level,_p:name,_ch:false,_kama:false,modes:['story']}));
+    });
+  });
+  // 3) Filet ultime : générateur générique par rôle (reste dans l'univers Histoire, jamais les gages classiques)
+  [pH,pF].forEach(function(player){
+    if(!alt[player.prenom].length){
+      var other=(player===pH)?pF:pH;
+      var g = generateStorySceneGage(level, player, other, usedTexts);
+      if(g){ usedTexts.push(g.texte); alt[player.prenom].push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); }
+    }
+  });
+  return alt;
+}
+
+function buildStoryGame(){
+  var pH = G.players.filter(function(p){return p.genre==='Homme';})[0] || G.players[0];
+  var pF = G.players.filter(function(p){return p.genre==='Femme';})[0] || G.players[1] || G.players[0];
+  G.changePool = {};
+  var duo = G._storyDuo ? STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0] : null;
+
+  if(duo){
+    // ── Histoire sur-mesure : on pioche exclusivement dans les scènes écrites pour ce duo précis ──
+    var usedTextsAll = [];
+    [1,2,3,4].forEach(function(lvl){
+      G.gagesByLevel[lvl] = buildDuoLevel(duo, lvl, usedTextsAll, pH, pF);
+      // Filet de sécurité : si aucune scène du duo n'est jouable à ce niveau (peu de pratiques cochées),
+      // on complète avec le générateur générique plutôt que de laisser le niveau vide.
+      if(!G.gagesByLevel[lvl].length){
+        var count = Math.max(2, Math.min(LVL_MAX[lvl]||4, 4));
+        for(var i=0;i<count;i++){
+          var actor = (i%2===0) ? pH : pF;
+          var receiver = (actor===pH) ? pF : pH;
+          var g = generateStorySceneGage(lvl, actor, receiver, usedTextsAll);
+          if(g){ usedTextsAll.push(g.texte); G.gagesByLevel[lvl].push(Object.assign({},g,{_p:actor.prenom,_ch:false,_kama:false})); }
+        }
+      }
+    });
+    var pool5 = buildDuoLevel(duo, 5, usedTextsAll, pH, pF);
+    if(!pool5.length){
+      var gsafe = generateStorySceneGage(3, pH, pF, usedTextsAll);
+      if(gsafe){ usedTextsAll.push(gsafe.texte); pool5.push(Object.assign({},gsafe,{niveau:5,_p:pH.prenom,_ch:false,_kama:false})); }
+    }
+    var epi = generateStoryEpilogue(pH, pF);
+    pool5.push(Object.assign({},epi,{_p:pH.prenom,_ch:false,_kama:false}));
+    G.gagesByLevel[5] = pool5;
+    // Une fois TOUT le contenu principal posé (niveaux 1 à 5), on construit les pools de
+    // remplacement ("Changer") — sinon buildDuoChangePool consommerait par avance des
+    // scènes destinées aux niveaux suivants avant même qu'ils ne soient construits.
+    [1,2,3,4,5].forEach(function(lvl){
+      G.changePool[lvl] = buildDuoChangePool(duo, lvl, usedTextsAll, pH, pF);
+    });
+  } else {
+  [1,2,3,4].forEach(function(lvl){
+    var maxN = LVL_MAX[lvl] || 5;
+    var count = Math.max(3, Math.min(maxN, 6));
+    var pool = [];
+    var levelUsedTexts = []; // dédoublonnage limité à CE niveau — évite d'épuiser les petites banques de contenu sur toute la partie
+    for(var i=0;i<count;i++){
+      var actor = (i%2===0) ? pH : pF;
+      var receiver = (actor===pH) ? pF : pH;
+      var g = generateStorySceneGage(lvl, actor, receiver, levelUsedTexts);
+      if(g){ levelUsedTexts.push(g.texte); pool.push(Object.assign({},g,{_p:actor.prenom,_ch:false,_kama:false})); }
+    }
+    G.gagesByLevel[lvl] = pool;
+    // Pool de remplacement ("Changer") pré-généré — jamais de repli vers les gages classiques en mode Histoire
+    G.changePool[lvl] = {};
+    [pH,pF].forEach(function(player){
+      var alt = [];
+      for(var k=0;k<4;k++){
+        var other = (player===pH)?pF:pH;
+        var g2 = generateStorySceneGage(lvl, player, other, levelUsedTexts);
+        if(g2){ levelUsedTexts.push(g2.texte); alt.push(Object.assign({},g2,{_p:player.prenom,_ch:false,_kama:false})); }
+      }
+      G.changePool[lvl][player.prenom] = alt;
+    });
+  });
+
+  // Niveau 5 : même arbre de décision que le reste du jeu (finish prioritaire, sinon pénétration partagée, sinon 2 scènes séparées)
+  var pool5 = [];
+  var usedTexts5 = [];
+  var hasFinish = pF.pratiques.indexOf('sperme_gout_1')>=0 || pF.pratiques.indexOf('sperme_gout_2')>=0 || pF.pratiques.indexOf('finish_corps')>=0;
+  var allHavePenKama = G.players.every(function(p){ return p.pratiques.indexOf('penetration_h')>=0||p.pratiques.indexOf('penetration_f')>=0||p.pratiques.indexOf('kamasutra')>=0; });
+  if(hasFinish){
+    var g1 = generateStorySceneGage(4, pH, pF, usedTexts5);
+    if(g1){ usedTexts5.push(g1.texte); pool5.push(Object.assign({},g1,{niveau:5,_p:pH.prenom,_ch:false,_kama:false})); }
+    var g2 = generateStoryFinale(pF, pH, usedTexts5, true);
+    if(g2){ usedTexts5.push(g2.texte); pool5.push(Object.assign({},g2,{_p:pF.prenom,_ch:false,_kama:false})); }
+  } else if(allHavePenKama){
+    var g3 = generateStoryFinale(pH, pF, usedTexts5, false);
+    if(g3){ usedTexts5.push(g3.texte); pool5.push(Object.assign({},g3,{_p:pH.prenom,_ch:false,_kama:false})); }
+  } else {
+    G.players.forEach(function(player){
+      var other = G.players.filter(function(p){return p!==player;})[0]||player;
+      var g = generateStorySceneGage(4, player, other, usedTexts5);
+      if(g){ usedTexts5.push(g.texte); pool5.push(Object.assign({},g,{niveau:5,_p:player.prenom,_ch:false,_kama:false})); }
+    });
+  }
+  if(!pool5.length){
+    var gsafe = generateStorySceneGage(3, pH, pF, usedTexts5);
+    if(gsafe){ usedTexts5.push(gsafe.texte); pool5.push(Object.assign({},gsafe,{niveau:5,_p:pH.prenom,_ch:false,_kama:false})); }
+  }
+  var epi = generateStoryEpilogue(pH, pF);
+  pool5.push(Object.assign({},epi,{_p:pH.prenom,_ch:false,_kama:false}));
+  G.gagesByLevel[5] = pool5;
+  G.changePool[5] = {};
+  [pH,pF].forEach(function(player){
+    var alt = [];
+    var other = (player===pH)?pF:pH;
+    for(var k=0;k<2;k++){
+      var g4 = generateStorySceneGage(4, player, other, usedTexts5);
+      if(g4){ usedTexts5.push(g4.texte); alt.push(Object.assign({},g4,{niveau:5,_p:player.prenom,_ch:false,_kama:false})); }
+    }
+    G.changePool[5][player.prenom] = alt;
+  });
+  }
+
+  // Injection des gages 100% perso sélectionnés, comme dans les autres modes
+  var _sel = G._selectedCustomGages || [];
+  if(_sel.length){
+    for(var mi=0; mi<_sel.length; mi++){
+      var mg=_sel[mi]; var lv=mg.niveau||1; if(lv<1||lv>5) lv=1;
+      if(!G.gagesByLevel[lv]) G.gagesByLevel[lv]=[];
+      var ap=G.players[mi%G.players.length]||G.players[0];
+      var arr=G.gagesByLevel[lv]; var pos=Math.floor(Math.random()*(arr.length+1));
+      arr.splice(pos,0,Object.assign({},mg,{_p:ap?ap.prenom:'',_ch:false,_kama:false}));
+    }
+  }
+}
+
 function prepareGages() {
   G.gagesByLevel={};G.changePool={};
+  if(G.mode==='story' && !isSoloGame() && G.players.length>=2){
+    buildStoryGame();
+    return;
+  }
   var all=allGages();
   for(var lvl=1;lvl<=4;lvl++) {
     var pool=[];
     var maxN=LVL_MAX[lvl];
+    var levelUsedTexts={}; // évite qu'un même texte de gage soit tiré pour 2 joueurs différents dans ce niveau
     G.players.forEach(function(player){
       // Exclude guide gages from normal pool — they are injected separately below
       var discFilter=DISC_PRATS[lvl];
       var cands=all.filter(function(g){
         if(g.niveau!==lvl) return false;
+        if(levelUsedTexts[g.texte]) return false;
         if(!gageOk(g,player,lvl)) return false;
         if(g.texte&&g.texte.charAt(0)==='🎓') return false;
         // Discovery mode: only allow pratiques unlocked at this level
@@ -5236,7 +6109,7 @@ function prepareGages() {
         return true;
       });
       var norm=buildVariedPool(cands,maxN,player);
-      norm.forEach(function(g){ pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
+      norm.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
       // Max 1 kâmasûtra per party at niv4 (any mode)
       var kamaInPool = pool.filter(function(g){return g._kama;}).length;
       if(lvl===4 && player.pratiques.indexOf('kamasutra')>=0 && kamaInPool<1) {
@@ -5252,7 +6125,7 @@ function prepareGages() {
           var normTexts = norm.map(function(g){ return g.texte; });
           var _cpFilter = function(g){
             if(g.solo || g._kama) return false;
-            if(g.niveau !== lvl || normTexts.indexOf(g.texte) >= 0) return false;
+            if(g.niveau !== lvl || normTexts.indexOf(g.texte) >= 0 || levelUsedTexts[g.texte]) return false;
             if(g.genre !== 'Mixte' && g.genre !== player.genre) return false;
             if(g.accessoires && g.accessoires.length > 0) {
               if(!g.accessoires.every(function(a){ return G.acc.indexOf(a) >= 0; })) return false;
@@ -5288,7 +6161,7 @@ function prepareGages() {
             return !g.pratiques||!g.pratiques.some(function(p){ return _allFavs.indexOf(p)>=0; });
           }));
           var cp = _cpFav.concat(_cpOther).slice(0, 1);
-          cp.forEach(function(g){ pool.push(Object.assign({}, g, {_p:player.prenom, _ch:false, _kama:false})); });
+          cp.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({}, g, {_p:player.prenom, _ch:false, _kama:false})); });
         }
       }
       var normT=new Set(norm.map(function(g){return g.texte;}));
@@ -5388,16 +6261,20 @@ function prepareGages() {
       pushFinale(hommePlayer, picked5, pool5);
     } else {
       // CAS B2 — 2 gages, un par joueur, selon leurs pratiques sélectionnées (couvre aussi couples non hétéro / trans / trio)
+      var usedFinaleTexts = [];
       G.players.forEach(function(player){
-        var picked=pickFinale(player, G.usedKama, all5);
+        var picked=pickFinale(player, G.usedKama, all5, usedFinaleTexts);
+        if(picked && picked.type==='gage') usedFinaleTexts.push(picked.data.texte);
         pushFinale(player, picked, pool5);
       });
     }
 
     // Filet de sécurité : le niveau 5 ne doit jamais rester vide
     if(!pool5.length){
+      var usedFinaleTexts2 = [];
       G.players.forEach(function(player){
-        var picked=pickFinale(player, G.usedKama, all5);
+        var picked=pickFinale(player, G.usedKama, all5, usedFinaleTexts2);
+        if(picked && picked.type==='gage') usedFinaleTexts2.push(picked.data.texte);
         pushFinale(player, picked, pool5);
       });
     }
@@ -5473,7 +6350,6 @@ function displayGage() {
   var partner=G.players.filter(function(p){return p.prenom!==player.prenom;})[0]||player;
   var lvlNames=['','Sensuel','Chaleur','Brûlant','Intense','Finish'];
   var levelBadge=el('g-level');
-  setGameLevelBg(G.level);
   if(G.mode==='brise_glace'){
     levelBadge.className='level-badge lvl-'+G.level;
     levelBadge.textContent='🧊 Brise-glace';
@@ -5541,11 +6417,62 @@ function displayGage() {
   updateScores();
 }
 
+function getRoleHF(){
+  var pH = G.players.filter(function(p){return p.genre==='Homme';})[0];
+  var pF = G.players.filter(function(p){return p.genre==='Femme';})[0];
+  return { pH:pH, pF:pF, rH:pH?getRoleData(pH.role):null, rF:pF?getRoleData(pF.role):null };
+}
+function storyChapterIntro(level){
+  var hf = getRoleHF();
+  var parts = [];
+  if(hf.rH) parts.push((hf.pH.prenom||'Il')+', '+hf.rH.article+', '+hf.rH.ouverture+'.');
+  if(hf.rF) parts.push((hf.pF.prenom||'Elle')+', '+hf.rF.article+', '+hf.rF.ouverture+'.');
+  return (STORY_LEVEL_INTRO[level]||'') + (parts.length ? ' '+parts.join(' ') : '');
+}
+function storyMidReminder(){
+  var hf = getRoleHF();
+  if(!hf.rH || !hf.rF) return '';
+  return cap(hf.rH.article)+' et '+hf.rF.article+', toujours dans leurs personnages.';
+}
+var STORY_ACC_FLAVOR = {
+  'Menottes':"Un cliquetis métallique résonne dans la pièce.",
+  'Bandeau':"Le noir total décuple chaque sensation.",
+  'Masque':"Le mystère reste entier, même dans l'intimité.",
+  'Huile de massage':"L'odeur chaude de l'huile flotte dans l'air.",
+  'Bougie':"La flamme vacille, projetant des ombres sur les corps.",
+  'Cravate':"Le tissu glisse, encore noué au col.",
+  'Fouet':"Le cuir claque, un frisson parcourt la pièce.",
+  'Plume':"La plume danse, légère, sur la peau.",
+  'Champagne':"Les bulles pétillent, presque autant que le regard.",
+  'Vin':"Le vin colore les lèvres d'un rouge profond.",
+  'Chantilly':"La chantilly fond doucement sur la peau.",
+  'Nutella':"Le chocolat glisse, gourmand, sur le corps.",
+  'Fraises':"Le fruit rouge attend d'être croqué... ou léché."
+};
+function roleFlavorLine(gage, actorPlayer, receiverPlayer){
+  var actorRole = getRoleData(actorPlayer.role), receiverRole = getRoleData(receiverPlayer.role);
+  if(!actorRole || !receiverRole) return '';
+  var line = actorRole.label+' '+randomAction(actorRole)+' '+receiverRole.label.toLowerCase()+'.';
+  if(gage.accessoires && gage.accessoires.length){
+    var matchAcc = gage.accessoires.filter(function(a){
+      return (actorRole.accAffinite||[]).indexOf(a)>=0 || (receiverRole.accAffinite||[]).indexOf(a)>=0;
+    });
+    if(matchAcc.length && STORY_ACC_FLAVOR[matchAcc[0]]) line += ' '+STORY_ACC_FLAVOR[matchAcc[0]];
+  }
+  return line;
+}
+
 function renderGageCard(gage, player, partner) {
   var pColor = player.genre==='Homme' ? 'var(--blue)' : 'var(--rose)';
+  var isStory = G.mode==='story';
+  var hf = isStory ? getRoleHF() : null;
+  var roleHLabel = isStory && hf.rH ? hf.rH.label : (isStory && hf.pH ? hf.pH.prenom : '');
+  var roleFLabel = isStory && hf.rF ? hf.rF.label : (isStory && hf.pF ? hf.pF.prenom : '');
   var txt = gageText(gage)
     .replace(/{prenom}/g, '<strong style="color:'+pColor+'">'+player.prenom+'</strong> ')
     .replace(/{partenaire}/g, '<strong style="color:var(--gold)">'+partner.prenom+'</strong>')
+    .replace(/{role_h}/g, '<strong style="color:var(--blue)">'+roleHLabel+'</strong>')
+    .replace(/{role_f}/g, '<strong style="color:var(--rose)">'+roleFLabel+'</strong>')
     .replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:var(--gold)">$1</strong>');
   var cls = 'gage-card';
   if(gage._ch) cls += ' challenge';
@@ -5554,8 +6481,18 @@ function renderGageCard(gage, player, partner) {
   var acc = gage.accessoires && gage.accessoires.length
     ? '<div class="gage-acc">\uD83C\uDFAD '+gage.accessoires.map(accText).join(', ')+'</div>' : '';
   var favActive = isGageFav(gage.texte||'');
+  var storyHTML = '';
+  if(isStory && hf.rH && hf.rF){
+    var pool = G.gagesByLevel[G.level]||[];
+    var midIdx = pool.length>2 ? Math.floor(pool.length/2) : -1; // pas de rappel milieu si le niveau est trop court pour que ça ait un sens
+    if(G.gageIdx===0){
+      storyHTML = '<p style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:8px;line-height:1.5">'+storyChapterIntro(G.level)+'</p>';
+    } else if(G.gageIdx===midIdx){
+      storyHTML = '<p style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:8px;line-height:1.5">'+storyMidReminder()+'</p>';
+    }
+  }
   el('g-card').innerHTML = '<div class="'+cls+'" style="position:relative" data-gage-text="">'
-    +'<p class="gage-text-body">'+txt+'</p>'+acc
+    +storyHTML+'<p class="gage-text-body">'+txt+'</p>'+acc
     +'</div>';
   el('g-card').querySelector('[data-gage-text]').dataset.gageText = gage.texte||'';
   requestAnimationFrame(function(){ el('g-card').classList.add('swipe-in-left'); setTimeout(function(){ if(el('g-card')) el('g-card').classList.remove('swipe-in-left'); },300); });
@@ -5779,10 +6716,13 @@ function nextGage(skipSound){
   displayGage();
 }
 function skipGage(){
+  var pool0=G.gagesByLevel[G.level]||[];
+  var curSkip = pool0[G.gageIdx];
   if(G.mode==='competition'){
     var pool=G.gagesByLevel[G.level]||[];
     if(pool.length){var gage=pool[G.gageIdx];var p=G.players.filter(function(x){return x.prenom===gage._p;})[0]||G.players[0];G.scores[p.prenom]=Math.max(0,(G.scores[p.prenom]||0)-3);}
   }
+  if(curSkip) recordGageSignal(curSkip, curSkip._p, 'skip');
   soundGagePass();
   stopTimer(); G.gageIdx++; displayGage();
 }
@@ -5810,6 +6750,7 @@ function changeGage(){
   soundCardChange();
   var cur=pool[G.gageIdx];
   var player=G.players.filter(function(p){return p.prenom===cur._p;})[0]||G.players[0];
+  recordGageSignal(cur, cur._p, 'change');
   // Competition: -1 point for changing
   if(G.mode==='competition'&&player){G.scores[player.prenom]=Math.max(0,(G.scores[player.prenom]||0)-1);updateScores();}
   // Get or replenish change pool
@@ -6469,6 +7410,7 @@ function adminTab(tab, btn) {
   else if(tab==='pratiques') { cnt.innerHTML = renderAdminPrat(); }
   else if(tab==='accessoires') { cnt.innerHTML = renderAdminAcc(); }
   else if(tab==='bonus') { cnt.innerHTML = renderAdminBonus(); }
+  else if(tab==='memoire') { cnt.innerHTML = renderAdminMemoire(); }
 }
 
 function renderAdminGages() {
@@ -6988,6 +7930,114 @@ function saveBonus(){
   showFavToast('✓ Carte bonus enregistrée');
 }
 
+// ══════════════ ADMIN — MÉMOIRE DES PARTIES (gages moins aimés) ══════════════
+function renderAdminMemoire(){
+  var texts = Object.keys(gageMemory);
+  var totalEvents = texts.reduce(function(s,t){ return s + gageMemory[t].skips + gageMemory[t].changes; }, 0);
+  var dislikedCount = Object.keys(gagePrefs).filter(function(t){ return gagePrefs[t]===-1; }).length;
+
+  var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:10px">Chaque fois qu\'un joueur passe ou change un gage, c\'est mémorisé ici et ce gage réapparaît ensuite bien moins souvent pour lui (jamais totalement exclu). Cette page t\'aide à repérer les gages à revoir ou retirer.</p>';
+
+  html += '<div style="display:flex;gap:8px;margin-bottom:14px">'
+    + '<div style="flex:1;background:var(--card2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">'+texts.length+'</div><div style="font-size:10px;color:var(--muted)">gages avec signal</div></div>'
+    + '<div style="flex:1;background:var(--card2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">'+totalEvents+'</div><div style="font-size:10px;color:var(--muted)">passages / changements</div></div>'
+    + '<div style="flex:1;background:var(--card2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">'+dislikedCount+'</div><div style="font-size:10px;color:var(--muted)">👎 explicites (fin de partie)</div></div>'
+    + '</div>';
+
+  // ── Classement combiné : 👎 explicites + signaux implicites (passer/changer) ──
+  var rows = texts.map(function(t){
+    var m = gageMemory[t];
+    return { texte:t, niveau:m.niveau||null, skips:m.skips, changes:m.changes, total:m.skips+m.changes, disliked: gagePrefs[t]===-1 };
+  });
+  Object.keys(gagePrefs).forEach(function(t){
+    if(gagePrefs[t]===-1 && !gageMemory[t]) rows.push({texte:t, niveau:null, skips:0, changes:0, total:0, disliked:true});
+  });
+  rows.sort(function(a,b){
+    if(a.disliked!==b.disliked) return a.disliked ? -1 : 1;
+    return b.total - a.total;
+  });
+
+  html += '<h3 style="font-size:13px;color:var(--gold);margin:14px 0 8px">📉 Gages les moins aimés</h3>';
+  if(!rows.length){
+    html += '<p style="font-size:12px;color:var(--muted)">Aucune donnée pour l\'instant — joue quelques parties pour voir apparaître des statistiques ici.</p>';
+  } else {
+    var shown = rows.slice(0,40);
+    html += '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">';
+    shown.forEach(function(r,i){
+      var preview = r.texte.replace(/\{prenom\}/g,'X').replace(/\{partenaire\}/g,'Y').replace(/\*\*([^*]+)\*\*/g,'$1');
+      if(preview.length>85) preview = preview.slice(0,85)+'…';
+      html += '<div style="padding:9px 12px;'+(i?'border-top:1px solid var(--border)':'')+';cursor:pointer" onclick="memGoToGage(\''+encodeURIComponent(r.texte)+'\')">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        + '<span style="font-size:12.5px;flex:1">'+(r.disliked?'👎 ':'')+preview+'</span>'
+        + '<span style="font-size:10px;color:var(--muted);white-space:nowrap">'+(r.niveau?('Niv.'+r.niveau+' · '):'')+'⏭'+r.skips+' 🔀'+r.changes+'</span>'
+        + '</div></div>';
+    });
+    html += '</div>';
+    if(rows.length>40) html += '<p style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(rows.length-40)+' autres gages avec un signal (les plus significatifs sont affichés en premier)</p>';
+  }
+
+  // ── Par prénom (reconnaît les joueurs qui reviennent) ──
+  var byName = {};
+  texts.forEach(function(t){
+    var m = gageMemory[t];
+    Object.keys(m.byName).forEach(function(name){
+      if(!byName[name]) byName[name] = { total:0, topGages:[] };
+      var c = m.byName[name].skips + m.byName[name].changes;
+      byName[name].total += c;
+      byName[name].topGages.push({texte:t, count:c});
+    });
+  });
+  var names = Object.keys(byName).sort(function(a,b){ return byName[b].total - byName[a].total; });
+  html += '<h3 style="font-size:13px;color:var(--gold);margin:18px 0 8px">👤 Par prénom</h3>';
+  if(!names.length){
+    html += '<p style="font-size:12px;color:var(--muted)">Aucun signal individuel pour l\'instant.</p>';
+  } else {
+    names.forEach(function(name){
+      var top = byName[name].topGages.sort(function(a,b){return b.count-a.count;}).slice(0,3);
+      html += '<div class="admin-list-item"><strong>'+name+'</strong> — '+byName[name].total+' signaux au total'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:4px">Le plus évité : '
+        + top.map(function(t){ return '« '+t.texte.replace(/\{prenom\}/g,'').replace(/\{partenaire\}/g,'').slice(0,45).trim()+'… » ('+t.count+')'; }).join(', ')
+        + '</div></div>';
+    });
+  }
+
+  // ── Par profil couple sauvegardé ──
+  var profiles = loadProfiles();
+  if(profiles.length){
+    html += '<h3 style="font-size:13px;color:var(--gold);margin:18px 0 8px">💑 Par profil couple sauvegardé</h3>';
+    profiles.forEach(function(p){
+      var prenoms = (p.players||[]).map(function(pl){return pl.prenom;});
+      var totalP = prenoms.reduce(function(s,n){ return s + (byName[n]?byName[n].total:0); }, 0);
+      html += '<div class="admin-list-item"><strong>'+p.name+'</strong> <span style="font-size:11px;color:var(--muted)">('+prenoms.join(', ')+')</span> — '+totalP+' signaux cumulés sur leurs parties</div>';
+    });
+  }
+
+  html += '<button class="btn ghost sm" style="width:100%;margin-top:16px" onclick="resetGageMemory()">↺ Réinitialiser toute la mémoire</button>';
+  return html;
+}
+
+function memGoToGage(encodedTexte){
+  var texte = decodeURIComponent(encodedTexte);
+  adminTab('gages', document.getElementById('atab-gages-nav'));
+  var baseIdx=-1;
+  for(var i=0;i<GAGES_BASE.length;i++){ if(GAGES_BASE[i].texte===texte){ baseIdx=i; break; } }
+  if(baseIdx>=0){ editBaseGage(baseIdx); return; }
+  var custIdx=-1;
+  for(var j=0;j<customGages.length;j++){ if(customGages[j].texte===texte){ custIdx=j; break; } }
+  if(custIdx>=0){ editCustomGage(custIdx); return; }
+  // Filet de sécurité : recherche par mot-clé si le texte exact n'est plus trouvé (gage modifié entre-temps)
+  switchGageTab('list', document.getElementById('atab-list'));
+  var kw = document.getElementById('s-kw');
+  if(kw){ kw.value = texte.replace(/\{[^}]+\}/g,'').replace(/\*\*/g,'').slice(0,30); filterGages(); }
+}
+
+function resetGageMemory(){
+  if(!confirm('Effacer toute la mémoire des gages passés/changés ? Les 👍/👎 explicites de fin de partie ne sont pas touchés.')) return;
+  gageMemory = {};
+  saveGageMemory();
+  adminTab('memoire', document.getElementById('atab-mem-nav'));
+}
+
 
 // ── SWIPE MOBILE ──
 (function(){
@@ -7314,7 +8364,7 @@ function openBonusChoicePicker(winnerName, toLvl){
   var targetPlayer = G.players.filter(function(p){return p.prenom===target;})[0];
   if(!targetPlayer) return false;
   var pool = shuffle(allGages().filter(function(g){
-    return !g.solo && gageOk(g, targetPlayer, slot.lvl) && g.texte !== slot.gage.texte;
+    return !g.solo && g.niveau===slot.lvl && gageOk(g, targetPlayer, slot.lvl) && g.texte !== slot.gage.texte;
   }));
   var cands = pool.slice(0,3);
   if(cands.length < 2) return false; // pas assez d'options pour un vrai choix
