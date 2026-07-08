@@ -886,24 +886,24 @@ var ROLES = {
   Homme: [
     {id:'h_detenu',   emoji:'🔒', label:'Détenu',            article:'le détenu',            ouverture:"vient d'être enfermé dans sa cellule, seul avec ses pensées",           action:["tire sur ses liens en fixant","ne quitte pas des yeux"],     accAffinite:['Menottes']},
     {id:'h_policier', emoji:'👮', label:'Policier',           article:'le policier',           ouverture:"referme la porte de la cellule d'un geste autoritaire",                action:["s'approche d'un pas assuré de","toise longuement"],    accAffinite:['Menottes']},
-    {id:'h_patron',   emoji:'💼', label:'Patron',             article:'le patron',             ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:['Cravate','Bureau']},
+    {id:'h_patron',   emoji:'💼', label:'Patron',             article:'le patron',             ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:[]},
     {id:'h_livreur',  emoji:'📦', label:'Livreur',            article:'le livreur',            ouverture:"sonne à la porte avec un paquet... et un sourire en coin",             action:["tend le paquet avant de glisser une main vers","s'attarde sur le pas de la porte, un sourire pour"], accAffinite:[]},
-    {id:'h_prof',     emoji:'🎓', label:'Professeur',         article:'le professeur',         ouverture:"garde son élève après les cours pour un entretien particulier",        action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:['Lunettes']},
-    {id:'h_medecin',  emoji:'🩺', label:'Médecin',            article:'le médecin',            ouverture:"invite sa patiente à s'allonger pour un examen approfondi",           action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Bandeau']},
+    {id:'h_prof',     emoji:'🎓', label:'Professeur',         article:'le professeur',         ouverture:"garde son élève après les cours pour un entretien particulier",        action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:[]},
+    {id:'h_medecin',  emoji:'🩺', label:'Médecin',            article:'le médecin',            ouverture:"invite sa patiente à s'allonger pour un examen approfondi",           action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Masque / Bandeau']},
     {id:'h_pompier',  emoji:'🚒', label:'Pompier',            article:'le pompier',            ouverture:"vient d'éteindre l'incendie et reprend son souffle, torse nu",         action:["soulève dans ses bras musclés","attire contre son torse encore essoufflé"],    accAffinite:[]},
     {id:'h_chef',     emoji:'👨‍🍳', label:'Chef cuisinier',   article:'le chef',               ouverture:"prépare un dernier plat, rien que pour elle, cuisine fermée",          action:["fait glisser un doigt gourmand sur","approche une bouchée des lèvres de"], accAffinite:['Chantilly','Nutella','Fraises']},
     {id:'h_inconnu',  emoji:'🍸', label:'Inconnu au bar',     article:"l'inconnu du bar",      ouverture:"s'installe au bar et lui offre un verre sans un mot",                  action:["pose sa main sur la hanche de","se penche à l'oreille de"],    accAffinite:['Champagne','Vin']},
     {id:'h_masseur',  emoji:'💆‍♂️', label:'Masseur',          article:'le masseur',            ouverture:"prépare la table de massage et fait chauffer l'huile",                action:["masse lentement les épaules de","fait glisser ses mains le long du dos de"],   accAffinite:['Huile de massage','Bougie']},
-    {id:'h_patient',  emoji:'🤒', label:'Patient',            article:'le patient',            ouverture:"attend, alité, que sa garde le rejoigne",                              action:["tend la main vers","attire doucement contre lui"],   accAffinite:['Bandeau']}
+    {id:'h_patient',  emoji:'🤒', label:'Patient',            article:'le patient',            ouverture:"attend, alité, que sa garde le rejoigne",                              action:["tend la main vers","attire doucement contre lui"],   accAffinite:['Masque / Bandeau']}
   ],
   Femme: [
     {id:'f_policiere',emoji:'👮‍♀️', label:'Policière',        article:'la policière',          ouverture:"verrouille la porte de la cellule d'un geste autoritaire",             action:["s'approche d'un pas assuré de","toise longuement"],    accAffinite:['Menottes']},
-    {id:'f_infirmiere',emoji:'💉', label:'Infirmière',        article:"l'infirmière",          ouverture:"vient prendre la température de son patient, un peu trop souvent",    action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Bandeau']},
-    {id:'f_patronne', emoji:'💼', label:'Patronne',           article:'la patronne',           ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:['Cravate','Bureau']},
-    {id:'f_etudiante',emoji:'📚', label:'Étudiante',          article:"l'étudiante",           ouverture:"reste après les cours pour un entretien particulier",                 action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:['Lunettes']},
+    {id:'f_infirmiere',emoji:'💉', label:'Infirmière',        article:"l'infirmière",          ouverture:"vient prendre la température de son patient, un peu trop souvent",    action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Masque / Bandeau']},
+    {id:'f_patronne', emoji:'💼', label:'Patronne',           article:'la patronne',           ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:[]},
+    {id:'f_etudiante',emoji:'📚', label:'Étudiante',          article:"l'étudiante",           ouverture:"reste après les cours pour un entretien particulier",                 action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:[]},
     {id:'f_menage',   emoji:'🧹', label:'Femme de ménage',    article:'la femme de ménage',    ouverture:"fait le ménage quand son patron rentre plus tôt que prévu",           action:["laisse tomber le plumeau pour effleurer","s'arrête de ranger pour dévisager"], accAffinite:['Plume']},
-    {id:'f_seductrice',emoji:'🖤', label:'Séductrice mystérieuse', article:'la séductrice',    ouverture:"apparaît dans la pénombre, masquée, sans un mot",                 action:["glisse un doigt ganté le long de","tourne lentement autour de"], accAffinite:['Masque','Bandeau']},
-    {id:'f_prof',     emoji:'🎓', label:'Professeure',        article:'la professeure',        ouverture:"garde son élève après les cours pour un entretien particulier",       action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:['Lunettes']},
+    {id:'f_seductrice',emoji:'🖤', label:'Séductrice mystérieuse', article:'la séductrice',    ouverture:"apparaît dans la pénombre, masquée, sans un mot",                 action:["glisse un doigt ganté le long de","tourne lentement autour de"], accAffinite:['Masque / Bandeau']},
+    {id:'f_prof',     emoji:'🎓', label:'Professeure',        article:'la professeure',        ouverture:"garde son élève après les cours pour un entretien particulier",       action:["referme le livre et se penche vers","pose une main sur le bureau, juste à côté de"], accAffinite:[]},
     {id:'f_masseuse', emoji:'💆‍♀️', label:'Masseuse',         article:'la masseuse',           ouverture:"prépare la table de massage et fait chauffer l'huile",                action:["masse lentement les épaules de","fait glisser ses mains le long du dos de"],   accAffinite:['Huile de massage','Bougie']},
     {id:'f_voisine',  emoji:'🏠', label:'Voisine',            article:'la voisine',            ouverture:"sonne pour emprunter du sel... et reste sur le pas de la porte",       action:["pose sa main sur le torse de","s'attarde un peu trop longtemps près de"],     accAffinite:['Vin']},
     {id:'f_inconnue', emoji:'🍸', label:'Inconnue au bar',    article:"l'inconnue du bar",     ouverture:"s'installe au bar et lui glisse un regard qui ne trompe pas",         action:["pose sa main sur la cuisse de","se penche à l'oreille de"],    accAffinite:['Champagne','Vin']},
@@ -979,7 +979,7 @@ var STORY_DUOS = [
       {texte:"{prenom} guide la main de {partenaire}, en professionnelle qui connaît son sujet, pendant **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} bande les yeux de {partenaire} — 'pour tester ses réflexes', dit-elle — avant de continuer bien plus bas.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} bande les yeux de {partenaire} — 'pour tester ses réflexes', dit-elle — avant de continuer bien plus bas.",genre:'Femme',pratiques:[],accessoires:['Masque / Bandeau']},
       {texte:"{prenom} verse un peu d'huile chaude sur {partenaire}, prétextant décontracter des muscles noués — le geste devient tout sauf médical.",genre:'Homme',pratiques:[],accessoires:['Huile de massage']},
       {texte:"{prenom} stimule délicatement {partenaire} plus bas, doigts lubrifiés, très attentif à chaque réaction, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} et {partenaire} échangent les rôles un instant — c'est elle qui l'ausculte, main experte, jusqu'à le faire perdre son sérieux professionnel.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]}
@@ -1012,7 +1012,7 @@ var STORY_DUOS = [
       {texte:"{prenom} guide la main de {partenaire} sous sa blouse pendant **1 minute**, en gardant un œil sur la porte entrouverte.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} bande les yeux de {partenaire} — 'pour l'aider à se détendre', dit-elle avec un sourire qui ne trompe personne.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} bande les yeux de {partenaire} — 'pour l'aider à se détendre', dit-elle avec un sourire qui ne trompe personne.",genre:'Femme',pratiques:[],accessoires:['Masque / Bandeau']},
       {texte:"{prenom} verse un peu d'huile tiède sur les épaules de {partenaire}, prétextant un massage thérapeutique.",genre:'Homme',pratiques:[],accessoires:['Huile de massage']},
       {texte:"{prenom} stimule délicatement {partenaire} plus bas, avec beaucoup de douceur et de lubrifiant, **1 minute**.",genre:'Femme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} verrouille la porte de la chambre du bout du pied, sans lâcher {partenaire} des mains.",genre:'Femme',pratiques:[],accessoires:[]}
@@ -1035,7 +1035,7 @@ var STORY_DUOS = [
     1:[
       {texte:"{prenom} referme la porte du bureau à clé et demande à {partenaire} si elle a vraiment cru qu'il s'agissait d'un dossier.",genre:'Homme',pratiques:[],accessoires:[]},
       {texte:"{prenom} s'assoit sur le bureau de {partenaire}, croise les jambes, et attend qu'il fasse le premier pas.",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} desserre sa cravate lentement, sans quitter {partenaire} des yeux, et la laisse tomber sur le clavier.",genre:'Homme',pratiques:[],accessoires:['Cravate']},
+      {texte:"{prenom} desserre sa cravate lentement, sans quitter {partenaire} des yeux, et la laisse tomber sur le clavier.",genre:'Homme',pratiques:[],accessoires:[]},
       {texte:"{prenom} s'approche par derrière pendant qu'il travaille encore, et pose les mains sur ses épaules — plus longtemps que nécessaire.",genre:'Femme',pratiques:[],accessoires:[]}
     ],
     2:[
@@ -1045,7 +1045,7 @@ var STORY_DUOS = [
       {texte:"{prenom} guide la main de {partenaire} sous sa jupe pendant **1 minute**, sans jamais quitter l'écran des yeux — pour la forme.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} attache les poignets de {partenaire} à la chaise de bureau avec sa cravate — 'pour qu'elle apprenne la patience'.",genre:'Homme',pratiques:[],accessoires:['Cravate']},
+      {texte:"{prenom} attache les poignets de {partenaire} à la chaise de bureau avec sa cravate — 'pour qu'elle apprenne la patience'.",genre:'Homme',pratiques:[],accessoires:[]},
       {texte:"{prenom} donne à {partenaire} **10 petites fessées** contre le bureau, juste assez fort pour marquer le jeu, avant de l'embrasser.",genre:'Femme',pratiques:['fetish_actif_1'],accessoires:[]},
       {texte:"{prenom} stimule {partenaire} plus bas, du bout des doigts, avec beaucoup de lubrifiant, sur le tapis du bureau, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} renverse les rôles : c'est elle qui donne les ordres maintenant, et {partenaire} obéit, amusé.",genre:'Femme',pratiques:[],accessoires:[]}
@@ -1068,7 +1068,7 @@ var STORY_DUOS = [
     1:[
       {texte:"{prenom} referme le livre lentement et demande à {partenaire} ce qu'elle attend vraiment de cet entretien.",genre:'Homme',pratiques:[],accessoires:[]},
       {texte:"{prenom} s'assoit sur le bureau, juste devant {partenaire}, bien plus près qu'une élève ne le devrait.",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} retire ses lunettes, les pose sur la table, et se penche vers {partenaire} sans un mot.",genre:'Homme',pratiques:[],accessoires:['Lunettes']},
+      {texte:"{prenom} retire ses lunettes, les pose sur la table, et se penche vers {partenaire} sans un mot.",genre:'Homme',pratiques:[],accessoires:[]},
       {texte:"{prenom} murmure à {partenaire} qu'elle a tout fait pour rester après les cours, et que ce n'était pas pour la grammaire.",genre:'Femme',pratiques:[],accessoires:[]}
     ],
     2:[
@@ -1078,7 +1078,7 @@ var STORY_DUOS = [
       {texte:"{prenom} guide la main de {partenaire} sous son pull pendant **1 minute**, la porte de la salle encore entrouverte.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} bande les yeux de {partenaire} avec son propre foulard — 'interro surprise', murmure-t-elle.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} bande les yeux de {partenaire} avec son propre foulard — 'interro surprise', murmure-t-elle.",genre:'Femme',pratiques:[],accessoires:['Masque / Bandeau']},
       {texte:"{prenom} attache les poignets de {partenaire} au dossier de la chaise, en guise de punition symbolique.",genre:'Homme',pratiques:[],accessoires:['Menottes']},
       {texte:"{prenom} stimule doucement {partenaire} plus bas, avec beaucoup de lubrifiant, sur le bureau du prof, **1 minute**.",genre:'Femme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} donne à {partenaire} **10 petites fessées**, juste assez fort pour marquer le jeu, avant de la récompenser d'un baiser.",genre:'Homme',pratiques:['fetish_actif_1'],accessoires:[]}
@@ -1112,7 +1112,7 @@ var STORY_DUOS = [
     ],
     3:[
       {texte:"{prenom} verse un filet d'huile chaude entre les omoplates de {partenaire} avant de continuer, bien plus bas.",genre:'Homme',pratiques:[],accessoires:['Huile de massage']},
-      {texte:"{prenom} bande les yeux de {partenaire} — 'pour intensifier chaque sensation', dit-elle avec un sourire.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} bande les yeux de {partenaire} — 'pour intensifier chaque sensation', dit-elle avec un sourire.",genre:'Femme',pratiques:[],accessoires:['Masque / Bandeau']},
       {texte:"{prenom} stimule doucement {partenaire} plus bas, doigts glissants d'huile, très attentif à chaque réaction, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} se redresse et prend les commandes, poussant {partenaire} sur la table pour changer de rôle.",genre:'Femme',pratiques:[],accessoires:[]}
     ],
@@ -1144,7 +1144,7 @@ var STORY_DUOS = [
       {texte:"{prenom} guide la main de {partenaire} sous sa robe pendant **1 minute**, sans même être passés du couloir.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} bande les yeux de {partenaire} avec le ruban du paquet — 'surprise sur surprise', dit-elle en riant.",genre:'Femme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} bande les yeux de {partenaire} avec le ruban du paquet — 'surprise sur surprise', dit-elle en riant.",genre:'Femme',pratiques:[],accessoires:['Masque / Bandeau']},
       {texte:"{prenom} stimule doucement {partenaire} plus bas, du bout des doigts, avec beaucoup de lubrifiant, contre le mur de l'entrée, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} le pousse contre la porte fermée et prend le contrôle, curieuse de voir jusqu'où il est prêt à rester en retard.",genre:'Femme',pratiques:[],accessoires:[]},
       {texte:"{prenom} verse un peu de champagne, trinque avec {partenaire}, et continue avant même d'avoir reposé le verre.",genre:'Homme',pratiques:[],accessoires:['Champagne']}
@@ -1177,8 +1177,8 @@ var STORY_DUOS = [
       {texte:"{prenom} guide la main de {partenaire} sous sa jupe, discrètement, au comptoir même, pendant **1 minute**.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} bande les yeux de {partenaire} avec sa propre écharpe avant de continuer, dans le taxi qui les ramène.",genre:'Homme',pratiques:[],accessoires:['Bandeau']},
-      {texte:"{prenom} garde son masque de la soirée déguisée — le mystère reste entier, même dans l'intimité.",genre:'Femme',pratiques:[],accessoires:['Masque']},
+      {texte:"{prenom} bande les yeux de {partenaire} avec sa propre écharpe avant de continuer, dans le taxi qui les ramène.",genre:'Homme',pratiques:[],accessoires:['Masque / Bandeau']},
+      {texte:"{prenom} garde son masque de la soirée déguisée — le mystère reste entier, même dans l'intimité.",genre:'Femme',pratiques:[],accessoires:['Masque / Bandeau']},
       {texte:"{prenom} stimule doucement {partenaire} plus bas, avec beaucoup de lubrifiant, contre le mur des toilettes, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} prend le contrôle, curieuse de voir jusqu'où cet inconnu est prêt à la suivre cette nuit.",genre:'Femme',pratiques:[],accessoires:[]}
     ],
@@ -1211,7 +1211,7 @@ var STORY_DUOS = [
     ],
     3:[
       {texte:"{prenom} verse un peu d'huile apaisante sur les brûlures imaginaires de {partenaire}, prétexte parfait pour continuer plus bas.",genre:'Femme',pratiques:[],accessoires:['Huile de massage']},
-      {texte:"{prenom} bande les yeux de {partenaire} — 'pour évacuer en sécurité', plaisante-t-il — avant de continuer sans elle.",genre:'Homme',pratiques:[],accessoires:['Bandeau']},
+      {texte:"{prenom} bande les yeux de {partenaire} — 'pour évacuer en sécurité', plaisante-t-il — avant de continuer sans elle.",genre:'Homme',pratiques:[],accessoires:['Masque / Bandeau']},
       {texte:"{prenom} stimule doucement {partenaire} plus bas, du bout des doigts, avec beaucoup de lubrifiant, sur le plan de travail, **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} le pousse contre le frigo et prend le contrôle, plus téméraire qu'elle ne l'aurait cru.",genre:'Femme',pratiques:[],accessoires:[]}
     ],
@@ -1302,16 +1302,14 @@ var STORY_CATEGORIES = [
 // remplace la fin de la phrase pour intégrer concrètement l'objet dans la mise en scène.
 var STORY_ACC_SCENE = {
   'Menottes':      ["{prenom} attache les poignets de {partenaire} avant de continuer — un cliquetis, puis plus rien d'autre à faire que ressentir.", "{prenom} referme les menottes autour des poignets de {partenaire}, en restant {actorRole} jusqu'au bout."],
-  'Bandeau':       ["{prenom} bande les yeux de {partenaire} avant de continuer — dans le noir, chaque geste du personnage de {actorRole} devient plus intense.", "{prenom} noue le bandeau sur les yeux de {partenaire} — plus rien à voir, tout à ressentir."],
-  'Cravate':       ["{prenom} utilise sa cravate pour attacher les mains de {partenaire}, sans jamais sortir du personnage de {actorRole}.", "{prenom} desserre sa cravate, lentement, avant de s'en servir pour attacher {partenaire}."],
+  'Masque / Bandeau': ["{prenom} bande les yeux de {partenaire} avant de continuer — dans le noir, chaque geste du personnage de {actorRole} devient plus intense.", "{prenom} noue le bandeau sur les yeux de {partenaire} — plus rien à voir, tout à ressentir.", "{prenom} garde son masque — le mystère du personnage de {actorRole} reste entier même dans l'intimité."],
   'Huile de massage':["{prenom} verse un filet d'huile chaude sur {partenaire} avant de continuer — le geste devient plus glissant, plus lent.", "{prenom} chauffe un peu d'huile entre ses mains avant de continuer sur {partenaire}."],
   'Bougie':        ["{prenom} laisse tomber quelques gouttes de cire tiède près de la zone concernée, juste avant de continuer.", "{prenom} approche la bougie, juste assez près pour que {partenaire} sente la chaleur avant de continuer."],
   'Plume':         ["{prenom} passe la plume sur la peau de {partenaire} avant de continuer, pour faire durer l'attente.", "{prenom} fait glisser la plume le long du corps de {partenaire}, très lentement, avant de continuer."],
   'Fouet':         ["{prenom}, en {actorRole}, fait claquer le fouet une fois dans l'air avant de continuer — {partenaire} sait ce qui l'attend.", "{prenom} fait glisser le cuir du fouet sur la peau de {partenaire}, sans frapper, juste avant de continuer."],
   'Champagne':     ["{prenom} verse une goutte de champagne sur {partenaire} et la boit avant de continuer.", "{prenom} trinque avec {partenaire}, un regard qui en dit long, avant de continuer."],
   'Fraises':       ["{prenom} croque une fraise puis en pose un morceau sur {partenaire} avant de continuer, gourmand·e.", "{prenom} fait glisser une fraise sur les lèvres de {partenaire} avant de continuer."],
-  'Nutella':       ["{prenom} étale un peu de chocolat sur {partenaire} avant de continuer, et prend son temps pour tout faire disparaître.", "{prenom} trempe un doigt dans le chocolat et le porte aux lèvres de {partenaire} avant de continuer."],
-  'Masque':        ["{prenom} garde son masque — le mystère du personnage de {actorRole} reste entier même dans l'intimité.", "{prenom} ajuste son masque avant de continuer, {actorRole} jusqu'au bout."]
+  'Nutella':       ["{prenom} étale un peu de chocolat sur {partenaire} avant de continuer, et prend son temps pour tout faire disparaître.", "{prenom} trempe un doigt dans le chocolat et le porte aux lèvres de {partenaire} avant de continuer."]
 };
 function storyPratOk(cat, actor, receiver){
   if(!cat.actif) return true; // catégorie générique (baisers), toujours jouable
@@ -4488,7 +4486,7 @@ function selectMode(m) {
   }
   G.mode = m;
   document.querySelectorAll('.mode-card').forEach(function(c){ c.classList.remove('sel'); });
-  G.acc = null;            // nouvelle partie : objets pas encore choisis
+  G.acc = null;            // nouvelle partie : objets pas encore choisis (la page Objets pré-coche depuis le profil si chargé, mais reste toujours affichée pour vérification — comme pour les pratiques)
   G._useCustomGages = false;
   G._selectedCustomGages = [];
   // Map mode key to card HTML id (brise_glace → mc-brise-glace)
@@ -4946,11 +4944,13 @@ function goBackPlayer() {
 // ── ACCESSOIRES ──
 function renderAccPage() {
   var ad = getAccData();
+  var profileAcc = (G._loadedProfile && G._loadedProfile.acc) ? G._loadedProfile.acc : [];
   var html = '';
   Object.keys(ad).forEach(function(cat) {
     html += '<div class="cat-title">' + cat + '</div><div class="acc-grid">';
     ad[cat].forEach(function(a) {
-      html += '<label class="acc-item" onclick="toggleAcc(this,\'' + a.replace(/'/g,"\\'") + '\')">'        + '<input type="checkbox" value="' + a + '"> ' + a + '</label>';
+      var checked = profileAcc.indexOf(a) >= 0;
+      html += '<label class="acc-item'+(checked?' checked':'')+'" onclick="toggleAcc(this,\'' + a.replace(/'/g,"\\'") + '\')">'        + '<input type="checkbox" value="' + a + '"' + (checked?' checked':'') + '> ' + a + '</label>';
     });
     html += '</div>';
   });
@@ -6434,34 +6434,6 @@ function storyMidReminder(){
   if(!hf.rH || !hf.rF) return '';
   return cap(hf.rH.article)+' et '+hf.rF.article+', toujours dans leurs personnages.';
 }
-var STORY_ACC_FLAVOR = {
-  'Menottes':"Un cliquetis métallique résonne dans la pièce.",
-  'Bandeau':"Le noir total décuple chaque sensation.",
-  'Masque':"Le mystère reste entier, même dans l'intimité.",
-  'Huile de massage':"L'odeur chaude de l'huile flotte dans l'air.",
-  'Bougie':"La flamme vacille, projetant des ombres sur les corps.",
-  'Cravate':"Le tissu glisse, encore noué au col.",
-  'Fouet':"Le cuir claque, un frisson parcourt la pièce.",
-  'Plume':"La plume danse, légère, sur la peau.",
-  'Champagne':"Les bulles pétillent, presque autant que le regard.",
-  'Vin':"Le vin colore les lèvres d'un rouge profond.",
-  'Chantilly':"La chantilly fond doucement sur la peau.",
-  'Nutella':"Le chocolat glisse, gourmand, sur le corps.",
-  'Fraises':"Le fruit rouge attend d'être croqué... ou léché."
-};
-function roleFlavorLine(gage, actorPlayer, receiverPlayer){
-  var actorRole = getRoleData(actorPlayer.role), receiverRole = getRoleData(receiverPlayer.role);
-  if(!actorRole || !receiverRole) return '';
-  var line = actorRole.label+' '+randomAction(actorRole)+' '+receiverRole.label.toLowerCase()+'.';
-  if(gage.accessoires && gage.accessoires.length){
-    var matchAcc = gage.accessoires.filter(function(a){
-      return (actorRole.accAffinite||[]).indexOf(a)>=0 || (receiverRole.accAffinite||[]).indexOf(a)>=0;
-    });
-    if(matchAcc.length && STORY_ACC_FLAVOR[matchAcc[0]]) line += ' '+STORY_ACC_FLAVOR[matchAcc[0]];
-  }
-  return line;
-}
-
 function renderGageCard(gage, player, partner) {
   var pColor = player.genre==='Homme' ? 'var(--blue)' : 'var(--rose)';
   var isStory = G.mode==='story';
@@ -7257,11 +7229,11 @@ function renderProfilesPage() {
 
 var _editProfileIdx = -1;
 
-var _pw = { idx:-1, name:'', nb:2, step:0, players:[] };
+var _pw = { idx:-1, name:'', nb:2, step:0, players:[], acc:[] };
 
 function openNewProfile() {
   _editProfileIdx = -1;
-  _pw = { idx:-1, name:'', nb:2, step:0, players:[] };
+  _pw = { idx:-1, name:'', nb:2, step:0, players:[], acc:[] };
   renderProfileWizard();
   goTo('page-save-profile');
 }
@@ -7271,7 +7243,7 @@ function editProfile(i) {
   var p = profiles[i]; if(!p) return;
   _editProfileIdx = i;
   var players = (p.players||[]).map(function(pl){ return {prenom:pl.prenom||'',genre:pl.genre||'Homme',pratiques:(pl.pratiques||[]).slice(),favorites:(pl.favorites||[]).slice()}; });
-  _pw = { idx:i, name:p.name||'', nb:players.length||2, step:0, players:players };
+  _pw = { idx:i, name:p.name||'', nb:players.length||2, step:0, players:players, acc:(p.acc||[]).slice() };
   renderProfileWizard();
   goTo('page-save-profile');
 }
@@ -7377,7 +7349,7 @@ function saveProfile() {
     return {prenom:(pl.prenom||'').trim()||'Joueur', genre:pl.genre||'Homme', pratiques:(pl.pratiques||[]).slice(), favorites:(pl.favorites||[]).slice()};
   });
   if(!players.length) { alert('Aucun joueur configuré.'); return; }
-  var profile = {name:name, date:Date.now(), nb:players.length, players:players};
+  var profile = {name:name, date:Date.now(), nb:players.length, players:players, acc:(_pw.acc||[]).slice()};
   var profiles = loadProfiles();
   if(_editProfileIdx>=0 && _editProfileIdx<profiles.length){
     profiles[_editProfileIdx]=profile;
