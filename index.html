@@ -690,10 +690,10 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
       <span class="icon">🎭</span><div class="label">Histoire</div><div class="sub">Rôles, mise en scène, votre histoire</div>
       <span class="mode-badge premium">✦ Premium</span>
     </div>
-    <div class="mode-card mode-premium" id="mc-live" onclick="selectMode('live')" style="position:relative">
-      <span class="mode-lock" id="lock-live">🔒</span>
+    <div class="mode-card mode-premium" id="mc-live" onclick="selectMode('live')" style="position:relative;opacity:.55;filter:grayscale(.4)">
+      <span class="mode-lock" id="lock-live">🚧</span>
       <span class="icon">🔴</span><div class="label">Live Streamer</div><div class="sub">Jouez avec vos viewers</div>
-      <span class="mode-badge premium" style="background:rgba(255,59,59,.12);color:#ff6b6b">✦ Streamer</span>
+      <span class="mode-badge premium" style="background:rgba(255,180,60,.15);color:#f0c060">🚧 En travaux</span>
     </div>
   </div>
   <div class="btn-row">
@@ -1845,6 +1845,12 @@ var PRATIQUES_BASE = {
     "Anal Solo":[
       {id:"anal_solo_1", label:"Anal doux seul",   desc:"Vous aimez explorer votre anus avec les doigts doucement en solo."},
       {id:"anal_solo_2", label:"Anal avancé seul", desc:"Vous aimez les pratiques anales avancées seul (plug, gode anal)."}
+    ],
+    "Voyeurisme":[
+      {id:"voyeur_actif_1",  label:"Voyeurisme Niveau 1 (actif)",  desc:"Vous aimez regarder votre partenaire prendre du plaisir seul(e)."},
+      {id:"voyeur_passif_1", label:"Voyeurisme Niveau 1 (passif)", desc:"Vous aimez que votre partenaire vous regarde prendre du plaisir seul(e)."},
+      {id:"voyeur_actif_2",  label:"Voyeurisme Niveau 2 (actif)",  desc:"Vous aimez regarder votre partenaire prendre du plaisir avec un ou des inconnus."},
+      {id:"voyeur_passif_2", label:"Voyeurisme Niveau 2 (passif)", desc:"Vous aimez que votre partenaire vous regarde prendre du plaisir avec un ou des inconnus."}
     ]
   },
   Femme: {
@@ -1904,6 +1910,12 @@ var PRATIQUES_BASE = {
     "Accessoires Solo":[
       {id:"vibro_solo", label:"Vibromasseur",      desc:"Vous aimez vous stimuler avec un vibromasseur seule."},
       {id:"gode_solo",  label:"Gode / Insertion",  desc:"Vous aimez utiliser un gode seule."}
+    ],
+    "Voyeurisme":[
+      {id:"voyeur_actif_1",  label:"Voyeurisme Niveau 1 (actif)",  desc:"Vous aimez regarder votre partenaire prendre du plaisir seul(e)."},
+      {id:"voyeur_passif_1", label:"Voyeurisme Niveau 1 (passif)", desc:"Vous aimez que votre partenaire vous regarde prendre du plaisir seule."},
+      {id:"voyeur_actif_2",  label:"Voyeurisme Niveau 2 (actif)",  desc:"Vous aimez regarder votre partenaire prendre du plaisir avec un ou des inconnus."},
+      {id:"voyeur_passif_2", label:"Voyeurisme Niveau 2 (passif)", desc:"Vous aimez que votre partenaire vous regarde prendre du plaisir avec un ou des inconnus."}
     ]
   },
   Trans: {
@@ -1964,6 +1976,12 @@ var PRATIQUES_BASE = {
     "Anal Solo":[
       {id:"anal_solo_t_1", label:"Anal doux seul(e)",   desc:"Vous aimez explorer votre anus doucement en solo."},
       {id:"anal_solo_t_2", label:"Anal avancé seul(e)", desc:"Vous aimez les pratiques anales avancées en solo (plug, gode anal)."}
+    ],
+    "Voyeurisme":[
+      {id:"voyeur_actif_1",  label:"Voyeurisme Niveau 1 (actif)",  desc:"Vous aimez regarder votre partenaire prendre du plaisir seul(e)."},
+      {id:"voyeur_passif_1", label:"Voyeurisme Niveau 1 (passif)", desc:"Vous aimez que votre partenaire vous regarde prendre du plaisir seul(e)."},
+      {id:"voyeur_actif_2",  label:"Voyeurisme Niveau 2 (actif)",  desc:"Vous aimez regarder votre partenaire prendre du plaisir avec un ou des inconnus."},
+      {id:"voyeur_passif_2", label:"Voyeurisme Niveau 2 (passif)", desc:"Vous aimez que votre partenaire vous regarde prendre du plaisir avec un ou des inconnus."}
     ]
   }
 }
@@ -4280,7 +4298,19 @@ var GAGES_BASE = [
 {texte:"{prenom}, monte en intensité avec la vidéo porno jusqu'au bord, puis retiens-toi encore un peu — **2 minutes**.",niveau:4,genre:"Trans",pratiques:["solo_t","masturb_solo_t"],accessoires:["Vidéos porno"],modes:[],solo:true},
 {texte:"{prenom}, laisse la vidéo porno t'emmener jusqu'au bout — orgasme complet, aucune limite de temps.",niveau:5,genre:"Homme",pratiques:["solo_h","masturb_solo_h"],accessoires:["Vidéos porno"],modes:[],solo:true},
 {texte:"{prenom}, laisse le film érotique t'emmener jusqu'au bout — orgasme complet, aucune limite de temps.",niveau:5,genre:"Femme",pratiques:["solo_f","masturb_solo_f"],accessoires:["Films érotiques"],modes:[],solo:true},
-{texte:"{prenom}, laisse la vidéo porno t'emmener jusqu'au bout — orgasme complet, aucune limite de temps.",niveau:5,genre:"Trans",pratiques:["solo_t","masturb_solo_t"],accessoires:["Vidéos porno"],modes:[],solo:true}
+{texte:"{prenom}, laisse la vidéo porno t'emmener jusqu'au bout — orgasme complet, aucune limite de temps.",niveau:5,genre:"Trans",pratiques:["solo_t","masturb_solo_t"],accessoires:["Vidéos porno"],modes:[],solo:true},
+
+/* ══════ GAGES — VOYEURISME (niveaux 1 à 5) ══════ */
+{texte:"{prenom} s'installe confortablement et regarde {partenaire} se donner du plaisir seul(e), sans intervenir — **2 minutes**, juste le regard, en silence.",niveau:1,genre:"Homme",pratiques:["voyeur_actif_1"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} demande à {partenaire} de se caresser devant elle, sans y toucher elle-même — **2 minutes**, elle observe chaque geste.",niveau:1,genre:"Femme",pratiques:["voyeur_actif_1"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} choisit exactement la position et le rythme, et regarde {partenaire} se caresser en suivant ses instructions à la lettre — **3 minutes**.",niveau:2,genre:"Mixte",pratiques:["voyeur_actif_1"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} raconte à voix basse, sans aucune gêne, le fantasme précis où {partenaire} prend du plaisir sous son regard avec quelqu'un d'autre — **2 minutes**, juste les mots, rien de plus.",niveau:2,genre:"Homme",pratiques:["voyeur_actif_2"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} ferme les yeux et décrit en détail la scène où elle regarde {partenaire} prendre du plaisir avec un(e) inconnu(e) imaginaire — **3 minutes**, {partenaire} laisse le fantasme prendre toute la place.",niveau:3,genre:"Femme",pratiques:["voyeur_actif_2"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} et {partenaire} construisent ensemble, à voix haute et à tour de rôle, un scénario complet autour de ce fantasme — chacun ajoute un détail, **3 minutes**.",niveau:3,genre:"Mixte",pratiques:["voyeur_actif_2"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} raconte le fantasme le plus intense qu'il ait sur le sujet pendant que {partenaire} se caresse en l'écoutant — **3 minutes**.",niveau:4,genre:"Homme",pratiques:["voyeur_actif_2"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} regarde {partenaire} se caresser jusqu'à ce que le plaisir devienne visible sur son visage, sans jamais intervenir — **3 minutes**.",niveau:4,genre:"Mixte",pratiques:["voyeur_actif_1"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} guide {partenaire} vers l'orgasme uniquement par les mots, en décrivant la scène fantasmée jusqu'au bout — durée libre, aucune limite dans le récit.",niveau:5,genre:"Femme",pratiques:["voyeur_actif_2"],accessoires:[],modes:[],solo:false},
+{texte:"{prenom} regarde {partenaire} se donner du plaisir jusqu'à l'orgasme complet, sans intervenir, sans détourner le regard — durée libre.",niveau:5,genre:"Mixte",pratiques:["voyeur_actif_1"],accessoires:[],modes:[],solo:false}
 ];
 
 /* ENGINE */
@@ -4558,7 +4588,7 @@ function goTo(pageId) {
   var pb=document.getElementById('premium-badge');
   if(pb&&isPremium()) pb.style.display='block';
   // Update mode cards lock state
-  var premiumCards=['mc-decouverte','mc-pimente','mc-competition','mc-live'];
+  var premiumCards=['mc-decouverte','mc-pimente','mc-competition'];
   premiumCards.forEach(function(id){
     var card=document.getElementById(id);
     var lock=card&&card.querySelector('.mode-lock');
@@ -4666,8 +4696,8 @@ var LIVE_DEFAULT_GAGES = [
 var LIVE_WHEEL_COLORS = ['#e8437a','#f0c060','#9b6dff','#38d9f5','#3ecf8e','#ff6b6b','#f08040','#e87aaa'];
 
 function openLiveMode() {
-  // Go to the live config page
-  goTo('page-live-config');
+  // Mode Live Streamer temporairement désactivé (en travaux)
+  showWipOverlay();
 }
 
 function liveSelSubmode(m){
@@ -4873,6 +4903,11 @@ function liveDelGage(i){ LIVE.customGages.splice(i,1); liveRenderEditor(); }
 function liveCloseEditor(){ document.getElementById('live-editor-overlay').style.display='none'; }
 
 function selectMode(m) {
+  // Mode Live Streamer temporairement désactivé (en travaux)
+  if(m === 'live') {
+    showWipOverlay();
+    return;
+  }
   // Premium gate for non-free modes
   var premiumModes = ['pimente','competition','decouverte','live','story'];
   if(premiumModes.indexOf(m) >= 0 && !isPremium()) {
@@ -5792,10 +5827,10 @@ var LVL_MAX_DEFAULT = {1:5,2:4,3:4,4:3,5:99};
 var LVL_MAX = {1:5,2:4,3:4,4:3,5:99};
 var LVL_ALLOWED = {
   1: null,
-  2: ['masturb_actif','masturb_passif','masturb_actif_f','masturb_passif_f','oral_actif','oral_passif','oro_anal_actif','oro_anal_passif','anal_actif_1','anal_passif_1','fun','fetish_actif_1','fetish_actif_2','fetish_passif_1','fetish_passif_2','solo','solo_h','solo_f','solo_t','anal_solo_1','masturb_solo_h','masturb_solo_f','pointg_solo','vibro_solo','domination_1','domination_2','soumission_1','soumission_2'],
-  3: ['masturb_actif','masturb_passif','masturb_actif_f','masturb_passif_f','oral_actif','oral_passif','oro_anal_actif','oro_anal_passif','anal_actif_1','anal_passif_1','fun','fetish_actif_1','fetish_actif_2','fetish_passif_1','fetish_passif_2','solo','solo_h','solo_f','solo_t','anal_solo_1','masturb_solo_h','masturb_solo_f','pointg_solo','squirt_solo','vibro_solo','masturb_solo_t','anal_solo_t_1','domination_1','domination_2','soumission_1','soumission_2'],
+  2: ['masturb_actif','masturb_passif','masturb_actif_f','masturb_passif_f','oral_actif','oral_passif','oro_anal_actif','oro_anal_passif','anal_actif_1','anal_passif_1','fun','fetish_actif_1','fetish_actif_2','fetish_passif_1','fetish_passif_2','solo','solo_h','solo_f','solo_t','anal_solo_1','masturb_solo_h','masturb_solo_f','pointg_solo','vibro_solo','domination_1','domination_2','soumission_1','soumission_2','voyeur_actif_1','voyeur_passif_1','voyeur_actif_2','voyeur_passif_2'],
+  3: ['masturb_actif','masturb_passif','masturb_actif_f','masturb_passif_f','oral_actif','oral_passif','oro_anal_actif','oro_anal_passif','anal_actif_1','anal_passif_1','fun','fetish_actif_1','fetish_actif_2','fetish_passif_1','fetish_passif_2','solo','solo_h','solo_f','solo_t','anal_solo_1','masturb_solo_h','masturb_solo_f','pointg_solo','squirt_solo','vibro_solo','masturb_solo_t','anal_solo_t_1','domination_1','domination_2','soumission_1','soumission_2','voyeur_actif_1','voyeur_passif_1','voyeur_actif_2','voyeur_passif_2'],
   4: null,
-  5: ['oral_actif','oral_passif','masturb_actif','masturb_passif','masturb_actif_f','masturb_passif_f','anal_actif_1','anal_passif_1','soumission_1','soumission_2','domination_1','domination_2','fetish_passif_2','fetish_actif_2','sperme_gout_1','sperme_gout_2','finish_corps','penetration_h','penetration_f','penetration_acc','anal_actif_2','anal_passif_2','kamasutra','solo','solo_h','solo_f','solo_t','anal_solo_1','anal_solo_2','masturb_solo_h','masturb_solo_f','pointg_solo','squirt_solo','vibro_solo','gode_solo','masturb_solo_t','anal_solo_t_1','anal_solo_t_2']
+  5: ['oral_actif','oral_passif','masturb_actif','masturb_passif','masturb_actif_f','masturb_passif_f','anal_actif_1','anal_passif_1','soumission_1','soumission_2','domination_1','domination_2','fetish_passif_2','fetish_actif_2','sperme_gout_1','sperme_gout_2','finish_corps','penetration_h','penetration_f','penetration_acc','anal_actif_2','anal_passif_2','kamasutra','solo','solo_h','solo_f','solo_t','anal_solo_1','anal_solo_2','masturb_solo_h','masturb_solo_f','pointg_solo','squirt_solo','vibro_solo','gode_solo','masturb_solo_t','anal_solo_t_1','anal_solo_t_2','voyeur_actif_1','voyeur_passif_1','voyeur_actif_2','voyeur_passif_2']
 };
 
 function isSoloGame(){
@@ -5858,6 +5893,18 @@ function gageOk(g, player, lvl, ignorePrat) {
     if(g.pratiques && g.pratiques.indexOf('kamasutra')>=0 && lvl<4) return false;
   }
   if(!ignorePrat && g.pratiques && g.pratiques.length>0) {
+    if(g.pratiquesPartenaire && g.pratiquesPartenaire.length) {
+      // ── Correspondance explicite définie par l'admin : pratiques du joueur ET du partenaire
+      // peuvent être différentes, et sont vérifiées dans TOUS les modes (y compris Compétition,
+      // Découverte, solo-multi-joueurs où seul le joueur actif est normalement vérifié). ──
+      var playerMatched = g.pratiques.every(function(p){ return player.pratiques.indexOf(p)>=0; });
+      if(!playerMatched) return false;
+      if(!isSoloGame()){
+        var _partnerX = G.players.find(function(p){ return p.prenom!==player.prenom; });
+        var partnerMatched = !_partnerX || g.pratiquesPartenaire.every(function(p){ return _partnerX.pratiques.indexOf(p)>=0; });
+        if(!partnerMatched) return false;
+      }
+    } else {
     // Table des paires complémentaires actif/passif
     var _compMap={
       'domination_1':'soumission_1','soumission_1':'domination_1',
@@ -5869,7 +5916,9 @@ function gageOk(g, player, lvl, ignorePrat) {
       'anal_actif_2':'anal_passif_2','anal_passif_2':'anal_actif_2',
       'oro_anal_actif':'oro_anal_passif','oro_anal_passif':'oro_anal_actif',
       'fetish_actif_1':'fetish_passif_1','fetish_passif_1':'fetish_actif_1',
-      'fetish_actif_2':'fetish_passif_2','fetish_passif_2':'fetish_actif_2'
+      'fetish_actif_2':'fetish_passif_2','fetish_passif_2':'fetish_actif_2',
+      'voyeur_actif_1':'voyeur_passif_1','voyeur_passif_1':'voyeur_actif_1',
+      'voyeur_actif_2':'voyeur_passif_2','voyeur_passif_2':'voyeur_actif_2'
     };
     // Classique ET pimenté (gages réguliers), 2 joueurs : règle actif/passif stricte
     // — pratique avec complément : joueur doit avoir p ET partenaire doit avoir _comp[p]
@@ -5904,6 +5953,7 @@ function gageOk(g, player, lvl, ignorePrat) {
       // Compétition, brise_glace, solo, multi-joueurs : pas de vérif complément, juste le joueur courant
       var matched=false; g.pratiques.forEach(function(p){ if(player.pratiques.indexOf(p)>=0) matched=true; });
       if(!matched) return false;
+    }
     }
   }
   // ── FILTRE STRICT NB JOUEURS ──
@@ -6024,12 +6074,33 @@ function interleave(pool) {
   // Separate kama-last items and regular items
   var regular = pool.filter(function(g){return !g._kamaLast;});
   var kamaLast = pool.filter(function(g){return g._kamaLast;});
-  var byP={};
-  regular.forEach(function(g){ var k=g._p||'?'; if(!byP[k])byP[k]=[]; byP[k].push(g); });
-  var queues=Object.values(byP), res=[], s=0;
-  while(queues.some(function(q){return q.length>0;})&&s<500){
+  if(regular.length<2) return regular.concat(kamaLast);
+  var byP={}, order=[];
+  regular.forEach(function(g){
+    var k=g._p||'?';
+    if(!byP[k]){ byP[k]=[]; order.push(k); }
+    byP[k].push(g);
+  });
+  if(order.length<2) return regular.concat(kamaLast);
+  var queues = order.map(function(k){return byP[k];});
+  var res=[], lastKey=null, s=0;
+  // Glouton : à chaque tour, on prend la file la plus longue restante en évitant
+  // de reprendre le même joueur que le coup d'avant — garantit qu'il n'y a jamais
+  // 2 gages d'affilée pour la même personne, sauf déséquilibre extrême impossible à éviter.
+  while(queues.some(function(q){return q.length>0;}) && s<2000){
     s++;
-    queues.forEach(function(q){ if(q.length>0) res.push(q.shift()); });
+    var bestIdx=-1, bestLen=-1;
+    for(var i=0;i<queues.length;i++){
+      if(queues[i].length===0 || order[i]===lastKey) continue;
+      if(queues[i].length>bestLen){ bestLen=queues[i].length; bestIdx=i; }
+    }
+    if(bestIdx<0){
+      // Repli forcé : plus qu'une seule file non vide (déséquilibre trop grand pour alterner)
+      for(var j=0;j<queues.length;j++){ if(queues[j].length>0){ bestIdx=j; break; } }
+    }
+    if(bestIdx<0) break;
+    res.push(queues[bestIdx].shift());
+    lastKey=order[bestIdx];
   }
   // Append kama positions at the very end
   return res.concat(kamaLast);
@@ -6479,6 +6550,12 @@ function buildStoryGame(){
       arr.splice(pos,0,Object.assign({},mg,{_p:ap?ap.prenom:'',_ch:false,_kama:false}));
     }
   }
+  // Alternance stricte homme/femme : jamais 2 gages d'affilée pour le même joueur
+  // (les scènes duo/générées alternent déjà en général, mais l'injection perso ci-dessus
+  // ou un échec ponctuel de génération peuvent créer 2 gages d'affilée sans cette passe finale)
+  [1,2,3,4,5].forEach(function(lvl){
+    if(G.gagesByLevel[lvl] && G.gagesByLevel[lvl].length>1) G.gagesByLevel[lvl]=interleave(G.gagesByLevel[lvl]);
+  });
 }
 
 function prepareGages() {
@@ -6843,7 +6920,7 @@ function storyMidReminder(){
   if(!hf.rH || !hf.rF) return '';
   return cap(hf.rH.article)+' et '+hf.rF.article+', toujours dans leurs personnages.';
 }
-// ══════════════ NARRATION VOCALE (mode Histoire) — Web Speech API, zéro serveur ══════════════
+// ══════════════ NARRATION VOCALE (tous les modes) — Web Speech API, zéro serveur ══════════════
 var voiceNarrationOn = (function(){ try{ return localStorage.getItem('voice_narration_v28')==='1'; }catch(e){ return false; } })();
 var _voiceFR = null;
 function _pickFrenchVoice(){
@@ -6862,7 +6939,7 @@ function updateVoiceToggleBtn(){
   var btn = document.getElementById('voice-toggle-btn');
   if(!btn) return;
   var supported = ('speechSynthesis' in window);
-  btn.style.display = (G.mode==='story' && supported) ? 'inline-block' : 'none';
+  btn.style.display = supported ? 'inline-block' : 'none';
   btn.textContent = voiceNarrationOn ? '🔊' : '🔇';
   btn.style.borderColor = voiceNarrationOn ? 'var(--gold)' : 'var(--border)';
   btn.style.color = voiceNarrationOn ? 'var(--gold)' : 'var(--muted)';
@@ -6884,7 +6961,7 @@ function toggleVoiceNarration(){
   }
 }
 function speakGageText(gage, player, partner){
-  if(!voiceNarrationOn || !('speechSynthesis' in window) || G.mode!=='story') return;
+  if(!voiceNarrationOn || !('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
   var raw = gageText(gage)
     .replace(/\{prenom\}/g, player.prenom)
@@ -7285,7 +7362,9 @@ function updateTimerUI(){
     rt.textContent='✓ Terminé';
     rt.style.color='var(--success)';
     rt.style.borderColor='rgba(62,207,142,0.4)';
-    playBeep();setTimeout(nextGage,1500);
+    playBeep();
+    // Le bip sonne mais on n'avance plus tout seul : c'est au joueur d'appuyer sur
+    // Suivant / Réalisé quand il/elle est prêt·e (temps de se replacer, de lire la suite...).
   } else if(timerRun){
     rt.textContent='⏸ '+disp;
     rt.style.color=timerLeft<10?'var(--accent)':'var(--gold)';
@@ -7690,6 +7769,15 @@ function getPratData(){
   });
   return r;
 }
+function pratLabelMap(){
+  var pd=getPratData(), map={};
+  ['Homme','Femme','Trans'].forEach(function(g){
+    Object.keys(pd[g]||{}).forEach(function(cat){
+      (pd[g][cat]||[]).forEach(function(p){ if(!map[p.id]) map[p.id]=p.label; });
+    });
+  });
+  return map;
+}
 function getAccData(){
   var r={};
   Object.keys(ACCESSOIRES_BASE).forEach(function(c){ r[c]=ACCESSOIRES_BASE[c].slice(); });
@@ -8034,8 +8122,12 @@ function renderGageForm() {
     +'<span style="font-size:13px;line-height:1.4"><strong style="color:var(--gold)">🎯 Gage 100% personnalisé</strong><br><span style="color:var(--muted);font-size:11px">Proposé en début de partie (si pratiques/objets compatibles) puis garanti à 100%, invisible in-game.</span></span></label>'
     +'<h3>Accessoires <span style="font-weight:400;color:var(--muted)">(optionnel)</span></h3>'
     +'<div id="g-acc-grid" class="admin-check-grid"></div>'
-    +'<h3>Pratiques <span style="font-weight:400;color:var(--muted)">(optionnel)</span></h3>'
+    +'<h3>Pratiques du joueur <span style="font-weight:400;color:var(--muted)">(optionnel)</span></h3>'
+    +'<p style="font-size:11px;color:var(--muted);margin:-4px 0 6px">Ce que <strong>{prenom}</strong> doit avoir coché pour recevoir ce gage.</p>'
     +'<div id="g-prat-grid" class="admin-check-grid"></div>'
+    +'<h3>Pratiques du partenaire <span style="font-weight:400;color:var(--muted)">(optionnel)</span></h3>'
+    +'<p style="font-size:11px;color:var(--muted);margin:-4px 0 6px">Ce que <strong>{partenaire}</strong> doit avoir coché — peut être <strong>différent</strong> des pratiques du joueur (ex : joueur = oral actif, partenaire = oral passif). Si rempli, cette correspondance joueur/partenaire est vérifiée <strong>dans tous les modes</strong>, y compris Compétition, Découverte et multi-joueurs, où seules les pratiques du joueur actif sont vérifiées par défaut. Laisse vide si tu veux le comportement standard.</p>'
+    +'<div id="g-prat-partner-grid" class="admin-check-grid"></div>'
     +'<div id="val-block" style="margin:12px 0"></div>'
     +'<div class="btn-row">'
     +'<button class="btn ghost sm" id="g-cancel" style="display:none" onclick="cancelGageEdit()">Annuler</button>'
@@ -8047,8 +8139,9 @@ function renderGageForm() {
 function renderGageListFilters() {
   var pratIds=['masturb_actif','masturb_actif_f','oral_actif','oral_passif','oro_anal_actif','anal_actif_1','anal_actif_2','anal_passif_1','anal_passif_2','penetration_h','penetration_f','penetration_acc','domination_1','domination_2','soumission_1','soumission_2','fetish_actif_2','kamasutra','solo','sperme_gout_1','sperme_gout_2','finish_corps'];
   var pratOptions=pratIds.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
-  return '<div class="search-box"><input type="text" id="s-kw" placeholder="🔍 Mot-clé…" oninput="filterGages()"><select id="s-lvl" onchange="filterGages()"><option value="">Tous niveaux</option><option value="1">Niv.1</option><option value="2">Niv.2</option><option value="3">Niv.3</option><option value="4">Niv.4</option><option value="5">Niv.5</option></select></div>'
-    +'<div class="search-box"><select id="s-genre" onchange="filterGages()" style="flex:1"><option value="">Tous genres</option><option value="Homme">👨 H</option><option value="Femme">👩 F</option><option value="Mixte">⚧ M</option></select><select id="s-src" onchange="filterGages()" style="flex:1"><option value="all">Tous</option><option value="base">Base</option><option value="custom">Perso</option></select></div>'
+  return '<p style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5">Par défaut, seuls <strong>tes gages personnalisés</strong> sont affichés (les plus récents en premier) — bascule sur "Tous" pour voir aussi les gages de base. Chaque gage indique en petit ses <strong>conditions exactes de tirage in-game</strong> (niveau, genre, mode, pratiques, accessoires). 🎯 100% = jamais tiré au hasard, uniquement proposé au démarrage d\'une partie.</p>'
+    +'<div class="search-box"><input type="text" id="s-kw" placeholder="🔍 Mot-clé…" oninput="filterGages()"><select id="s-lvl" onchange="filterGages()"><option value="">Tous niveaux</option><option value="1">Niv.1</option><option value="2">Niv.2</option><option value="3">Niv.3</option><option value="4">Niv.4</option><option value="5">Niv.5</option></select></div>'
+    +'<div class="search-box"><select id="s-genre" onchange="filterGages()" style="flex:1"><option value="">Tous genres</option><option value="Homme">👨 H</option><option value="Femme">👩 F</option><option value="Mixte">⚧ M</option></select><select id="s-src" onchange="filterGages()" style="flex:1"><option value="custom" selected>🎯 Mes gages perso</option><option value="all">Tous (perso + base)</option><option value="base">Base uniquement</option></select></div>'
     +'<div class="search-box"><select id="s-prat" onchange="filterGages()" style="flex:1"><option value="">Toutes pratiques</option>'+pratOptions+'</select><select id="s-type" onchange="filterGages()" style="flex:1"><option value="">Tous types</option><option value="guide">🎓 Guide</option><option value="action">🎯 Action</option><option value="choix">🔀 Choix A/B</option><option value="question">❓ Question</option><option value="defi">⚡ Défi/Fun</option><option value="massage">💆 Massage</option><option value="kamasutra">🕉 Kamasutra</option></select></div>'
     +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:4px 2px 8px"><input type="checkbox" id="s-perso100" onchange="filterGages()" style="width:16px;height:16px;accent-color:var(--gold)"><span style="font-size:13px">🎯 Uniquement les gages 100% personnalisés</span></label>';
 }
@@ -8074,6 +8167,19 @@ function initAdminGageForm() {
       });
     });
   });
+  var pgp=document.getElementById('g-prat-partner-grid');
+  if(pgp){
+    pgp.innerHTML='';
+    var seen2={};
+    ['Homme','Femme'].forEach(function(g){
+      Object.keys(pd[g]||{}).forEach(function(cat){
+        (pd[g][cat]||[]).forEach(function(p){
+          if(seen2[p.id]) return; seen2[p.id]=1;
+          pgp.innerHTML+='<label class="admin-pill" onclick="togglePill(this)" title="'+p.desc.replace(/"/g,"'")+'"><input type="checkbox" name="g-prat-partner" value="'+p.id+'"> '+p.label+'</label>';
+        });
+      });
+    });
+  }
   liveVal();
 }
 
@@ -8118,9 +8224,10 @@ function saveGage() {
   var mode=(document.getElementById('g-mode')||{value:''}).value;
   var accs=[]; document.querySelectorAll('input[name="g-acc"]:checked').forEach(function(c){accs.push(c.value);});
   var prats=[]; document.querySelectorAll('input[name="g-prat"]:checked').forEach(function(c){prats.push(c.value);});
+  var pratsPartner=[]; document.querySelectorAll('input[name="g-prat-partner"]:checked').forEach(function(c){pratsPartner.push(c.value);});
   var perso100=!!(document.getElementById('g-perso100')||{}).checked;
   var rawIdx=(document.getElementById('edit-idx')||{value:'-1'}).value;
-  var gage={texte:txt,niveau:lvl,genre:genre,pratiques:prats,accessoires:accs,modes:mode?[mode]:[],solo:false,_perso100:perso100};
+  var gage={texte:txt,niveau:lvl,genre:genre,pratiques:prats,pratiquesPartenaire:pratsPartner,accessoires:accs,modes:mode?[mode]:[],solo:false,_perso100:perso100};
   if(rawIdx.indexOf('base_')===0){
     var bi=parseInt(rawIdx.replace('base_',''));
     customGages.push(gage);
@@ -8163,7 +8270,7 @@ function cancelGageEdit(){
   var fg=document.getElementById('g-genre'); if(fg) fg.value='Mixte';
   var fl=document.getElementById('g-lvl'); if(fl) fl.value='1';
   var fm=document.getElementById('g-mode'); if(fm) fm.value='';
-  document.querySelectorAll('input[name="g-acc"],input[name="g-prat"]').forEach(function(cb){cb.checked=false;cb.closest&&cb.closest('.admin-pill')&&cb.closest('.admin-pill').classList.remove('checked');});
+  document.querySelectorAll('input[name="g-acc"],input[name="g-prat"],input[name="g-prat-partner"]').forEach(function(cb){cb.checked=false;cb.closest&&cb.closest('.admin-pill')&&cb.closest('.admin-pill').classList.remove('checked');});
   var sb=document.getElementById('g-save'); if(sb) sb.textContent='➕ Ajouter';
   var p100c=document.getElementById('g-perso100'); if(p100c) p100c.checked=false;
   var cb2=document.getElementById('g-cancel'); if(cb2) cb2.style.display='none';
@@ -8182,10 +8289,12 @@ function filterGages() {
   var hidden=hiddenBaseGages;
   function matchPrat(g){ return !prat||(g.pratiques&&g.pratiques.indexOf(prat)>=0); }
   function matchType(g){ return !type||getGageType(g)===type; }
+  if(src!=='base') for(var _ci=customGages.length-1;_ci>=0;_ci--){ var g=customGages[_ci]; if(onlyPerso&&!g._perso100) continue; if(kw&&g.texte.toLowerCase().indexOf(kw)<0) continue; if(lvl&&String(g.niveau)!==lvl) continue; if(genre&&g.genre!==genre) continue; if(!matchPrat(g)) continue; if(!matchType(g)) continue; items.push({g:g,i:_ci,base:false}); }
   if(src!=='custom' && !onlyPerso) GAGES_BASE.forEach(function(g,i){ if(hidden.indexOf(i)>=0) return; if(kw&&g.texte.toLowerCase().indexOf(kw)<0) return; if(lvl&&String(g.niveau)!==lvl) return; if(genre&&g.genre!==genre) return; if(!matchPrat(g)) return; if(!matchType(g)) return; items.push({g:g,i:i,base:true}); });
-  if(src!=='base') customGages.forEach(function(g,i){ if(onlyPerso&&!g._perso100) return; if(kw&&g.texte.toLowerCase().indexOf(kw)<0) return; if(lvl&&String(g.niveau)!==lvl) return; if(genre&&g.genre!==genre) return; if(!matchPrat(g)) return; if(!matchType(g)) return; items.push({g:g,i:i,base:false}); });
   var div=document.getElementById('gage-list-items'); if(!div) return;
   if(!items.length){div.innerHTML='<p style="text-align:center;color:var(--muted);padding:20px">Aucun gage trouvé.</p>';return;}
+  var pratMap = pratLabelMap();
+  var MODE_LABELS = {classique:'🎲 Classique',pimente:'🔥 Pimenté',brise_glace:'🧭 Découverte',competition:'🏆 Compétition',story:'🎭 Histoire',prive:'🔒 Privé',solo:'👤 Solo'};
   div.innerHTML=items.map(function(it){
     var g=it.g,i=it.i,isBase=it.base;
     var tags=[]; tags.push('Niv.'+g.niveau); tags.push({Homme:'👨',Femme:'👩',Mixte:'⚧'}[g.genre]||g.genre);
@@ -8194,11 +8303,28 @@ function filterGages() {
     var secs=extractTimer(g.texte); if(secs) tags.push('⏱'+Math.floor(secs/60)+'m');
     var txt2=g.texte.length>80?g.texte.substring(0,80)+'…':g.texte;
     var badge=isBase?'<span class="admin-mini-tag" style="color:var(--info)">base</span> ':'';
-    if(!isBase && g._perso100) badge+='<span class="admin-mini-tag" style="color:var(--gold)">🎯 100%</span> ';
+    var isPerso100 = !isBase && g._perso100;
+    if(isPerso100) badge+='<span class="admin-mini-tag" style="color:var(--gold)">🎯 100%</span> ';
     var btns=isBase
       ?'<button class="btn info sm" style="padding:6px 10px" onclick="editBaseGage('+i+')">✏️</button><button class="btn ghost sm" style="padding:6px 10px" onclick="hideGage('+i+')">🚫</button>'
       :'<button class="btn info sm" style="padding:6px 10px" onclick="editCustomGage('+i+')">✏️</button><button class="btn danger sm" style="padding:6px 10px" onclick="deleteGage('+i+')">✕</button>';
-    return '<div class="admin-list-item"><div class="admin-list-row"><div class="admin-list-text">'+badge+txt2+'</div><div class="admin-list-btns">'+btns+'</div></div><div style="margin-top:6px">'+tags.map(function(t){return '<span class="admin-mini-tag">'+t+'</span>';}).join('')+'</div></div>';
+    // ── Conditions de tirage, en clair ──
+    var modesTxt = (g.modes&&g.modes.length) ? g.modes.map(function(m){return MODE_LABELS[m]||m;}).join(', ') : 'Tous modes';
+    var pratTxt = (g.pratiques&&g.pratiques.length) ? g.pratiques.map(function(p){return pratMap[p]||p;}).join(', ') : 'aucune requise';
+    var accTxt = (g.accessoires&&g.accessoires.length) ? g.accessoires.join(', ') : 'aucun requis';
+    var genreTxt = {Homme:'joueur Homme uniquement',Femme:'joueuse Femme uniquement',Mixte:'tout genre'}[g.genre]||g.genre;
+    var soloTxt = g.solo ? 'Solo uniquement' : 'Couple uniquement';
+    var cond;
+    if(isPerso100){
+      cond = '🎯 <strong>Garanti à 100%</strong> — jamais tiré au hasard : proposé uniquement au démarrage d\'une partie (si pratiques/objets compatibles), coché manuellement, puis inséré automatiquement dans la partie.';
+    } else {
+      var pratPartnerTxt = (g.pratiquesPartenaire&&g.pratiquesPartenaire.length) ? g.pratiquesPartenaire.map(function(p){return pratMap[p]||p;}).join(', ') : null;
+      cond = '🎲 Tirage aléatoire si toutes ces conditions sont réunies : Niveau '+g.niveau+' · '+genreTxt+' · '+soloTxt+' · Mode(s) : '+modesTxt+' · Pratiques (joueur) : '+pratTxt+(pratPartnerTxt?' · Pratiques (partenaire, tous modes) : '+pratPartnerTxt:'')+' · Accessoires requis : '+accTxt+'.';
+    }
+    return '<div class="admin-list-item"><div class="admin-list-row"><div class="admin-list-text">'+badge+txt2+'</div><div class="admin-list-btns">'+btns+'</div></div>'
+      +'<div style="margin-top:6px">'+tags.map(function(t){return '<span class="admin-mini-tag">'+t+'</span>';}).join('')+'</div>'
+      +'<div style="margin-top:6px;font-size:11px;line-height:1.5;color:var(--muted)">'+cond+'</div>'
+      +'</div>';
   }).join('');
 }
 
@@ -8213,6 +8339,7 @@ function editBaseGage(i){
   var p100b=document.getElementById('g-perso100'); if(p100b) p100b.checked=false;
   document.querySelectorAll('input[name="g-acc"]').forEach(function(cb){cb.checked=g.accessoires&&g.accessoires.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
   document.querySelectorAll('input[name="g-prat"]').forEach(function(cb){cb.checked=g.pratiques&&g.pratiques.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
+  document.querySelectorAll('input[name="g-prat-partner"]').forEach(function(cb){cb.checked=g.pratiquesPartenaire&&g.pratiquesPartenaire.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
   document.getElementById('g-save').textContent='💾 Enregistrer (copie)';
   document.getElementById('g-cancel').style.display='';
   liveVal(); window.scrollTo(0,0);
@@ -8228,6 +8355,7 @@ function editCustomGage(i){
   var p100=document.getElementById('g-perso100'); if(p100) p100.checked=!!g._perso100;
   document.querySelectorAll('input[name="g-acc"]').forEach(function(cb){cb.checked=g.accessoires&&g.accessoires.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
   document.querySelectorAll('input[name="g-prat"]').forEach(function(cb){cb.checked=g.pratiques&&g.pratiques.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
+  document.querySelectorAll('input[name="g-prat-partner"]').forEach(function(cb){cb.checked=g.pratiquesPartenaire&&g.pratiquesPartenaire.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
   document.getElementById('g-save').textContent='💾 Enregistrer';
   document.getElementById('g-cancel').style.display='';
   liveVal(); window.scrollTo(0,0);
@@ -9936,6 +10064,16 @@ function hidePaywall() {
   if(ov) ov.style.display = 'none';
 }
 
+function showWipOverlay() {
+  var ov = document.getElementById('wip-overlay');
+  if(ov) ov.style.display = 'flex';
+}
+
+function hideWipOverlay() {
+  var ov = document.getElementById('wip-overlay');
+  if(ov) ov.style.display = 'none';
+}
+
 function tryActivateCode() {
   var inp = document.getElementById('premium-code-inp');
   var code = (inp ? inp.value : '').trim();
@@ -9980,7 +10118,7 @@ function adminTap(){
       // Affiche le badge premium
       var pb=document.getElementById('premium-badge'); if(pb) pb.style.display='block';
       // Débloque visuellement toutes les cartes premium
-      ['mc-decouverte','mc-pimente','mc-competition','mc-live'].forEach(function(id){
+      ['mc-decouverte','mc-pimente','mc-competition'].forEach(function(id){
         var card=document.getElementById(id);
         if(card){ card.classList.add('unlocked'); var lock=card.querySelector('.mode-lock'); if(lock) lock.style.display='none'; }
       });
@@ -10149,6 +10287,20 @@ applyLang();
     <button onclick="hidePaywall()"
       style="background:transparent;border:none;color:#7a6e8a;font-size:13px;cursor:pointer;padding:8px;font-family:'DM Sans',sans-serif">
       ← Retour (mode Brise-glace gratuit)
+    </button>
+  </div>
+</div>
+
+<div id="wip-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,7,16,.97);align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
+  <div style="max-width:360px;width:100%;text-align:center;font-family:'DM Sans',sans-serif">
+    <div style="font-size:44px;margin-bottom:16px">🚧</div>
+    <div style="font-size:22px;font-weight:800;color:#f0c060;margin-bottom:8px">Mode en travaux</div>
+    <div style="font-size:14px;color:#7a6e8a;margin-bottom:20px;line-height:1.6">
+      Le mode Live Streamer est temporairement indisponible le temps d'une amélioration.<br>Il sera de retour très bientôt.
+    </div>
+    <button onclick="hideWipOverlay()"
+      style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
+      ← Retour
     </button>
   </div>
 </div>
