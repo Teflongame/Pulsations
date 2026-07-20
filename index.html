@@ -913,6 +913,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <button class="admin-tab" onclick="adminTab('accessoires',this)">🎭 Accessoires</button>
     <button class="admin-tab" id="atab-bonus-nav" onclick="adminTab('bonus',this)">🎁 Bonus</button>
     <button class="admin-tab" id="atab-mem-nav" onclick="adminTab('memoire',this)">🧠 Mémoire</button>
+    <button class="admin-tab" id="atab-data-nav" onclick="adminTab('data',this)">💾 Données</button>
   </div>
   <div id="admin-content"></div>
   <button class="btn ghost" style="margin-top:14px" onclick="goTo('page-home')">← Retour</button>
@@ -7773,11 +7774,77 @@ function pratLabelMap(){
   var pd=getPratData(), map={};
   ['Homme','Femme','Trans'].forEach(function(g){
     Object.keys(pd[g]||{}).forEach(function(cat){
-      (pd[g][cat]||[]).forEach(function(p){ if(!map[p.id]) map[p.id]=p.label; });
+      (pd[g][cat]||[]).forEach(function(p){ if(!map[p.id]) map[p.id]={label:p.label,desc:p.desc||''}; });
     });
   });
   return map;
 }
+function pratLabel(map,id){ return (map[id]&&map[id].label) || id; }
+function pratDesc(map,id){ return (map[id]&&map[id].desc) || ''; }
+var GAGE_MODE_LABELS = {classique:'🎲 Classique',pimente:'🔥 Pimenté',brise_glace:'🧭 Découverte',competition:'🏆 Compétition',story:'🎭 Histoire',prive:'🔒 Privé',solo:'👤 Solo'};
+// Construit le panneau d'icônes + tags (avec info-bulles) montrant exactement comment
+// un gage se comporte in-game. Réutilisé dans la liste admin (dépliant) ET dans le
+// formulaire de création/édition (aperçu en direct).
+function buildGageInfoBadges(g){
+  var pratMap = pratLabelMap();
+  var secs = extractTimer(g.texte||'');
+  var timerTxt = secs ? (Math.floor(secs/60)+':'+String(secs%60).padStart(2,'0')) : '—';
+  var accs = g.accessoires||[];
+  var prats = g.pratiques||[];
+  var pratsP = g.pratiquesPartenaire||[];
+  var modes = g.modes||[];
+  var isPerso100 = !!g._perso100;
+
+  function badge(icon,val,title){
+    return '<div class="tip" title="'+title.replace(/"/g,'&quot;')+'" style="flex:1;min-width:60px;text-align:center;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 4px">'
+      +'<div style="font-size:15px;line-height:1">'+icon+'</div><div style="font-size:12px;font-weight:700;margin-top:3px">'+val+'</div></div>';
+  }
+  var html = '<div style="display:flex;gap:7px;margin:8px 0;flex-wrap:wrap">'
+    + badge('👤', g.solo?'1':'2', g.solo ? 'Gage solo : concerne 1 seul·e joueur·euse.' : 'Gage en couple : concerne les 2 joueur·euses.')
+    + badge('NIV.', g.niveau, 'Niveau d\'intensité '+g.niveau+'/5 requis pour que ce gage puisse sortir.')
+    + badge('⏱', timerTxt, secs ? 'Chronomètre détecté dans le texte : '+timerTxt+'.' : 'Aucun chronomètre détecté dans le texte.')
+    + badge(accs.length?'🎭':'🚫', accs.length?(accs.length+' req.'):'Aucun', accs.length ? 'Accessoire(s) que le couple doit avoir coché en début de partie : '+accs.join(', ')+'.' : 'Aucun accessoire requis — ce gage peut sortir même si le couple n\'a coché "Aucun".')
+    + '</div>';
+
+  function tagGroup(title, items){
+    if(!items.length) return '';
+    return '<div style="margin-top:8px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">'+title+'</div><div>'+items.join('')+'</div></div>';
+  }
+
+  var dispo = [];
+  var genreTip = g.genre==='Homme' ? 'Ce gage n\'est proposé qu\'à un·e joueur·euse ayant coché le genre Homme.'
+    : g.genre==='Femme' ? 'Ce gage n\'est proposé qu\'à un·e joueur·euse ayant coché le genre Femme.'
+    : 'Ce gage peut être proposé à n\'importe quel genre de joueur·euse.';
+  dispo.push('<span class="admin-mini-tag tip" title="'+genreTip+'">'+({Homme:'👨 Homme',Femme:'👩 Femme',Mixte:'⚧ Tout genre'}[g.genre]||g.genre)+'</span>');
+  dispo.push('<span class="admin-mini-tag tip" title="'+(g.solo?'Uniquement en mode Solo.':'Uniquement en partie à 2 (ou plus) — pas en mode Solo.')+'">'+(g.solo?'Solo':'Couple')+'</span>');
+  if(modes.length) modes.forEach(function(m){ dispo.push('<span class="admin-mini-tag tip" title="Restreint au mode '+(GAGE_MODE_LABELS[m]||m)+'.">'+(GAGE_MODE_LABELS[m]||m)+'</span>'); });
+  else dispo.push('<span class="admin-mini-tag tip" title="Aucune restriction de mode : peut sortir en Classique, Pimenté, Découverte, Compétition...">🌐 Tous modes</span>');
+
+  var accTags = accs.length
+    ? accs.map(function(a){ return '<span class="admin-mini-tag tip" title="Doit être coché par le couple en début de partie.">🎭 '+a+'</span>'; })
+    : ['<span class="admin-mini-tag">Aucun accessoire requis</span>'];
+
+  var pratTags = prats.length
+    ? prats.map(function(p){ return '<span class="admin-mini-tag tip" title="'+(pratDesc(pratMap,p)||'Pratique requise chez le·la joueur·euse actif·ve.').replace(/"/g,'&quot;')+'">'+pratLabel(pratMap,p)+'</span>'; })
+    : ['<span class="admin-mini-tag">Aucune — toujours disponible</span>'];
+
+  var pratPTags = pratsP.length
+    ? pratsP.map(function(p){ return '<span class="admin-mini-tag tip" title="'+(pratDesc(pratMap,p)||'Pratique requise chez le·la partenaire.').replace(/"/g,'&quot;')+'">'+pratLabel(pratMap,p)+'</span>'; })
+    : [];
+
+  html += tagGroup('Disponible pour', dispo);
+  html += tagGroup('Accessoires', accTags);
+  html += tagGroup('Pratiques requises (joueur·euse actif·ve)', pratTags);
+  if(pratPTags.length) html += tagGroup('Pratiques requises (partenaire — tous modes)', pratPTags);
+
+  if(isPerso100){
+    html += '<div class="val-box val-ok" style="margin-top:10px">🎯 <div><strong>Garanti à 100%</strong> — jamais tiré au hasard : proposé uniquement au démarrage d\'une partie (si compatible), coché manuellement, puis inséré automatiquement.</div></div>';
+  } else {
+    html += '<div style="font-size:11px;color:var(--muted);margin-top:8px">🎲 Tirage aléatoire : ce gage sort seulement quand <strong>toutes</strong> les conditions ci-dessus sont réunies en même temps.</div>';
+  }
+  return html;
+}
+
 function getAccData(){
   var r={};
   Object.keys(ACCESSOIRES_BASE).forEach(function(c){ r[c]=ACCESSOIRES_BASE[c].slice(); });
@@ -7995,6 +8062,7 @@ function adminTab(tab, btn) {
   else if(tab==='accessoires') { cnt.innerHTML = renderAdminAcc(); }
   else if(tab==='bonus') { cnt.innerHTML = renderAdminBonus(); }
   else if(tab==='memoire') { cnt.innerHTML = renderAdminMemoire(); }
+  else if(tab==='data') { cnt.innerHTML = renderAdminData(); }
 }
 
 function renderAdminGages() {
@@ -8188,6 +8256,7 @@ function togglePratLabel(label) {
 }
 function togglePill(label) {
   var cb=label.querySelector('input'); cb.checked=!cb.checked; label.classList.toggle('checked',cb.checked);
+  liveVal();
 }
 
 function liveVal() {
@@ -8209,6 +8278,22 @@ function liveVal() {
   if(txt.length>=10){var sim=findSimilar(txt,(document.getElementById('edit-idx')||{value:'-1'}).value);if(sim.length)warns.push('<strong>'+sim.length+' gage(s) similaire(s) :</strong><div style="margin-top:4px">'+sim.map(function(s){return '<div style="font-size:11px;padding:4px 8px;background:rgba(240,192,96,0.08);border-radius:6px;margin-top:3px">Niv.'+s.niveau+' '+s.genre+' — '+s.texte.substring(0,60)+'…</div>';}).join('')+'</div>');}
   var secs=txt?extractTimer(txt):null; if(secs)infos.push('⏱ Timer: '+Math.floor(secs/60)+'m'+(secs%60?secs%60+'s':''));
   var html='';
+  if(txt){
+    var _accs=[]; document.querySelectorAll('input[name="g-acc"]:checked').forEach(function(c){_accs.push(c.value);});
+    var _prats=[]; document.querySelectorAll('input[name="g-prat"]:checked').forEach(function(c){_prats.push(c.value);});
+    var _pratsP=[]; document.querySelectorAll('input[name="g-prat-partner"]:checked').forEach(function(c){_pratsP.push(c.value);});
+    var _mode=(document.getElementById('g-mode')||{value:''}).value;
+    var _fakeGage={
+      texte:txt,
+      niveau:parseInt((document.getElementById('g-lvl')||{value:'1'}).value)||1,
+      genre:(document.getElementById('g-genre')||{value:'Mixte'}).value,
+      modes:_mode?[_mode]:[],
+      accessoires:_accs, pratiques:_prats, pratiquesPartenaire:_pratsP,
+      solo:false,
+      _perso100:!!(document.getElementById('g-perso100')||{}).checked
+    };
+    html += '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:2px 0 2px">Comment ce gage fonctionne in-game</div>' + buildGageInfoBadges(_fakeGage);
+  }
   if(errs.length)html+='<div class="val-box val-err">🚫 <div>'+errs.join('<br>')+'</div></div>';
   else html+='<div class="val-box val-ok">✅ <div>Gage valide</div></div>';
   if(warns.length)html+='<div class="val-box val-warn">⚠️ <div>'+warns.join('<br>')+'</div></div>';
@@ -8294,9 +8379,9 @@ function filterGages() {
   var div=document.getElementById('gage-list-items'); if(!div) return;
   if(!items.length){div.innerHTML='<p style="text-align:center;color:var(--muted);padding:20px">Aucun gage trouvé.</p>';return;}
   var pratMap = pratLabelMap();
-  var MODE_LABELS = {classique:'🎲 Classique',pimente:'🔥 Pimenté',brise_glace:'🧭 Découverte',competition:'🏆 Compétition',story:'🎭 Histoire',prive:'🔒 Privé',solo:'👤 Solo'};
   div.innerHTML=items.map(function(it){
     var g=it.g,i=it.i,isBase=it.base;
+    var domId=(isBase?'b':'c')+'_'+i;
     var tags=[]; tags.push('Niv.'+g.niveau); tags.push({Homme:'👨',Femme:'👩',Mixte:'⚧'}[g.genre]||g.genre);
     if(g.accessoires&&g.accessoires.length) tags.push('🎭');
     if(g.solo) tags.push('👤');
@@ -8308,24 +8393,20 @@ function filterGages() {
     var btns=isBase
       ?'<button class="btn info sm" style="padding:6px 10px" onclick="editBaseGage('+i+')">✏️</button><button class="btn ghost sm" style="padding:6px 10px" onclick="hideGage('+i+')">🚫</button>'
       :'<button class="btn info sm" style="padding:6px 10px" onclick="editCustomGage('+i+')">✏️</button><button class="btn danger sm" style="padding:6px 10px" onclick="deleteGage('+i+')">✕</button>';
-    // ── Conditions de tirage, en clair ──
-    var modesTxt = (g.modes&&g.modes.length) ? g.modes.map(function(m){return MODE_LABELS[m]||m;}).join(', ') : 'Tous modes';
-    var pratTxt = (g.pratiques&&g.pratiques.length) ? g.pratiques.map(function(p){return pratMap[p]||p;}).join(', ') : 'aucune requise';
-    var accTxt = (g.accessoires&&g.accessoires.length) ? g.accessoires.join(', ') : 'aucun requis';
-    var genreTxt = {Homme:'joueur Homme uniquement',Femme:'joueuse Femme uniquement',Mixte:'tout genre'}[g.genre]||g.genre;
-    var soloTxt = g.solo ? 'Solo uniquement' : 'Couple uniquement';
-    var cond;
-    if(isPerso100){
-      cond = '🎯 <strong>Garanti à 100%</strong> — jamais tiré au hasard : proposé uniquement au démarrage d\'une partie (si pratiques/objets compatibles), coché manuellement, puis inséré automatiquement dans la partie.';
-    } else {
-      var pratPartnerTxt = (g.pratiquesPartenaire&&g.pratiquesPartenaire.length) ? g.pratiquesPartenaire.map(function(p){return pratMap[p]||p;}).join(', ') : null;
-      cond = '🎲 Tirage aléatoire si toutes ces conditions sont réunies : Niveau '+g.niveau+' · '+genreTxt+' · '+soloTxt+' · Mode(s) : '+modesTxt+' · Pratiques (joueur) : '+pratTxt+(pratPartnerTxt?' · Pratiques (partenaire, tous modes) : '+pratPartnerTxt:'')+' · Accessoires requis : '+accTxt+'.';
-    }
     return '<div class="admin-list-item"><div class="admin-list-row"><div class="admin-list-text">'+badge+txt2+'</div><div class="admin-list-btns">'+btns+'</div></div>'
-      +'<div style="margin-top:6px">'+tags.map(function(t){return '<span class="admin-mini-tag">'+t+'</span>';}).join('')+'</div>'
-      +'<div style="margin-top:6px;font-size:11px;line-height:1.5;color:var(--muted)">'+cond+'</div>'
+      +'<div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between">'
+        +'<div>'+tags.map(function(t){return '<span class="admin-mini-tag">'+t+'</span>';}).join('')+'</div>'
+        +'<button type="button" onclick="toggleGageInfo(\''+domId+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px" title="Voir comment ce gage fonctionne in-game" id="chev_'+domId+'">▾</button>'
+      +'</div>'
+      +'<div id="info_'+domId+'" class="hidden">'+buildGageInfoBadges(g)+'</div>'
       +'</div>';
   }).join('');
+}
+function toggleGageInfo(domId){
+  var panel=document.getElementById('info_'+domId), chev=document.getElementById('chev_'+domId);
+  if(!panel) return;
+  var open = panel.classList.toggle('hidden')===false;
+  if(chev) chev.textContent = open ? '▴' : '▾';
 }
 
 function editBaseGage(i){
@@ -8638,6 +8719,96 @@ function renderAdminMemoire(){
 
   html += '<button class="btn ghost sm" style="width:100%;margin-top:16px" onclick="resetGageMemory()">↺ Réinitialiser toute la mémoire</button>';
   return html;
+}
+
+// ══════════════ EXPORT / IMPORT DES DONNÉES ══════════════
+// Tout ce qui compte (gages perso, pratiques ajoutées, accessoires perso, gages masqués,
+// bonus, profils sauvegardés, historique de partie, mémoire, préférences...) ne vit que
+// dans le localStorage du navigateur. Cette page permet de le sauvegarder dans un fichier
+// et de le restaurer sur un autre appareil ou après un vidage de cache.
+function _dataKeyGroups(){
+  return [
+    {label:'🎴 Gages personnalisés', keys:['cg_v28']},
+    {label:'🚫 Gages masqués', keys:['hbg_v28']},
+    {label:'🔖 Pratiques ajoutées/modifiées', keys:['cp_v28']},
+    {label:'🎭 Accessoires ajoutés', keys:['ca_v28']},
+    {label:'🎁 Cartes bonus', keys:['cb_v28']},
+    {label:'💑 Profils de couple sauvegardés', keys:['jdc_profiles_v28']},
+    {label:'📜 Historique des gages joués', keys:['jdc_played_v28']},
+    {label:'🧠 Mémoire des préférences (passer/changer)', keys:['gmem_v28']},
+    {label:'👍👎 Notes de fin de partie', keys:['gprefs_v28']},
+    {label:'⭐ Favoris', keys:['pulsations_favs_v1']},
+    {label:'📝 Mes gages (liste perso hors admin)', keys:['myg_v28']},
+    {label:'⚙️ Réglages (thème, voix, langue)', keys:['jdc_theme_v28','voice_narration_v28','pulsations_lang']},
+    {label:'💾 Partie en cours', keys:['jdc_save_v28','jdc_game_save_v28']}
+  ];
+}
+function renderAdminData(){
+  var groups=_dataKeyGroups();
+  var html='<p style="font-size:12px;color:var(--muted);margin-bottom:10px">Tout ce que tu personnalises (gages perso, pratiques ajoutées, accessoires, gages masqués, profils, historique...) ne vit que dans le navigateur de cet appareil. Un vidage de cache, un changement de téléphone ou une réinstallation efface tout, sans prévenir. Exporte régulièrement un fichier de sauvegarde, et importe-le sur un nouvel appareil pour tout récupérer.</p>';
+
+  html+='<div style="background:var(--card2);border-radius:12px;padding:12px;margin-bottom:14px">';
+  html+='<h3 style="font-size:13px;color:var(--gold);margin-bottom:8px">Ce qui sera inclus</h3>';
+  var totalKeys=0, presentKeys=0;
+  groups.forEach(function(g){
+    var found=g.keys.filter(function(k){ try{ return localStorage.getItem(k)!==null; }catch(e){ return false; } });
+    totalKeys+=g.keys.length; presentKeys+=found.length;
+    html+='<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">'
+      +'<span>'+g.label+'</span><span style="color:'+(found.length?'var(--success)':'var(--muted)')+'">'+(found.length?'✓ présent':'— vide')+'</span></div>';
+  });
+  html+='</div>';
+
+  html+='<div class="btn-row" style="flex-direction:column;gap:10px">'
+    +'<button class="btn" style="width:100%" onclick="exportAllData()">📤 Exporter mes données (fichier .json)</button>'
+    +'<button class="btn ghost" style="width:100%" onclick="document.getElementById(\'import-file-input\').click()">📥 Importer une sauvegarde</button>'
+    +'<input type="file" id="import-file-input" accept="application/json,.json" style="display:none" onchange="importAllData(this.files[0]);this.value=\'\'">'
+    +'</div>';
+  html+='<p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5">📤 Télécharge un fichier <code>.json</code> à garder précieusement (mail, cloud, etc.).<br>📥 Remplace les données de cet appareil par celles du fichier importé — à utiliser sur un nouvel appareil, ou pour restaurer après un problème. Une confirmation est demandée avant tout remplacement.</p>';
+  return html;
+}
+function exportAllData(){
+  try{
+    var data={};
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      data[k]=localStorage.getItem(k);
+    }
+    var payload={app:'Pulsations — Jeu de Couple',exportedAt:new Date().toISOString(),data:data};
+    var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    var d=new Date(); var stamp=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    a.download='pulsations-sauvegarde-'+stamp+'.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+  }catch(e){
+    alert('Erreur pendant l\'export : '+e.message);
+  }
+}
+function importAllData(file){
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var payload=JSON.parse(e.target.result);
+      var data=(payload && payload.data && typeof payload.data==='object') ? payload.data : payload;
+      if(!data || typeof data!=='object') throw new Error('format non reconnu');
+      var keys=Object.keys(data);
+      if(!keys.length) throw new Error('fichier vide');
+      if(!confirm('Importer '+keys.length+' élément(s) ?\n\nCela va REMPLACER les données actuelles de cet appareil (gages perso, pratiques, accessoires, profils, historique...) par celles du fichier. Cette action est irréversible.')) return;
+      var okCount=0;
+      keys.forEach(function(k){
+        try{ localStorage.setItem(k, data[k]); okCount++; }catch(e2){}
+      });
+      alert('Import réussi : '+okCount+' élément(s) restauré(s). La page va se recharger.');
+      location.reload();
+    }catch(err){
+      alert('Fichier invalide ou corrompu — import annulé.\n('+err.message+')');
+    }
+  };
+  reader.onerror=function(){ alert('Impossible de lire ce fichier.'); };
+  reader.readAsText(file);
 }
 
 function memGoToGage(encodedTexte){
@@ -9022,7 +9193,7 @@ function pickBonusChoice(i){
 // ══ PROFILE QUICK ══
 
 // ── GAME SAVE/RESTORE ──
-var SAVE_KEY = 'jdc_save_v28';
+var QUICKSAVE_KEY = 'jdc_save_v28';
 function autoSaveGame() {
   if(G.level===0 || !G.players.length) return;
   try {
@@ -9034,14 +9205,14 @@ function autoSaveGame() {
       _startedAt:G._startedAt||Date.now(),
       savedAt:Date.now()
     };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(state));
   } catch(e){}
 }
 function clearSavedGame() {
-  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+  try { localStorage.removeItem(QUICKSAVE_KEY); } catch(e){}
 }
 function loadSavedGame() {
-  try { return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); } catch(e){ return null; }
+  try { return JSON.parse(localStorage.getItem(QUICKSAVE_KEY)||'null'); } catch(e){ return null; }
 }
 function restoreGame(state) {
   G.mode=state.mode; G.nb=state.nb; G.players=state.players; G.acc=state.acc;
