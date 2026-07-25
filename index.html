@@ -365,6 +365,9 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 .timer-box { margin:8px auto; text-align:center; }
 .timer-btn-simple { background:rgba(240,192,96,0.1); border:1.5px solid rgba(240,192,96,0.4); border-radius:22px; padding:10px 24px; color:var(--gold); font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:.3px; transition:background .2s; }
 .timer-btn-simple:active { background:rgba(240,192,96,0.2); }
+#dice-result { font-size:44px; font-weight:800; margin-top:10px; color:var(--gold); line-height:1; }
+@keyframes diceSpin { 0%{transform:scale(1) rotate(0deg);} 50%{transform:scale(1.15) rotate(-8deg);} 100%{transform:scale(1) rotate(0deg);} }
+.dice-spin { animation:diceSpin .16s linear infinite; }
 
 /* ── COMP BANNER ── */
 .comp-banner { display:flex; gap:0; background:rgba(0,0,0,0.3); border-radius:12px; overflow:hidden; margin:6px 0; border:1px solid var(--border); }
@@ -885,6 +888,10 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   <div class="fav-toast" id="fav-toast"></div>
   <div id="g-timer" class="timer-box hidden">
     <button class="timer-btn-simple" id="ring-text" onclick="toggleTimer()">▶ Démarrer</button>
+  </div>
+  <div id="g-dice" class="timer-box hidden">
+    <button class="timer-btn-simple" id="dice-btn" onclick="rollDice()">🎲 Lancer le dé</button>
+    <div id="dice-result" class="hidden"></div>
   </div>
   <div class="lvl-progress-row"><span class="lvl-progress-label" id="lvl-prog-label">1/5</span><div class="lvl-progress-bar-wrap"><div class="lvl-progress-bar" id="g-progress" style="width:0%"></div></div></div>
   <div class="gage-counter" id="g-counter"></div>
@@ -4311,7 +4318,59 @@ var GAGES_BASE = [
 {texte:"{prenom} raconte le fantasme le plus intense qu'il ait sur le sujet pendant que {partenaire} se caresse en l'écoutant — **3 minutes**.",niveau:4,genre:"Homme",pratiques:["voyeur_actif_2"],accessoires:[],modes:[],solo:false},
 {texte:"{prenom} regarde {partenaire} se caresser jusqu'à ce que le plaisir devienne visible sur son visage, sans jamais intervenir — **3 minutes**.",niveau:4,genre:"Mixte",pratiques:["voyeur_actif_1"],accessoires:[],modes:[],solo:false},
 {texte:"{prenom} guide {partenaire} vers l'orgasme uniquement par les mots, en décrivant la scène fantasmée jusqu'au bout — durée libre, aucune limite dans le récit.",niveau:5,genre:"Femme",pratiques:["voyeur_actif_2"],accessoires:[],modes:[],solo:false},
-{texte:"{prenom} regarde {partenaire} se donner du plaisir jusqu'à l'orgasme complet, sans intervenir, sans détourner le regard — durée libre.",niveau:5,genre:"Mixte",pratiques:["voyeur_actif_1"],accessoires:[],modes:[],solo:false}
+{texte:"{prenom} regarde {partenaire} se donner du plaisir jusqu'à l'orgasme complet, sans intervenir, sans détourner le regard — durée libre.",niveau:5,genre:"Mixte",pratiques:["voyeur_actif_1"],accessoires:[],modes:[],solo:false},
+
+/* ══════ GAGES — DÉ ANIMÉ (1-12), un par niveau et par mode de jeu ══════ */
+{texte:"{prenom}, dépose autant de bisous sur le cou de {partenaire} que l'indique le **dé**.",niveau:1,genre:"Mixte",pratiques:[],accessoires:[],modes:["classique"],solo:false},
+{texte:"{prenom}, mordille l'oreille de {partenaire} autant de fois que l'indique le **dé** — de plus en plus fort à chaque fois.",niveau:1,genre:"Mixte",pratiques:[],accessoires:[],modes:["pimente"],solo:false},
+{texte:"{prenom}, caresse doucement le bras de {partenaire}, une fois par point indiqué par le **dé**, en changeant de zone à chaque fois.",niveau:1,genre:"Mixte",pratiques:[],accessoires:[],modes:["brise_glace"],solo:false},
+{texte:"{prenom}, tu as autant de secondes ×5 que l'indique le **dé** pour faire rougir {partenaire} avec des bisous surprises.",niveau:1,genre:"Mixte",pratiques:[],accessoires:[],modes:["competition"],solo:false},
+{texte:"{prenom}, le **dé** décide : embrasse {partenaire} sur autant de zones différentes que le chiffre obtenu.",niveau:1,genre:"Mixte",pratiques:[],accessoires:[],modes:["story"],solo:false},
+{texte:"{prenom}, caresse le sexe de {partenaire} pendant autant de ×5 secondes que l'indique le **dé**.",niveau:2,genre:"Mixte",pratiques:["masturb_actif","masturb_actif_f"],accessoires:[],modes:["classique"],solo:false},
+{texte:"{prenom}, lèche le sexe de {partenaire} le nombre de fois indiqué par le **dé**, en changeant de rythme à chaque passage.",niveau:2,genre:"Mixte",pratiques:["oral_actif"],accessoires:[],modes:["pimente"],solo:false},
+{texte:"{prenom}, masse une zone érogène de {partenaire} de ton choix pendant autant de ×10 secondes que l'indique le **dé**.",niveau:2,genre:"Mixte",pratiques:[],accessoires:[],modes:["brise_glace"],solo:false},
+{texte:"{prenom}, le **dé** fixe ton défi : autant de caresses différentes sur {partenaire} en 1 minute chrono.",niveau:2,genre:"Mixte",pratiques:[],accessoires:[],modes:["competition"],solo:false},
+{texte:"{prenom}, le **dé** choisit le nombre de baisers coquins à déposer sur le corps de {partenaire}.",niveau:2,genre:"Mixte",pratiques:[],accessoires:[],modes:["story"],solo:false},
+{texte:"{prenom}, doigte l'anus de {partenaire} avec autant de mouvements que l'indique le **dé**, en accélérant progressivement.",niveau:3,genre:"Mixte",pratiques:["anal_actif_1"],accessoires:[],modes:["classique"],solo:false},
+{texte:"{prenom}, suce le sexe de {partenaire} et alterne rythme lent/rapide toutes les fois indiquées par le **dé**.",niveau:3,genre:"Mixte",pratiques:["oral_actif"],accessoires:[],modes:["pimente"],solo:false},
+{texte:"{prenom}, explore le corps de {partenaire} et découvre autant de nouvelles zones sensibles que l'indique le **dé**.",niveau:3,genre:"Mixte",pratiques:[],accessoires:[],modes:["brise_glace"],solo:false},
+{texte:"{prenom}, le **dé** décide de la durée en ×10 secondes de ton prochain défi buccal sur {partenaire}.",niveau:3,genre:"Mixte",pratiques:["oral_actif"],accessoires:[],modes:["competition"],solo:false},
+{texte:"{prenom}, le **dé** tranche : autant de positions différentes essayées avec {partenaire} en 2 minutes.",niveau:3,genre:"Mixte",pratiques:[],accessoires:[],modes:["story"],solo:false},
+{texte:"{prenom}, pénètre {partenaire} et change de rythme autant de fois que l'indique le **dé**.",niveau:4,genre:"Homme",pratiques:["penetration_h","penetration_f"],accessoires:[],modes:["classique"],solo:false},
+{texte:"{prenom}, claque les fesses de {partenaire} le nombre de fois indiqué par le **dé**, puis masse doucement.",niveau:4,genre:"Mixte",pratiques:["domination_1"],accessoires:[],modes:["pimente"],solo:false},
+{texte:"{prenom}, bande les yeux de {partenaire} et fais-lui deviner autant de caresses différentes que l'indique le **dé**.",niveau:4,genre:"Mixte",pratiques:[],accessoires:[],modes:["brise_glace"],solo:false},
+{texte:"{prenom}, le **dé** fixe le nombre de va-et-vient avant de changer de position avec {partenaire}.",niveau:4,genre:"Mixte",pratiques:[],accessoires:[],modes:["competition"],solo:false},
+{texte:"{prenom}, le **dé** décide du nombre de fessées à donner à {partenaire} avant de continuer.",niveau:4,genre:"Mixte",pratiques:["domination_1"],accessoires:[],modes:["story"],solo:false},
+{texte:"{prenom} et {partenaire}, le **dé** décide qui choisit la position finale — relancez en cas d'égalité.",niveau:5,genre:"Mixte",pratiques:[],accessoires:[],modes:["classique"],solo:false},
+{texte:"{prenom}, le **dé** fixe le nombre d'accélérations avant l'orgasme de {partenaire} — obéis au chiffre obtenu.",niveau:5,genre:"Mixte",pratiques:[],accessoires:[],modes:["pimente"],solo:false},
+{texte:"{prenom} et {partenaire}, le **dé** choisit votre grande finale parmi les gages du soir — le chiffre indique lequel.",niveau:5,genre:"Mixte",pratiques:[],accessoires:[],modes:["brise_glace"],solo:false},
+{texte:"{prenom}, le **dé** décide de tes points bonus de fin de partie — relance-le devant {partenaire}.",niveau:5,genre:"Mixte",pratiques:[],accessoires:[],modes:["competition"],solo:false},
+{texte:"{prenom} et {partenaire}, le **dé** scelle la fin de la soirée — le chiffre obtenu est le nombre de baisers finaux.",niveau:5,genre:"Mixte",pratiques:[],accessoires:[],modes:["story"],solo:false},
+{texte:"{prenom}, caresse-toi doucement le nombre de fois indiqué par le **dé**, en changeant de zone à chaque fois.",niveau:1,genre:"Homme",pratiques:["solo_h"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, stimule ton clitoris avec autant de rythmes différents que l'indique le **dé**.",niveau:2,genre:"Femme",pratiques:["solo_f","masturb_solo_f"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, explore ton corps et découvre autant de nouvelles sensations que l'indique le **dé**.",niveau:3,genre:"Trans",pratiques:["solo_t","masturb_solo_t"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, accélère et ralentis en alternance autant de fois que l'indique le **dé**, sans jouir avant la fin.",niveau:4,genre:"Homme",pratiques:["solo_h","masturb_solo_h"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, le **dé** décide : laisse-toi aller à l'orgasme après autant de vagues de plaisir que le chiffre obtenu.",niveau:5,genre:"Femme",pratiques:["solo_f","masturb_solo_f"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, caresse la nuque de {partenaire} autant de fois que l'indique le **dé**, en changeant de main à chaque passage.",niveau:1,genre:"Homme",pratiques:[],accessoires:[],modes:["classique"],solo:false},
+{texte:"{prenom}, embrasse le torse de {partenaire} autant de fois que l'indique le **dé**.",niveau:1,genre:"Femme",pratiques:[],accessoires:[],modes:["classique"],solo:false},
+{texte:"{prenom}, lèche le sexe de {partenaire} autant de fois de suite que l'indique le **dé**, sans t'arrêter entre chaque.",niveau:2,genre:"Homme",pratiques:["oral_actif"],accessoires:[],modes:["pimente"],solo:false},
+{texte:"{prenom}, suce le sexe de {partenaire} le nombre de fois indiqué par le **dé**, en variant la pression à chaque fois.",niveau:2,genre:"Femme",pratiques:["oral_actif"],accessoires:[],modes:["pimente"],solo:false},
+{texte:"{prenom}, doigte l'anus de {partenaire} avec autant de mouvements circulaires que l'indique le **dé**.",niveau:3,genre:"Homme",pratiques:["anal_actif_1"],accessoires:[],modes:["brise_glace"],solo:false},
+{texte:"{prenom}, caresse le clitoris de {partenaire} avec autant de rythmes différents que l'indique le **dé**.",niveau:3,genre:"Femme",pratiques:["masturb_actif_f"],accessoires:[],modes:["brise_glace"],solo:false},
+{texte:"{prenom}, le **dé** fixe le nombre de positions à enchaîner avec {partenaire} en 2 minutes.",niveau:4,genre:"Homme",pratiques:["penetration_h"],accessoires:[],modes:["competition"],solo:false},
+{texte:"{prenom}, le **dé** fixe le nombre d'allers-retours avant de changer de zone sur {partenaire}.",niveau:4,genre:"Femme",pratiques:[],accessoires:[],modes:["competition"],solo:false},
+{texte:"{prenom}, le **dé** décide du nombre de vagues de plaisir avant l'orgasme final de {partenaire}.",niveau:5,genre:"Homme",pratiques:[],accessoires:[],modes:["story"],solo:false},
+{texte:"{prenom}, le **dé** scelle la nuit — le chiffre obtenu est le nombre de caresses finales sur {partenaire}.",niveau:5,genre:"Femme",pratiques:[],accessoires:[],modes:["story"],solo:false},
+{texte:"{prenom}, caresse une zone de ton corps différente à chaque chiffre indiqué par le **dé**.",niveau:1,genre:"Trans",pratiques:["solo_t"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, masturbe-toi en changeant de prise autant de fois que l'indique le **dé**.",niveau:2,genre:"Homme",pratiques:["solo_h","masturb_solo_h"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, stimule ton point G avec autant de pressions rythmées que l'indique le **dé**.",niveau:3,genre:"Femme",pratiques:["solo_f","masturb_solo_f"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, alterne stimulation sexe/anus autant de fois que l'indique le **dé**.",niveau:4,genre:"Trans",pratiques:["solo_t","masturb_solo_t"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom}, le **dé** décide du nombre de vagues avant de te laisser jouir complètement.",niveau:5,genre:"Homme",pratiques:["solo_h","masturb_solo_h"],accessoires:[],modes:[],solo:true},
+{texte:"{prenom} et {partenaire}, le **dé** décide combien de fois vous vous embrassez avant de continuer.",niveau:2,genre:"Mixte",pratiques:[],accessoires:[],modes:["classique"],solo:false},
+{texte:"{prenom}, utilise le vibromasseur sur {partenaire} pendant autant de ×10 secondes que l'indique le **dé**.",niveau:3,genre:"Mixte",pratiques:[],accessoires:["Vibromasseur"],modes:["pimente"],solo:false},
+{texte:"{prenom}, le **dé** décide du nombre de zones à découvrir à l'aveugle sur {partenaire}, yeux bandés.",niveau:4,genre:"Mixte",pratiques:[],accessoires:["Masque / Bandeau"],modes:["brise_glace"],solo:false},
+{texte:"{prenom}, claque les fesses de {partenaire} avec la cravache le nombre de fois indiqué par le **dé**.",niveau:4,genre:"Mixte",pratiques:["domination_2"],accessoires:["Cravache"],modes:["competition"],solo:false},
+{texte:"{prenom} et {partenaire}, le **dé** choisit le nombre de positions du Kâmasûtra à essayer ce soir.",niveau:3,genre:"Mixte",pratiques:["kamasutra"],accessoires:[],modes:["story"],solo:false}
 ];
 
 /* ENGINE */
@@ -4490,7 +4549,7 @@ function renderCustomGagePicker(){
   var pratIdsSorted = Object.keys(usedPrats).sort(function(a,b){ return (pratLabel[a]||a).localeCompare(pratLabel[b]||b); });
 
   var h = '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">'
-    + '<p style="font-size:12px;color:var(--muted);margin-bottom:8px">Choisissez jusqu\'à <strong>3</strong> gages qui arriveront garantis à 100% en jeu — <strong>①</strong> sort en premier, puis <strong>②</strong>, puis <strong>③</strong>.</p>';
+    + '<p style="font-size:12px;color:var(--muted);margin-bottom:8px">Choisissez jusqu\'à <strong>8</strong> gages qui arriveront garantis à 100% en jeu — <strong>①</strong> sort en premier, puis <strong>②</strong>, etc.</p>';
 
   h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
   h += '<select id="pgf-type" onchange="onPersoFilterChange()" style="flex:1;min-width:108px">'
@@ -4522,6 +4581,16 @@ function renderCustomGagePicker(){
       var checked = rk >= 0;
       var preview = (g.texte||'').replace(/\{prenom\}/g,'joueur').replace(/\{partenaire\}/g,'partenaire').replace(/\*\*(.+?)\*\*/g,'$1');
       if(preview.length>90) preview = preview.slice(0,90)+'…';
+      var pv = partnerValidatesGage(g);
+      var pvBadge = pv===null ? '' : (pv
+        ? '<span class="tip" title="La partenaire a coché les pratiques concernées par ce gage. Indicatif uniquement — n\'empêche pas la sélection." style="display:inline-block;margin-left:6px;font-size:10px;color:var(--success)">✅ partenaire validé</span>'
+        : '<span class="tip" title="La partenaire n\'a pas coché toutes les pratiques concernées par ce gage. Indicatif uniquement — n\'empêche pas la sélection." style="display:inline-block;margin-left:6px;font-size:10px;color:var(--warn)">⚠️ partenaire non validé</span>');
+      var quotaBadge = '';
+      if(!checked && g.genre && g.genre!=='Mixte'){
+        var lvl0=g.niveau||1, cap0=LVL_MAX[lvl0]||5;
+        var used0=_persoLevelGenreCount(pool, lvl0, g.genre);
+        quotaBadge = '<span class="tip" title="Places perso déjà prises pour ce genre à ce niveau (plafonné à la capacité du niveau, pour garder l\'alternance stricte)." style="display:inline-block;margin-left:6px;font-size:10px;color:'+(used0>=cap0?'var(--warn)':'var(--muted)')+'">'+(g.genre==='Homme'?'👨':'👩')+' '+used0+'/'+cap0+'</span>';
+      }
       h += '<label class="perso-pick-item'+(checked?' checked':'')+'" style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
         + '<span class="perso-pick-rank" data-key="'+key+'" onclick="togglePersoPick(event,\''+key+'\',this)" '
         + 'style="flex:0 0 auto;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;'
@@ -4529,13 +4598,25 @@ function renderCustomGagePicker(){
         + 'transition:transform .15s">'+(checked ? (rk+1) : '+')+'</span>'
         + '<span style="font-size:13px;line-height:1.4">'
         + '<span style="display:inline-block;background:var(--card);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-right:5px;vertical-align:1px">Niv.'+(g.niveau||1)+'</span>'
-        + preview + '</span></label>';
+        + preview + pvBadge + quotaBadge + '</span></label>';
     });
   }
 
-  h += '<p id="perso-pick-count" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">'+G._selectedPersoIds.length+'/3 sélectionné(s)</p>';
+  h += '<p id="perso-pick-count" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">'+G._selectedPersoIds.length+'/8 sélectionné(s)</p>';
   h += '</div>';
   box.innerHTML = h;
+}
+// Indicateur informatif (sans impact in-game) : le/la partenaire a-t-il/elle coché les pratiques
+// concernées par ce gage perso, au moment où l'autre joueur·euse fait sa sélection ?
+function partnerValidatesGage(g){
+  if(!G.players || G.players.length<2) return null;
+  var actor = (g.genre && g.genre!=='Mixte') ? G.players.find(function(p){return p.genre===g.genre;}) : null;
+  var partner = actor ? G.players.find(function(p){return p.prenom!==actor.prenom;}) : null;
+  if(!partner) partner = G.players[1] || null;
+  if(!partner) return null;
+  var need = (g.pratiquesPartenaire && g.pratiquesPartenaire.length) ? g.pratiquesPartenaire : (g.pratiques||[]);
+  if(!need.length) return true;
+  return need.every(function(p){ return partner.pratiques.indexOf(p)>=0; });
 }
 function onPersoFilterChange(){
   G._persoFilter = G._persoFilter || {type:'',niveau:'',prat:''};
@@ -4544,6 +4625,20 @@ function onPersoFilterChange(){
   var p = document.getElementById('pgf-prat'); G._persoFilter.prat = p ? p.value : '';
   renderCustomGagePicker();
 }
+function _persoGageByKeyIn(pool, key){
+  for(var i=0;i<pool.length;i++){ var g=pool[i]; if(String(g.id!=null?g.id:i)===key) return g; }
+  return null;
+}
+// Combien de gages perso déjà sélectionnés occuperaient une place pour ce genre à ce niveau
+// (un gage "Mixte" peut atterrir sur l'un ou l'autre joueur, donc il compte pour les deux).
+function _persoLevelGenreCount(pool, niveau, genre){
+  var cnt=0;
+  (G._selectedPersoIds||[]).forEach(function(k){
+    var g=_persoGageByKeyIn(pool,k);
+    if(g && (g.niveau||1)===niveau && (g.genre===genre || g.genre==='Mixte')) cnt++;
+  });
+  return cnt;
+}
 function togglePersoPick(evt, key, el){
   if(evt){ evt.stopPropagation(); evt.preventDefault(); }
   G._selectedPersoIds = G._selectedPersoIds || [];
@@ -4551,9 +4646,27 @@ function togglePersoPick(evt, key, el){
   if(idx >= 0){
     G._selectedPersoIds.splice(idx,1);
   } else {
-    if(G._selectedPersoIds.length >= 3){
+    if(G._selectedPersoIds.length >= 8){
       if(el){ el.style.transform='scale(1.35)'; setTimeout(function(){ el.style.transform=''; },200); }
       return;
+    }
+    // Plafond par niveau/genre : au-delà de la capacité du niveau (nombre de gages par joueur
+    // réglé dans Réglages), un genre se retrouverait avec plus de gages que l'autre à ce niveau
+    // → alternance stricte impossible à tenir (ex: 2 gages perso d'affilée pour la même personne).
+    var pool = perso100Gages();
+    var newGage = _persoGageByKeyIn(pool, key);
+    if(newGage){
+      var lvl = newGage.niveau || 1;
+      var cap = LVL_MAX[lvl] || 5;
+      var gendersToCheck = newGage.genre==='Mixte' ? ['Homme','Femme'] : [newGage.genre];
+      for(var gi=0; gi<gendersToCheck.length; gi++){
+        var gg = gendersToCheck[gi];
+        if(_persoLevelGenreCount(pool, lvl, gg) >= cap){
+          if(el){ el.style.transform='scale(1.35)'; setTimeout(function(){ el.style.transform=''; },200); }
+          showFavToast('⚠️ Niveau '+lvl+' déjà au maximum pour '+(gg==='Homme'?'Homme':'Femme')+' ('+cap+'/'+cap+') — augmente le nombre de gages du niveau '+lvl+' dans Réglages, ou choisis un gage d\'un autre niveau.');
+          return;
+        }
+      }
     }
     G._selectedPersoIds.push(key);
   }
@@ -5145,7 +5258,7 @@ function renderPlayerPage() {
     var cgShow = (currentGenre==='Homme') ? 'flex' : 'none';
     html += '<label id="custom-gage-toggle" style="display:'+cgShow+';align-items:center;gap:10px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:14px">'
       + '<input type="checkbox" id="use-custom-gages" '+cgChecked+' onchange="toggleCustomGagePicker(this.checked)" style="width:18px;height:18px;flex:0 0 auto">'
-      + '<span style="font-size:14px">Gages personnalisés <span style="color:var(--muted);font-size:12px">(max 3)</span></span></label>';
+      + '<span style="font-size:14px">Gages personnalisés <span style="color:var(--muted);font-size:12px">(max 8)</span></span></label>';
     html += '<div id="custom-gage-picker" style="display:'+(G._useCustomGages?'block':'none')+';margin-top:8px"></div>';
   }
   html += '<button class="btn" style="margin-top:16px" onclick="savePlayer()">' + (isLast ? 'Confirmer ✓' : 'Joueur suivant →') + '</button>';
@@ -6775,6 +6888,12 @@ function prepareGages() {
       var pos = Math.floor(Math.random() * (arr.length + 1));
       arr.splice(pos, 0, Object.assign({}, mg, { _p: ap ? ap.prenom : '', _ch:false, _kama:false }));
     }
+    // Filet de sécurité : ré-applique l'alternance stricte après l'injection, sinon les gages
+    // perso ajoutés à une position aléatoire peuvent casser l'alternance homme/femme établie
+    // plus haut (ex: 2 gages perso pour la même personne insérés l'un après l'autre).
+    [1,2,3,4,5].forEach(function(lvl){
+      if(G.gagesByLevel[lvl] && G.gagesByLevel[lvl].length>1) G.gagesByLevel[lvl]=interleave(G.gagesByLevel[lvl]);
+    });
   }
 
   // ── BOOST DES GAGES "AIMÉS" (👍 donnés en fin de partie précédente) ──
@@ -6875,13 +6994,23 @@ function displayGage() {
     G._kamaShown=(G._kamaShown||0)+1;
     renderKamaCard(gage, player);
       el('g-timer').classList.add('hidden');
+      hideDice();
     } else {
       if(gage.texte&&gage.texte.charAt(0)==='🎓') soundGuide();
     renderGageCard(gage, player, partner);
       speakGageText(gage, player, partner);
       var secs=extractTimer(gage.texte);
       if(gage._bonusTimerX2 && secs){ secs = secs*2; }
-      if(secs){showTimer(secs);}else{el('g-timer').classList.add('hidden');}
+      if(hasDiceRef(gage.texte)){
+        el('g-timer').classList.add('hidden');
+        showDice();
+      } else if(secs){
+        hideDice();
+        showTimer(secs);
+      } else {
+        el('g-timer').classList.add('hidden');
+        hideDice();
+      }
       if(gage._bonusTimerX2) showFavToast('⏱️ Bonus actif : durée doublée !');
       else if(gage._bonusChoice) showFavToast('🔀 Bonus actif : gage choisi par l\'adversaire !');
       else if(gage._bonusSurprise) showFavToast('🎯 Bonus actif : gage surprise !');
@@ -6924,16 +7053,74 @@ function storyMidReminder(){
 // ══════════════ NARRATION VOCALE (tous les modes) — Web Speech API, zéro serveur ══════════════
 var voiceNarrationOn = (function(){ try{ return localStorage.getItem('voice_narration_v28')==='1'; }catch(e){ return false; } })();
 var _voiceFR = null;
+var VOICE_PREF_KEY = 'voice_id_v28';
+var _FEMALE_VOICE_NAMES = ['amelie','amélie','audrey','aurelie','aurélie','celine','céline','chantal','charline','marie','virginie','lea','léa','julie','hortense','denise','eloise','éloise','elise','élise','sandrine','manon','claire','camille','emma','lucie','justine','severine','séverine','nathalie','zosia','flo','ines','inès'];
+var _MALE_VOICE_NAMES = ['thomas','paul','henri','nicolas','antoine','daniel','pierre','jean','louis','maxime','guillaume','yannick','bruno','remi','rémi'];
+function _voiceGender(v){
+  var n=(v.name||'').toLowerCase();
+  if(_FEMALE_VOICE_NAMES.some(function(f){return n.indexOf(f)>=0;})) return 'f';
+  if(_MALE_VOICE_NAMES.some(function(m){return n.indexOf(m)>=0;})) return 'm';
+  if(n.indexOf('female')>=0||n.indexOf('femme')>=0||n.indexOf('woman')>=0) return 'f';
+  if(n.indexOf('male')>=0||n.indexOf('homme')>=0||n.indexOf('man')>=0) return 'm';
+  return '?';
+}
+function _loadVoicePref(){ try{ return localStorage.getItem(VOICE_PREF_KEY)||''; }catch(e){ return ''; } }
+function _saveVoicePref(id){ try{ localStorage.setItem(VOICE_PREF_KEY, id); }catch(e){} }
+function _frVoices(){
+  if(!('speechSynthesis' in window)) return [];
+  var voices = speechSynthesis.getVoices()||[];
+  var fr = voices.filter(function(v){return v.lang==='fr-FR';});
+  if(!fr.length) fr = voices.filter(function(v){return v.lang && v.lang.indexOf('fr')===0;});
+  return fr;
+}
 function _pickFrenchVoice(){
-  if(!('speechSynthesis' in window)) return null;
-  var voices = speechSynthesis.getVoices();
-  if(!voices || !voices.length) return null;
-  return voices.find(function(v){return v.lang==='fr-FR';})
-    || voices.find(function(v){return v.lang && v.lang.indexOf('fr')===0;})
-    || null;
+  var fr = _frVoices();
+  if(!fr.length) return null;
+  var savedId = _loadVoicePref();
+  if(savedId){
+    var saved = fr.find(function(v){ return (v.name+'|'+v.lang)===savedId; });
+    if(saved) return saved;
+  }
+  // Par défaut : une voix féminine si disponible, sinon la première voix française trouvée
+  return fr.find(function(v){return _voiceGender(v)==='f';}) || fr[0];
+}
+function setVoicePref(id){
+  _saveVoicePref(id);
+  _voiceFR = _pickFrenchVoice();
+  renderVoiceSettings();
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    var utt=new SpeechSynthesisUtterance('Voici comment je vais te lire les gages, ce soir.');
+    utt.lang='fr-FR'; if(_voiceFR) utt.voice=_voiceFR;
+    utt.rate=0.85; utt.pitch=0.94;
+    speechSynthesis.speak(utt);
+  }
+}
+function renderVoiceSettings(){
+  var box = document.getElementById('voice-settings-list');
+  if(!box) return;
+  if(!('speechSynthesis' in window)){
+    box.innerHTML = '<p style="font-size:12px;color:var(--muted)">Narration vocale non supportée par ce navigateur.</p>';
+    return;
+  }
+  var fr = _frVoices();
+  if(!fr.length){
+    box.innerHTML = '<p style="font-size:12px;color:var(--muted)">Chargement des voix disponibles…</p>';
+    return;
+  }
+  var savedId = _loadVoicePref();
+  var currentId = _voiceFR ? (_voiceFR.name+'|'+_voiceFR.lang) : '';
+  box.innerHTML = fr.map(function(v){
+    var id=v.name+'|'+v.lang;
+    var g=_voiceGender(v);
+    var icon = g==='f' ? '♀️' : (g==='m' ? '♂️' : '🎙️');
+    var sel = savedId ? savedId===id : id===currentId;
+    return '<button type="button" class="btn '+(sel?'':'ghost')+' sm" style="width:100%;text-align:left;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center" onclick="setVoicePref(\''+id.replace(/'/g,"\\'")+'\')">'
+      +'<span>'+icon+' '+v.name+'</span>'+(sel?'<span>✓</span>':'')+'</button>';
+  }).join('');
 }
 if('speechSynthesis' in window){
-  speechSynthesis.onvoiceschanged = function(){ _voiceFR = _pickFrenchVoice(); };
+  speechSynthesis.onvoiceschanged = function(){ _voiceFR = _pickFrenchVoice(); renderVoiceSettings(); };
   _voiceFR = _pickFrenchVoice();
 }
 function updateVoiceToggleBtn(){
@@ -6975,8 +7162,8 @@ function speakGageText(gage, player, partner){
   var utt = new SpeechSynthesisUtterance(raw);
   utt.lang = 'fr-FR';
   if(_voiceFR) utt.voice = _voiceFR;
-  utt.rate = 0.95;
-  utt.pitch = 1.0;
+  utt.rate = 0.85;
+  utt.pitch = 0.94;
   speechSynthesis.speak(utt);
 }
 
@@ -7336,6 +7523,42 @@ function extractTimer(txt){
   if(sm) return parseInt(sm[1]);
   return null;
 }
+// ── Gages "dé" : {texte} contient **dé** ou **dés** en gras → dé animé (1-12) à la place du timer ──
+function hasDiceRef(txt){
+  if(!txt) return false;
+  return /\*\*\s*d[ée]s?\s*\*\*/i.test(txt);
+}
+var _diceRolling=false;
+function showDice(){
+  var box=el('g-dice'); if(!box) return;
+  box.classList.remove('hidden');
+  var btn=el('dice-btn'); if(btn){ btn.textContent='🎲 Lancer le dé'; btn.disabled=false; }
+  var res=el('dice-result'); if(res){ res.classList.add('hidden'); res.textContent=''; }
+  _diceRolling=false;
+}
+function hideDice(){
+  var box=el('g-dice'); if(box) box.classList.add('hidden');
+}
+function rollDice(){
+  if(_diceRolling) return;
+  _diceRolling=true;
+  var btn=el('dice-btn'), res=el('dice-result');
+  if(btn){ btn.disabled=true; btn.textContent='🎲 …'; }
+  if(res){ res.classList.remove('hidden'); res.classList.add('dice-spin'); }
+  var ticks=0, maxTicks=14;
+  var spin=setInterval(function(){
+    ticks++;
+    if(res) res.textContent=String(1+Math.floor(Math.random()*12));
+    if(ticks>=maxTicks){
+      clearInterval(spin);
+      var final=1+Math.floor(Math.random()*12);
+      if(res){ res.textContent=String(final); res.classList.remove('dice-spin'); }
+      if(btn){ btn.disabled=false; btn.textContent='🎲 Relancer'; }
+      playBeep();
+      _diceRolling=false;
+    }
+  },80);
+}
 function showTimer(s){
   timerSecs=s;timerLeft=s;timerRun=false;
   if(timerInt){clearInterval(timerInt);timerInt=null;}
@@ -7579,6 +7802,7 @@ function showEnd(){
   el('g-progress').style.width='100%';
   el('g-counter').textContent='Fin de partie';
   el('g-timer').classList.add('hidden');
+  hideDice();
   el('btn-change').classList.add('hidden');
   el('btn-skip').classList.add('hidden');
   el('btn-validate').classList.add('hidden');
@@ -7751,6 +7975,7 @@ function showVictory(name,pts){
     +'</div>';
   ['btn-change','btn-skip','btn-validate','btn-next'].forEach(function(id){el(id).classList.add('hidden');});
   el('g-timer').classList.add('hidden');
+  hideDice();
 }
 
 // ── DATA HELPERS ──
@@ -8995,7 +9220,13 @@ function renderSettingsPage() {
     +'<button class="btn ghost sm" onclick="clearPlayedHistory()" style="font-size:12px;width:100%">🔄 Réinitialiser l\'historique des gages</button>'
     +'<div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">Les gages déjà joués peuvent revenir</div>'
     +'</div>';
+  html+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:2px">🔊 Narration vocale</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Ton plus lent et posé par défaut. Choisis la voix (♀️/♂️ selon les voix installées sur ton appareil) :</div>'
+    +'<div id="voice-settings-list"></div>'
+    +'</div>';
   var cnt=document.getElementById("settings-content");if(cnt)cnt.innerHTML=html;
+  renderVoiceSettings();
 }
 function openTestGage() {
   var txt=(document.getElementById("g-txt")||{value:""}).value.trim();
