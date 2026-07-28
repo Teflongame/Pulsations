@@ -897,12 +897,12 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   <div class="gage-counter" id="g-counter"></div>
   <div class="game-actions">
     <div class="action-row">
-      <button class="btn ghost sm" id="btn-change" onclick="changeGage()"><span data-i18n="btn_change">🔀 Changer</span></button>
       <button class="btn ghost sm hidden" id="btn-skip" onclick="skipGage()"><span data-i18n="btn_skip">⏭ Passer</span></button>
       <button class="btn success sm hidden" id="btn-validate" onclick="validateGage()"><span data-i18n="btn_validate">✅ Réalisé</span></button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <button class="btn ghost" id="btn-prev" onclick="prevGage()" style="flex:1;display:none"><span data-i18n="btn_prev">← Préc.</span></button>
+      <button class="btn ghost sm" id="btn-change" onclick="changeGage()" style="flex:1"><span data-i18n="btn_change">🔀 Changer</span></button>
       <button class="btn" id="btn-next" onclick="nextGage()" style="flex:1">Suivant →</button>
     </div>
     <div class="cost-hint hidden" id="cost-hint">🏆 Changer/Passer = -<span id="cost-pts">1</span> pt</div>
@@ -4487,13 +4487,15 @@ function saveGageMemory(){ saveCustom(GMEM_KEY, gageMemory); }
 function recordGageSignal(gage, playerName, type){
   if(!gage || gage._kama || !gage.texte || gage.texte.charAt(0)==='🎓') return;
   var texte = gage.texte;
-  if(!gageMemory[texte]) gageMemory[texte] = { skips:0, changes:0, niveau:gage.niveau||1, byName:{} };
+  if(!gageMemory[texte]) gageMemory[texte] = { skips:0, changes:0, likes:0, niveau:gage.niveau||1, byName:{} };
   var entry = gageMemory[texte];
+  if(entry.likes==null) entry.likes=0;
   entry.niveau = gage.niveau||entry.niveau||1;
-  if(type==='skip') entry.skips++; else if(type==='change') entry.changes++;
+  if(type==='skip') entry.skips++; else if(type==='change') entry.changes++; else if(type==='like') entry.likes++;
   if(playerName){
-    if(!entry.byName[playerName]) entry.byName[playerName] = {skips:0, changes:0};
-    if(type==='skip') entry.byName[playerName].skips++; else if(type==='change') entry.byName[playerName].changes++;
+    if(!entry.byName[playerName]) entry.byName[playerName] = {skips:0, changes:0, likes:0};
+    if(entry.byName[playerName].likes==null) entry.byName[playerName].likes=0;
+    if(type==='skip') entry.byName[playerName].skips++; else if(type==='change') entry.byName[playerName].changes++; else if(type==='like') entry.byName[playerName].likes++;
   }
   entry.lastSeen = Date.now();
   saveGageMemory();
@@ -5886,6 +5888,7 @@ function launchGame() {
   }
   var _ea=document.getElementById('err-acc'); if(_ea) _ea.textContent = '';
   G.level=1; G.gageIdx=0; G.scores={}; G.usedKama=[]; G.playedTexts=new Set(); G.progressLog=[]; G._kamaShown=0; G._prevGages=[]; G._recentGages=[]; G._sessionSeenGages=[]; G._lastBonusTitle=null;
+  G._statRealized=0; G._statChanged=0; G._changedThisSession=[];
   G._pendingBonusCard=null; G._pendingBonusWinner=null; G._bonusChoiceCtx=null;
   G._rolesChosen=false;
   G._storyDuo=null;
@@ -6924,6 +6927,7 @@ function prepareGages() {
 // ── DISPLAY GAGE ──
 function displayGage() {
   stopTimer();
+  _curGageEngaged=false;
   var pgEl = document.getElementById('page-game');
   if(pgEl){
     pgEl.classList.remove('mode-classique','mode-pimente','mode-competition','mode-brise_glace','mode-decouverte','mode-story','mode-solo','mode-live');
@@ -7416,6 +7420,10 @@ function nextGage(skipSound){
       G.progressLog.push({level:G.level,prenom:cur._p,action:shortTxt});
       if(G.progressLog.length>20) G.progressLog.shift();
     }
+    // Le joueur a démarré le timer ou lancé le dé, puis appuie sur Suivant sans changer
+    // de gage → signal implicite qu'il/elle aime ce gage (mémoire admin + stats de fin).
+    if(_curGageEngaged) recordGageSignal(cur, cur&&cur._p, 'like');
+    G._statRealized=(G._statRealized||0)+1;
   }
   G.gageIdx++;
   autoSaveGame();
@@ -7457,6 +7465,11 @@ function changeGage(){
   var cur=pool[G.gageIdx];
   var player=G.players.filter(function(p){return p.prenom===cur._p;})[0]||G.players[0];
   recordGageSignal(cur, cur._p, 'change');
+  G._statChanged=(G._statChanged||0)+1;
+  if(cur && cur.texte && !cur._kama && cur.texte.charAt(0)!=='🎓'){
+    G._changedThisSession = G._changedThisSession || [];
+    G._changedThisSession.push({texte:cur.texte, prenom:cur._p, niveau:cur.niveau});
+  }
   // Competition: -1 point for changing
   if(G.mode==='competition'&&player){G.scores[player.prenom]=Math.max(0,(G.scores[player.prenom]||0)-1);updateScores();}
   // Get or replenish change pool
@@ -7529,6 +7542,7 @@ function hasDiceRef(txt){
   return /\*\*\s*d[ée]s?\s*\*\*/i.test(txt);
 }
 var _diceRolling=false;
+var _curGageEngaged=false; // true si le timer a été démarré OU le dé lancé sur le gage actuellement affiché
 function showDice(){
   var box=el('g-dice'); if(!box) return;
   box.classList.remove('hidden');
@@ -7542,6 +7556,7 @@ function hideDice(){
 function rollDice(){
   if(_diceRolling) return;
   _diceRolling=true;
+  _curGageEngaged=true;
   var btn=el('dice-btn'), res=el('dice-result');
   if(btn){ btn.disabled=true; btn.textContent='🎲 …'; }
   if(res){ res.classList.remove('hidden'); res.classList.add('dice-spin'); }
@@ -7573,7 +7588,7 @@ function stopTimer(){
 function toggleTimer(){
   if(timerLeft<=0)return;
   timerRun=!timerRun;
-  if(timerRun){timerInt=setInterval(function(){timerLeft--;updateTimerUI();if(timerLeft<=0){clearInterval(timerInt);timerInt=null;soundTimerEnd();}},1000);}
+  if(timerRun){ _curGageEngaged=true; timerInt=setInterval(function(){timerLeft--;updateTimerUI();if(timerLeft<=0){clearInterval(timerInt);timerInt=null;soundTimerEnd();}},1000);}
   else{clearInterval(timerInt);timerInt=null;}
   updateTimerUI();
 }
@@ -7917,6 +7932,27 @@ function showEnd(){
         +'</div>'
       +'</div>'
       
+      +(function(){
+        var real=G._statRealized||0, chg=G._statChanged||0;
+        var changedList = G._changedThisSession||[];
+        var listHTML = '';
+        if(changedList.length){
+          listHTML = '<div style="margin-top:8px;text-align:left">'
+            + changedList.map(function(c){
+                var prev=(c.texte||'').replace(/\{prenom\}/g,c.prenom||'quelqu\'un').replace(/\{partenaire\}/g,'partenaire').replace(/\*\*([^*]+)\*\*/g,'$1');
+                if(prev.length>78) prev=prev.slice(0,78)+'…';
+                return '<div style="font-size:11.5px;color:var(--muted);padding:3px 0;border-top:1px solid var(--border)">🔀 <span style="color:var(--text)">'+(c.prenom?c.prenom+' — ':'')+'</span>'+prev+'</div>';
+              }).join('')
+            + '</div>';
+        }
+        return '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px 14px;margin-bottom:14px;text-align:left">'
+          + '<div style="display:flex;gap:18px;justify-content:center;text-align:center">'
+          + '<div><div style="font-size:20px;font-weight:800;color:var(--success)">✅ '+real+'</div><div style="font-size:11px;color:var(--muted)">gages réalisés</div></div>'
+          + '<div><div style="font-size:20px;font-weight:800;color:var(--warn)">🔀 '+chg+'</div><div style="font-size:11px;color:var(--muted)">gages changés</div></div>'
+          + '</div>'
+          + (changedList.length ? '<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Un bon moment pour en parler à deux — pourquoi ceux-là ?</div>'+listHTML : '')
+          + '</div>';
+      })()
       
       +'<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--text);line-height:1.6;text-align:left">'
         +'<div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px">💡 Pour continuer la soirée</div>'
@@ -8877,10 +8913,10 @@ function renderAdminMemoire(){
   // ── Classement combiné : 👎 explicites + signaux implicites (passer/changer) ──
   var rows = texts.map(function(t){
     var m = gageMemory[t];
-    return { texte:t, niveau:m.niveau||null, skips:m.skips, changes:m.changes, total:m.skips+m.changes, disliked: gagePrefs[t]===-1 };
+    return { texte:t, niveau:m.niveau||null, skips:m.skips, changes:m.changes, likes:m.likes||0, total:m.skips+m.changes, disliked: gagePrefs[t]===-1 };
   });
   Object.keys(gagePrefs).forEach(function(t){
-    if(gagePrefs[t]===-1 && !gageMemory[t]) rows.push({texte:t, niveau:null, skips:0, changes:0, total:0, disliked:true});
+    if(gagePrefs[t]===-1 && !gageMemory[t]) rows.push({texte:t, niveau:null, skips:0, changes:0, likes:0, total:0, disliked:true});
   });
   rows.sort(function(a,b){
     if(a.disliked!==b.disliked) return a.disliked ? -1 : 1;
@@ -8899,7 +8935,7 @@ function renderAdminMemoire(){
       html += '<div style="padding:9px 12px;'+(i?'border-top:1px solid var(--border)':'')+';cursor:pointer" onclick="memGoToGage(\''+encodeURIComponent(r.texte)+'\')">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
         + '<span style="font-size:12.5px;flex:1">'+(r.disliked?'👎 ':'')+preview+'</span>'
-        + '<span style="font-size:10px;color:var(--muted);white-space:nowrap">'+(r.niveau?('Niv.'+r.niveau+' · '):'')+'⏭'+r.skips+' 🔀'+r.changes+'</span>'
+        + '<span style="font-size:10px;color:var(--muted);white-space:nowrap">'+(r.niveau?('Niv.'+r.niveau+' · '):'')+'👍'+r.likes+' ⏭'+r.skips+' 🔀'+r.changes+'</span>'
         + '</div></div>';
     });
     html += '</div>';
