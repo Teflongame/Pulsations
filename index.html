@@ -45,6 +45,10 @@ body { background:var(--bg); color:var(--text); font-family:'DM Sans',-apple-sys
 #page-game { position:relative; }
 .page { display:none; min-height:100vh; padding:20px 16px 40px; max-width:480px; margin:0 auto; }
 .page.active { display:block; }
+@media (prefers-reduced-motion: no-preference) {
+  .page.active { animation: pageIn .22s cubic-bezier(.22,1,.36,1); }
+}
+@keyframes pageIn { from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
 .page-header { text-align:center; padding:28px 0 18px; position:relative; z-index:1; }
 .page-header h1 { font-family:'Cormorant Garamond',serif; font-weight:400; letter-spacing:.5px; font-size:28px; }
 .page-header p { font-size:14px; color:var(--muted); margin-top:4px; font-weight:300; }
@@ -365,6 +369,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 .timer-box { margin:8px auto; text-align:center; }
 .timer-btn-simple { background:rgba(240,192,96,0.1); border:1.5px solid rgba(240,192,96,0.4); border-radius:22px; padding:10px 24px; color:var(--gold); font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:.3px; transition:background .2s; }
 .timer-btn-simple:active { background:rgba(240,192,96,0.2); }
+#auto-toggle-btn.auto-on { border-color:var(--gold); background:rgba(240,192,96,0.12); color:var(--gold); }
 #dice-result { font-size:44px; font-weight:800; margin-top:10px; color:var(--gold); line-height:1; }
 @keyframes diceSpin { 0%{transform:scale(1) rotate(0deg);} 50%{transform:scale(1.15) rotate(-8deg);} 100%{transform:scale(1) rotate(0deg);} }
 .dice-spin { animation:diceSpin .16s linear infinite; }
@@ -875,6 +880,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   <div class="game-top">
     <div id="g-level" class="level-badge lvl-1">Niveau 1</div>
     <button id="voice-toggle-btn" onclick="toggleVoiceNarration()" style="display:none;background:transparent;border:1.5px solid var(--border);border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;vertical-align:middle;margin-left:8px;color:var(--muted)" title="Narration vocale">🔇</button>
+    <button id="auto-toggle-btn" onclick="toggleAutoPlay()" class="tip" title="Mode automatique : le jeu lit, lance le timer/dé, puis enchaîne tout seul. Un tap pour revenir en manuel à tout moment." style="background:transparent;border:1.5px solid var(--border);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;vertical-align:middle;margin-left:8px;color:var(--muted)">⏸ Manuel</button>
     <br>
     <span id="g-player" class="player-badge">👤 Joueur</span>
     <div id="g-challenge" class="challenge-tag hidden"><span data-i18n="surprise_tag">⚡ Gage surprise</span></div>
@@ -921,6 +927,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <button class="admin-tab" id="atab-bonus-nav" onclick="adminTab('bonus',this)">🎁 Bonus</button>
     <button class="admin-tab" id="atab-mem-nav" onclick="adminTab('memoire',this)">🧠 Mémoire</button>
     <button class="admin-tab" id="atab-data-nav" onclick="adminTab('data',this)">💾 Données</button>
+    <button class="admin-tab" id="atab-duree-nav" onclick="adminTab('duree',this)">⏱ Durée</button>
   </div>
   <div id="admin-content"></div>
   <button class="btn ghost" style="margin-top:14px" onclick="goTo('page-home')">← Retour</button>
@@ -5068,9 +5075,9 @@ function selectNb(n) {
 // ── PAGE DURÉE ──
 var G_duration = 45;
 var DURATION_PRESETS = {
-  30: {1:3, 2:2, 3:2, 4:2},
-  45: {1:5, 2:4, 3:4, 4:3},
-  60: {1:7, 2:6, 3:5, 4:4}
+  30: {1:4, 2:3, 3:2, 4:1},
+  45: {1:5, 2:4, 3:3, 4:2},
+  60: {1:7, 2:6, 3:4, 4:4}
 };
 
 function goToDurationPage() {
@@ -5089,6 +5096,29 @@ function goToDurationPage() {
 // + ~10s transition entre gages + 1 gage final niv5 ~120s
 var DUR_AVG = {1:35, 2:55, 3:90, 4:150, 5:120};
 var DUR_TRANS = 10; // secondes entre gages
+var DUR_CFG_KEY = 'durcfg_v28';
+function loadDurConfig(){
+  try{
+    var s = JSON.parse(localStorage.getItem(DUR_CFG_KEY)||'null');
+    if(!s) return;
+    if(s.durAvg) Object.keys(s.durAvg).forEach(function(k){ DUR_AVG[k]=s.durAvg[k]; });
+    if(s.durTrans!=null) DUR_TRANS = s.durTrans;
+    if(s.presets) Object.keys(s.presets).forEach(function(k){ DURATION_PRESETS[k]=s.presets[k]; });
+    if(s.autoGraceByLvl) Object.keys(s.autoGraceByLvl).forEach(function(k){ AUTO_GRACE_BY_LVL[k]=s.autoGraceByLvl[k]; });
+    if(s.autoPrePause!=null) AUTO_PRE_PAUSE = s.autoPrePause;
+    if(s.autoMechDelay!=null) AUTO_MECH_DELAY = s.autoMechDelay;
+    if(s.autoNoTimerWait!=null) AUTO_NO_TIMER_WAIT = s.autoNoTimerWait;
+  }catch(e){}
+}
+function saveDurConfig(){
+  try{
+    localStorage.setItem(DUR_CFG_KEY, JSON.stringify({
+      durAvg:DUR_AVG, durTrans:DUR_TRANS, presets:DURATION_PRESETS,
+      autoGraceByLvl:AUTO_GRACE_BY_LVL, autoPrePause:AUTO_PRE_PAUSE, autoMechDelay:AUTO_MECH_DELAY, autoNoTimerWait:AUTO_NO_TIMER_WAIT
+    }));
+  }catch(e){}
+}
+// loadDurConfig() est appelée plus bas, une fois toutes les variables déclarées (AUTO_GRACE_BY_LVL etc.)
 
 function _estimateTime() {
   var nb = G.nb || 2;
@@ -6934,6 +6964,7 @@ function displayGage() {
     pgEl.classList.add('mode-'+G.mode);
   }
   updateVoiceToggleBtn();
+  updateAutoPlayBtn();
   var pool=G.gagesByLevel[G.level]||[];
   if(!pool.length||G.gageIdx>=pool.length){
     if(!pool.length && G.level<5) {
@@ -7002,7 +7033,11 @@ function displayGage() {
     } else {
       if(gage.texte&&gage.texte.charAt(0)==='🎓') soundGuide();
     renderGageCard(gage, player, partner);
-      speakGageText(gage, player, partner);
+      if(AUTO_PLAY_ON && G.gageIdx>0){
+        setTimeout(function(){ speakGageText(gage, player, partner); }, AUTO_PRE_PAUSE*1000);
+      } else {
+        speakGageText(gage, player, partner);
+      }
       var secs=extractTimer(gage.texte);
       if(gage._bonusTimerX2 && secs){ secs = secs*2; }
       if(hasDiceRef(gage.texte)){
@@ -7019,6 +7054,7 @@ function displayGage() {
       else if(gage._bonusChoice) showFavToast('🔀 Bonus actif : gage choisi par l\'adversaire !');
       else if(gage._bonusSurprise) showFavToast('🎯 Bonus actif : gage surprise !');
     }
+    if(AUTO_PLAY_ON) scheduleAutoPlayForGage(gage);
     requestAnimationFrame(function(){ cardWrap.classList.add('card-enter'); });
   }, G.gageIdx===0 ? 0 : 180);
   var isComp=G.mode==='competition';
@@ -7056,6 +7092,20 @@ function storyMidReminder(){
 }
 // ══════════════ NARRATION VOCALE (tous les modes) — Web Speech API, zéro serveur ══════════════
 var voiceNarrationOn = (function(){ try{ return localStorage.getItem('voice_narration_v28')==='1'; }catch(e){ return false; } })();
+
+// ══════════════ MODE AUTOMATIQUE ══════════════
+// Le jeu lit le gage, démarre seul le timer/dé, puis enchaîne tout seul quelques
+// secondes après — sans jamais empêcher de repasser en manuel ou de changer un gage.
+var AUTO_PLAY_ON = (function(){ try{ return localStorage.getItem('auto_play_v28')==='1'; }catch(e){ return false; } })();
+var _autoToken = 0;
+var AUTO_GRACE = 5; // valeur de repli si un niveau n'a pas de réglage dédié
+var AUTO_GRACE_BY_LVL = {1:5, 2:5, 3:5, 4:5, 5:5}; // pause après le timer/dé avant de passer au gage suivant
+var AUTO_PRE_PAUSE = 1.5; // secondes de silence avant de commencer à lire le gage suivant (respiration entre 2 gages)
+var AUTO_MECH_DELAY = 5; // secondes entre la fin de la narration (lecture du gage) et le démarrage du timer/dé
+var AUTO_NO_TIMER_WAIT = 15; // secondes de "temps de réponse" virtuel pour un gage sans timer ni dé (question, etc.)
+var _autoGoNext = function(){};
+var _autoOnNarrationEnd = function(){}; // appelé par speakGageText quand la narration du gage se termine
+loadDurConfig(); // charge la calibration sauvegardée (durées + mode auto), maintenant que tout est déclaré
 var _voiceFR = null;
 var VOICE_PREF_KEY = 'voice_id_v28';
 var _FEMALE_VOICE_NAMES = ['amelie','amélie','audrey','aurelie','aurélie','celine','céline','chantal','charline','marie','virginie','lea','léa','julie','hortense','denise','eloise','éloise','elise','élise','sandrine','manon','claire','camille','emma','lucie','justine','severine','séverine','nathalie','zosia','flo','ines','inès'];
@@ -7096,7 +7146,7 @@ function setVoicePref(id){
     speechSynthesis.cancel();
     var utt=new SpeechSynthesisUtterance('Voici comment je vais te lire les gages, ce soir.');
     utt.lang='fr-FR'; if(_voiceFR) utt.voice=_voiceFR;
-    utt.rate=0.85; utt.pitch=0.94;
+    utt.rate=0.80; utt.pitch=0.90;
     speechSynthesis.speak(utt);
   }
 }
@@ -7166,8 +7216,11 @@ function speakGageText(gage, player, partner){
   var utt = new SpeechSynthesisUtterance(raw);
   utt.lang = 'fr-FR';
   if(_voiceFR) utt.voice = _voiceFR;
-  utt.rate = 0.85;
-  utt.pitch = 0.94;
+  utt.rate = 0.80;
+  utt.pitch = 0.90;
+  if(AUTO_PLAY_ON){
+    utt.onend = function(){ _autoOnNarrationEnd(); };
+  }
   speechSynthesis.speak(utt);
 }
 
@@ -7443,6 +7496,7 @@ function skipGage(){
 function validateGage(){
   var pool=G.gagesByLevel[G.level]||[];
   if(!pool.length)return;
+  vibrate(12);
   var gage=pool[G.gageIdx];
   var p=G.players.filter(function(x){return x.prenom===gage._p;})[0]||G.players[0];
   var pts=G.level*(gage._ch?2:1);
@@ -7553,10 +7607,117 @@ function showDice(){
 function hideDice(){
   var box=el('g-dice'); if(box) box.classList.add('hidden');
 }
+// Planifie l'enchaînement automatique pour le gage actuellement affiché.
+// Un "jeton" est utilisé pour annuler proprement les actions programmées si l'utilisateur
+// change de gage, repasse en manuel, ou avance lui-même entre-temps.
+function scheduleAutoPlayForGage(gage){
+  if(!AUTO_PLAY_ON || !gage) return;
+  var myToken = ++_autoToken;
+  var consumed = false;
+  var graceSecs = AUTO_GRACE_BY_LVL[gage.niveau] != null ? AUTO_GRACE_BY_LVL[gage.niveau] : AUTO_GRACE;
+  var advance = function(waitSecs){
+    setTimeout(function(){
+      if(consumed || !AUTO_PLAY_ON || myToken!==_autoToken) return;
+      consumed = true;
+      nextGage();
+    }, (waitSecs==null?graceSecs:waitSecs)*1000);
+  };
+  _autoGoNext = function(){
+    if(consumed || !AUTO_PLAY_ON || myToken!==_autoToken) return;
+    advance(graceSecs);
+  };
+  var startMechanic = function(){
+    if(consumed || !AUTO_PLAY_ON || myToken!==_autoToken) return;
+    if(hasDiceRef(gage.texte)){
+      if(!_diceRolling) rollDice(); // le résultat appellera _autoGoNext() automatiquement à l'arrêt du dé
+    } else {
+      var s = extractTimer(gage.texte);
+      if(s && !timerRun) toggleTimer(); // la fin du timer appellera _autoGoNext() automatiquement
+    }
+  };
+  // Petit temps de respiration entre la fin de la narration et le démarrage du timer/dé,
+  // pour éviter l'effet "couperet" d'un déclenchement instantané.
+  var startMechanicWithPause = function(){
+    if(consumed || !AUTO_PLAY_ON || myToken!==_autoToken) return;
+    setTimeout(function(){
+      if(!AUTO_PLAY_ON || myToken!==_autoToken || consumed) return;
+      startMechanic();
+    }, AUTO_MECH_DELAY*1000);
+  };
+
+  if(gage._kama){
+    // Carte Kamasutra : ni timer ni dé, ni narration dédiée, juste le temps de regarder/lire
+    _autoOnNarrationEnd = function(){};
+    advance(7);
+    return;
+  }
+
+  var hasDice = hasDiceRef(gage.texte);
+  var secs = extractTimer(gage.texte);
+
+  if(hasDice || secs){
+    // Le timer/dé ne démarre qu'à la toute fin de l'énoncé complet du gage (+ petite pause).
+    _autoOnNarrationEnd = startMechanicWithPause;
+    if(!voiceNarrationOn){
+      // Pas de narration pour donner le top départ : on démarre après un temps de lecture estimé.
+      var waitBeforeStart = Math.min(16, Math.max(4, Math.round((gage.texte||'').length/9)));
+      setTimeout(startMechanic, waitBeforeStart*1000);
+    } else {
+      // Filet de sécurité si la narration échoue silencieusement (pas d'événement de fin reçu).
+      var estRead = Math.min(20, Math.max(5, Math.round((gage.texte||'').length/8)));
+      setTimeout(function(){ if(AUTO_PLAY_ON && myToken===_autoToken && !consumed && !timerRun && !_diceRolling) startMechanic(); }, (estRead+4+AUTO_PRE_PAUSE)*1000);
+    }
+    if(hasDice) advance(30); // filet de sécurité global (dé)
+    if(secs) advance(secs + graceSecs + 25); // filet de sécurité global (timer)
+  } else {
+    // Ni timer ni dé (question, etc.) : on applique le même schéma qu'un vrai timer,
+    // avec un temps de réponse virtuel de 15s entre les 5s de démarrage et les 5s de fin.
+    _autoOnNarrationEnd = function(){
+      setTimeout(function(){
+        if(!AUTO_PLAY_ON || myToken!==_autoToken || consumed) return;
+        advance(AUTO_NO_TIMER_WAIT + graceSecs);
+      }, AUTO_MECH_DELAY*1000);
+    };
+    if(!voiceNarrationOn){
+      var waitSecs = Math.min(16, Math.max(4, Math.round((gage.texte||'').length/9)));
+      advance(waitSecs + AUTO_MECH_DELAY + AUTO_NO_TIMER_WAIT + graceSecs);
+    } else {
+      // Filet de sécurité si la narration échoue silencieusement (pas d'événement de fin reçu).
+      var waitFallback = Math.min(22, Math.max(7, Math.round((gage.texte||'').length/7))) + AUTO_MECH_DELAY + AUTO_NO_TIMER_WAIT + graceSecs + AUTO_PRE_PAUSE;
+      advance(waitFallback);
+    }
+  }
+}
+function toggleAutoPlay(){
+  AUTO_PLAY_ON = !AUTO_PLAY_ON;
+  try{ localStorage.setItem('auto_play_v28', AUTO_PLAY_ON?'1':'0'); }catch(e){}
+  if(AUTO_PLAY_ON && !voiceNarrationOn && 'speechSynthesis' in window){
+    voiceNarrationOn = true;
+    try{ localStorage.setItem('voice_narration_v28','1'); }catch(e){}
+    updateVoiceToggleBtn();
+    showFavToast('🔄 Mode automatique activé — narration vocale allumée pour en profiter pleinement');
+  } else {
+    showFavToast(AUTO_PLAY_ON ? '🔄 Mode automatique activé' : '✋ Retour au mode manuel');
+  }
+  updateAutoPlayBtn();
+  if(AUTO_PLAY_ON){
+    var pool=G.gagesByLevel[G.level]||[];
+    scheduleAutoPlayForGage(pool[G.gageIdx]);
+  } else {
+    _autoToken++; // invalide tout ce qui était programmé
+  }
+}
+function updateAutoPlayBtn(){
+  var b=document.getElementById('auto-toggle-btn');
+  if(!b) return;
+  b.textContent = AUTO_PLAY_ON ? '🔄 Auto' : '⏸ Manuel';
+  b.classList.toggle('auto-on', AUTO_PLAY_ON);
+}
 function rollDice(){
   if(_diceRolling) return;
   _diceRolling=true;
   _curGageEngaged=true;
+  vibrate(15);
   var btn=el('dice-btn'), res=el('dice-result');
   if(btn){ btn.disabled=true; btn.textContent='🎲 …'; }
   if(res){ res.classList.remove('hidden'); res.classList.add('dice-spin'); }
@@ -7569,6 +7730,8 @@ function rollDice(){
       var final=1+Math.floor(Math.random()*12);
       if(res){ res.textContent=String(final); res.classList.remove('dice-spin'); }
       if(btn){ btn.disabled=false; btn.textContent='🎲 Relancer'; }
+      vibrate([10,30,25]);
+      if(AUTO_PLAY_ON) _autoGoNext();
       playBeep();
       _diceRolling=false;
     }
@@ -7602,8 +7765,10 @@ function updateTimerUI(){
     rt.style.color='var(--success)';
     rt.style.borderColor='rgba(62,207,142,0.4)';
     playBeep();
-    // Le bip sonne mais on n'avance plus tout seul : c'est au joueur d'appuyer sur
-    // Suivant / Réalisé quand il/elle est prêt·e (temps de se replacer, de lire la suite...).
+    vibrate([30,60,30]);
+    if(AUTO_PLAY_ON) _autoGoNext();
+    // Le bip sonne mais on n'avance plus tout seul (sauf en mode automatique) : c'est au
+    // joueur d'appuyer sur Suivant / Réalisé quand il/elle est prêt·e (temps de se replacer, de lire la suite...).
   } else if(timerRun){
     rt.textContent='⏸ '+disp;
     rt.style.color=timerLeft<10?'var(--accent)':'var(--gold)';
@@ -7614,9 +7779,14 @@ function updateTimerUI(){
     rt.style.borderColor='rgba(240,192,96,0.4)';
   }
 }
+// Retour haptique léger — sans effet si l'appareil/navigateur ne le supporte pas (iOS Safari notamment).
+function vibrate(pattern){
+  try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){}
+}
 function playBeep(){
   try{
-    var ac=new (window.AudioContext||window.webkitAudioContext)();
+    var ac=getAudio();
+    if(ac.state==='suspended') ac.resume();
     [0,200,400].forEach(function(d,i){
       var o=ac.createOscillator(),g=ac.createGain();
       o.connect(g);g.connect(ac.destination);
@@ -7741,6 +7911,7 @@ function skipToNextLevel() {
   }
   if(overlay) overlay.classList.remove('show');
   soundLevelUp();
+  vibrate([20,40,20]);
   G.level = target;
   G._pendingLevel = null;
   G.gageIdx = 0;
@@ -7750,6 +7921,7 @@ function skipToNextLevel() {
 
 function confirmNextLevel() {
   soundLevelUp();
+  vibrate([20,40,20]);
   // G._pendingLevel is set by _showLevelTransitionOverlay — always use it
   var nextLevel = G._pendingLevel != null ? G._pendingLevel : (G.level + 1);
   var overlay = document.getElementById('lvl-transition');
@@ -8324,6 +8496,7 @@ function adminTab(tab, btn) {
   else if(tab==='bonus') { cnt.innerHTML = renderAdminBonus(); }
   else if(tab==='memoire') { cnt.innerHTML = renderAdminMemoire(); }
   else if(tab==='data') { cnt.innerHTML = renderAdminData(); }
+  else if(tab==='duree') { cnt.innerHTML = renderAdminDuree(); }
 }
 
 function renderAdminGages() {
@@ -9072,6 +9245,119 @@ function importAllData(file){
   reader.readAsText(file);
 }
 
+// ══════════════ CALIBRATION DES DURÉES (admin) ══════════════
+var DUR_LVL_NAMES = {1:'Sensuel 💋',2:'Chaleur 🔥',3:'Brûlant 🔥',4:'Intense 💥',5:'Finale 🏁'};
+var DUR_PRESET_NAMES = {30:'⚡ Rapide',45:'⏱ Standard',60:'🌙 Longue'};
+function _durEstimateFor(vals, nb){
+  nb = nb||2;
+  var secs=0;
+  [1,2,3,4].forEach(function(lvl){ secs += ((vals[lvl]||0)*nb)*(DUR_AVG[lvl]+DUR_TRANS); });
+  secs += DUR_AVG[5]+DUR_TRANS;
+  return secs;
+}
+function renderAdminDuree(){
+  var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Calibre ici le temps moyen reel par gage (utilise pour l estimation affichee aux joueurs) et le nombre de gages par joueur et par niveau pour chacun des 3 prereglages du menu duree. Tout est enregistre et recalcule en direct.</p>';
+
+  html += '<h3 style="font-size:13px;color:var(--gold);margin-bottom:8px">Temps moyen par gage (secondes)</h3>';
+  [1,2,3,4,5].forEach(function(lvl){
+    html += '<div class="settings-row"><div><div class="settings-label">Niv.'+lvl+' - '+DUR_LVL_NAMES[lvl]+'</div></div>'
+      + '<div class="settings-ctrl"><input type="number" min="5" max="600" value="'+DUR_AVG[lvl]+'" id="dur-avg-'+lvl+'" onchange="onDurAvgChange('+lvl+')" style="width:70px;text-align:center"></div></div>';
+  });
+  html += '<div class="settings-row"><div><div class="settings-label">Transition entre 2 gages</div></div>'
+    + '<div class="settings-ctrl"><input type="number" min="0" max="60" value="'+DUR_TRANS+'" id="dur-trans-input" onchange="onDurTransChange()" style="width:70px;text-align:center"></div></div>';
+
+  html += '<h3 style="font-size:13px;color:var(--gold);margin:18px 0 8px">Nombre de gages par joueur, par prereglage</h3>';
+  [30,45,60].forEach(function(pk){
+    var p = DURATION_PRESETS[pk];
+    html += '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      + '<strong style="font-size:13px">'+(DUR_PRESET_NAMES[pk]||pk)+'</strong>'
+      + '<span id="dur-preset-est-'+pk+'" style="font-size:12px;color:var(--muted)">'+_formatTime(_durEstimateFor(p,2))+'</span></div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    [1,2,3,4].forEach(function(lvl){
+      html += '<div style="flex:1;min-width:60px;text-align:center">'
+        + '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">Niv.'+lvl+'</div>'
+        + '<input type="number" min="0" max="20" value="'+(p[lvl]||0)+'" id="dur-preset-'+pk+'-'+lvl+'" onchange="onDurPresetChange('+pk+')" style="width:100%;text-align:center;padding:8px 4px">'
+        + '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  html += '<h3 style="font-size:13px;color:var(--gold);margin:18px 0 8px">Mode automatique</h3>';
+  html += '<p style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.5">Pause apres la fin du timer/de avant de passer au gage suivant, plus longue sur les niveaux intenses pour laisser le temps de se replacer.</p>';
+  [1,2,3,4,5].forEach(function(lvl){
+    html += '<div class="settings-row"><div><div class="settings-label">Niv.'+lvl+' - '+DUR_LVL_NAMES[lvl]+'</div></div>'
+      + '<div class="settings-ctrl"><input type="number" min="1" max="60" value="'+AUTO_GRACE_BY_LVL[lvl]+'" id="auto-grace-'+lvl+'" onchange="onAutoGraceChange('+lvl+')" style="width:70px;text-align:center"></div></div>';
+  });
+  html += '<div class="settings-row"><div><div class="settings-label">Temps de reponse virtuel (question, sans timer)</div></div>'
+    + '<div class="settings-ctrl"><input type="number" min="0" max="60" value="'+AUTO_NO_TIMER_WAIT+'" id="auto-notimerwait-input" onchange="onAutoNoTimerWaitChange()" style="width:70px;text-align:center"></div></div>';
+  html += '<div class="settings-row"><div><div class="settings-label">Respiration avant de lire le gage suivant</div></div>'
+    + '<div class="settings-ctrl"><input type="number" min="0" max="10" step="0.5" value="'+AUTO_PRE_PAUSE+'" id="auto-prepause-input" onchange="onAutoPrePauseChange()" style="width:70px;text-align:center"></div></div>';
+  html += '<div class="settings-row"><div><div class="settings-label">Delai avant demarrage du timer/de apres la narration</div></div>'
+    + '<div class="settings-ctrl"><input type="number" min="0" max="10" step="0.5" value="'+AUTO_MECH_DELAY+'" id="auto-mechdelay-input" onchange="onAutoMechDelayChange()" style="width:70px;text-align:center"></div></div>';
+
+  html += '<button class="btn ghost sm" style="width:100%;margin-top:10px" onclick="resetDurConfig()">Reinitialiser aux valeurs par defaut</button>';
+  return html;
+}
+function onAutoGraceChange(lvl){
+  var v = parseFloat((document.getElementById('auto-grace-'+lvl)||{}).value);
+  if(!isNaN(v) && v>=0) AUTO_GRACE_BY_LVL[lvl]=v;
+  saveDurConfig();
+}
+function onAutoPrePauseChange(){
+  var v = parseFloat((document.getElementById('auto-prepause-input')||{}).value);
+  if(!isNaN(v) && v>=0) AUTO_PRE_PAUSE=v;
+  saveDurConfig();
+}
+function onAutoMechDelayChange(){
+  var v = parseFloat((document.getElementById('auto-mechdelay-input')||{}).value);
+  if(!isNaN(v) && v>=0) AUTO_MECH_DELAY=v;
+  saveDurConfig();
+}
+function onAutoNoTimerWaitChange(){
+  var v = parseFloat((document.getElementById('auto-notimerwait-input')||{}).value);
+  if(!isNaN(v) && v>=0) AUTO_NO_TIMER_WAIT=v;
+  saveDurConfig();
+}
+function onDurAvgChange(lvl){
+  var v = parseInt((document.getElementById('dur-avg-'+lvl)||{}).value);
+  if(!isNaN(v) && v>0) DUR_AVG[lvl]=v;
+  saveDurConfig();
+  _refreshDurPresetEstimates();
+}
+function onDurTransChange(){
+  var v = parseInt((document.getElementById('dur-trans-input')||{}).value);
+  if(!isNaN(v) && v>=0) DUR_TRANS=v;
+  saveDurConfig();
+  _refreshDurPresetEstimates();
+}
+function onDurPresetChange(pk){
+  [1,2,3,4].forEach(function(lvl){
+    var v = parseInt((document.getElementById('dur-preset-'+pk+'-'+lvl)||{}).value);
+    if(!isNaN(v) && v>=0) DURATION_PRESETS[pk][lvl]=v;
+  });
+  saveDurConfig();
+  _refreshDurPresetEstimates();
+}
+function _refreshDurPresetEstimates(){
+  [30,45,60].forEach(function(pk){
+    var e = document.getElementById('dur-preset-est-'+pk);
+    if(e) e.textContent = _formatTime(_durEstimateFor(DURATION_PRESETS[pk],2));
+  });
+}
+function resetDurConfig(){
+  if(!confirm('Reinitialiser la calibration des durees aux valeurs par defaut ?')) return;
+  try{ localStorage.removeItem(DUR_CFG_KEY); }catch(e){}
+  DUR_AVG[1]=35; DUR_AVG[2]=55; DUR_AVG[3]=90; DUR_AVG[4]=150; DUR_AVG[5]=120; DUR_TRANS=10;
+  DURATION_PRESETS[30]={1:4,2:3,3:2,4:1};
+  DURATION_PRESETS[45]={1:5,2:4,3:3,4:2};
+  DURATION_PRESETS[60]={1:7,2:6,3:4,4:4};
+  AUTO_GRACE_BY_LVL[1]=5; AUTO_GRACE_BY_LVL[2]=5; AUTO_GRACE_BY_LVL[3]=5; AUTO_GRACE_BY_LVL[4]=5; AUTO_GRACE_BY_LVL[5]=5;
+  AUTO_PRE_PAUSE=1.5; AUTO_MECH_DELAY=5; AUTO_NO_TIMER_WAIT=15;
+  adminTab('duree', document.getElementById('atab-duree-nav'));
+}
+
+
 function memGoToGage(encodedTexte){
   var texte = decodeURIComponent(encodedTexte);
   adminTab('gages', document.getElementById('atab-gages-nav'));
@@ -9520,6 +9806,7 @@ function renderProfileQuick() {
     +'<div class="profile-meta">'+names+' — Appuyez pour charger</div></div>'
     +'<span style="font-size:20px">▶</span></div>';
 }
+var _audioCtx = null;
 function getAudio(){if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();return _audioCtx;}
 function playTone(freq,dur,type,vol,delay){
   try{var ctx=getAudio(),osc=ctx.createOscillator(),gain=ctx.createGain();
