@@ -698,6 +698,10 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
       <span class="icon">🎭</span><div class="label">Histoire</div><div class="sub">Rôles, mise en scène, votre histoire</div>
       <span class="mode-badge premium">✦ Premium</span>
     </div>
+    <div class="mode-card" id="mc-kamasutra" onclick="selectMode('kamasutra')" style="position:relative">
+      <span class="icon">🪷</span><div class="label">Kâmasûtra</div><div class="sub">Explorez les positions, sans pratiques à cocher</div>
+      <span class="mode-badge free">✓ Gratuit</span>
+    </div>
     <div class="mode-card mode-premium" id="mc-live" onclick="selectMode('live')" style="position:relative;opacity:.55;filter:grayscale(.4)">
       <span class="mode-lock" id="lock-live">🚧</span>
       <span class="icon">🔴</span><div class="label">Live Streamer</div><div class="sub">Jouez avec vos viewers</div>
@@ -707,6 +711,57 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   <div class="btn-row">
     <button class="btn ghost" onclick="goTo('page-home')">← Retour</button>
     <button class="btn" onclick="goToSettings()"><span data-i18n="btn_next">Suivant →</span></button>
+  </div>
+</div>
+
+<!-- PAGE KÂMASÛTRA — combien êtes-vous -->
+<div class="page" id="page-kama-setup">
+  <div class="page-header"><h1>🪷 Mode Kâmasûtra</h1><p>Combien êtes-vous ?</p></div>
+  <div style="display:flex;gap:12px;justify-content:center;margin:28px 0">
+    <button class="nb-btn" id="kama-nb-2" onclick="kamaSetNb(2)">2</button>
+    <button class="nb-btn" id="kama-nb-3" onclick="kamaSetNb(3)">3</button>
+    <button class="nb-btn" id="kama-nb-4" onclick="kamaSetNb(4)">4</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn ghost" onclick="goTo('page-mode')">← Retour</button>
+    <button class="btn" onclick="goTo('page-kama-choice')">Suivant →</button>
+  </div>
+</div>
+
+<!-- PAGE KÂMASÛTRA — aléatoire ou manuel -->
+<div class="page" id="page-kama-choice">
+  <div class="page-header"><h1>🪷 Kâmasûtra</h1><p>Comment veux-tu explorer les positions ?</p></div>
+  <div style="display:flex;flex-direction:column;gap:14px;margin-top:24px">
+    <button class="btn" style="padding:20px;text-align:center;line-height:1.6" onclick="kamaStartRandom()">🎲 Sélection aléatoire<br><span style="font-size:12px;font-weight:400;opacity:.85">Le jeu choisit une position pour vous</span></button>
+    <button class="btn ghost" style="padding:20px;text-align:center;line-height:1.6" onclick="kamaStartManual()">📖 Choix manuel<br><span style="font-size:12px;font-weight:400;opacity:.85">Parcourez toutes les positions</span></button>
+  </div>
+  <div class="btn-row"><button class="btn ghost" onclick="goTo('page-kama-setup')">← Retour</button></div>
+</div>
+
+<!-- PAGE KÂMASÛTRA — position aléatoire -->
+<div class="page" id="page-kama-random">
+  <div class="page-header"><h1>🪷 Position aléatoire</h1></div>
+  <div id="kama-random-card"></div>
+  <div class="btn-row" style="flex-direction:column;gap:10px;margin-top:10px">
+    <button class="btn" style="width:100%" onclick="kamaDrawRandom()">🔄 Nouvelle position</button>
+    <button class="btn ghost" style="width:100%" onclick="goTo('page-home')">🏠 Accueil</button>
+  </div>
+</div>
+
+<!-- PAGE KÂMASÛTRA — grille de toutes les positions -->
+<div class="page" id="page-kama-manual">
+  <div class="page-header"><h1>🪷 Toutes les positions</h1><p>Touchez une position pour la voir en détail</p></div>
+  <div id="kama-manual-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"></div>
+  <div class="btn-row"><button class="btn ghost" onclick="goTo('page-kama-choice')">← Retour</button></div>
+</div>
+
+<!-- PAGE KÂMASÛTRA — détail d'une position -->
+<div class="page" id="page-kama-detail">
+  <div class="page-header"><h1 id="kama-detail-name">—</h1></div>
+  <div id="kama-detail-content"></div>
+  <div class="btn-row" style="flex-direction:column;gap:10px;margin-top:10px">
+    <button class="btn ghost" style="width:100%" onclick="goTo('page-kama-manual')">← Voir toutes les positions</button>
+    <button class="btn ghost" style="width:100%" onclick="goTo('page-home')">🏠 Accueil</button>
   </div>
 </div>
 
@@ -928,6 +983,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <button class="admin-tab" id="atab-mem-nav" onclick="adminTab('memoire',this)">🧠 Mémoire</button>
     <button class="admin-tab" id="atab-data-nav" onclick="adminTab('data',this)">💾 Données</button>
     <button class="admin-tab" id="atab-duree-nav" onclick="adminTab('duree',this)">⏱ Durée</button>
+    <button class="admin-tab" id="atab-kama-nav" onclick="adminTab('kama',this)">🪷 Kâmasûtra</button>
   </div>
   <div id="admin-content"></div>
   <button class="btn ghost" style="margin-top:14px" onclick="goTo('page-home')">← Retour</button>
@@ -1740,7 +1796,7 @@ function generateStoryEpilogue(playerA, playerB){
 
 /* ═══════════════════ KÂMASÛTRA ═══════════════════
    SVG illustrations: homme=#3a7fd5, femme=#e87aaa
-   Niveau 4 et 5 uniquement
+   Niveau 4 et 5 uniquement — schémas de secours en attendant une image admin
 ═══════════════════════════════════════════════════ */
 const KAMASUTRA = [
 
@@ -1748,68 +1804,65 @@ const KAMASUTRA = [
  desc:"Elle est allongée sur le dos, lui au-dessus d'elle, face à face. La position la plus simple : on se regarde et on s'embrasse."},
 {name:"La Levrette",pose:"levrette",difficulty:1,niveau:4,
  desc:"Elle est à quatre pattes, lui à genoux derrière elle. Il la pénètre par-derrière et contrôle le rythme."},
-{name:"Le Cavalier",pose:"cavalier",difficulty:1,niveau:4,
+{name:"L'Andromaque",pose:"cavalier",difficulty:2,niveau:4,
  desc:"Lui allongé sur le dos, elle assise sur lui face à lui. C'est elle qui bouge et mène le rythme."},
-{name:"Le Cavalier Inversé",pose:"cavalier",difficulty:2,niveau:4,
+{name:"L'Andromaque inversé",pose:"amazone",difficulty:2,niveau:4,
  desc:"Lui allongé sur le dos, elle assise sur lui mais dos tourné. Elle contrôle, lui profite de la vue."},
 {name:"La Cuillère",pose:"cuillere",difficulty:1,niveau:4,
  desc:"Allongés sur le côté dans le même sens, lui collé derrière elle (comme deux cuillères). Tendre et reposant."},
-{name:"Le Lotus / Yab-Yum",pose:"lotus",difficulty:2,niveau:4,
- desc:"Lui assis en tailleur, elle assise sur lui face à face, jambes autour de sa taille. Très serrés l'un contre l'autre."},
 {name:"Le 69",pose:"sixtynine",difficulty:2,niveau:4,
  desc:"Allongés tête-bêche : chacun a la bouche au niveau du sexe de l'autre. Plaisir oral en même temps."},
-{name:"La Balustrade",pose:"missionnaire",difficulty:2,niveau:4,
- desc:"Elle penchée en avant, appuyée sur un meuble ou le bord du lit. Lui debout derrière elle."},
-{name:"Le Phénix",pose:"cuillere",difficulty:2,niveau:5,
+{name:"Le Phénix",pose:"profond",difficulty:2,niveau:4,
  desc:"Elle allongée sur le ventre, lui allongé sur son dos. Pénétration serrée, corps collés."},
-{name:"L'Andromaque",pose:"cavalier",difficulty:2,niveau:4,
- desc:"Lui allongé sur le dos, elle assise sur lui face à lui puis penchée en avant, mains posées sur le lit."},
-{name:"La Position X",pose:"cotecote",difficulty:3,niveau:5,
- desc:"Tous les deux sur le dos, face à face, les jambes croisées l'une dans l'autre. On se rejoint au centre."},
-{name:"Le Papillon",prop:"coussin",pose:"missionnaire",difficulty:2,niveau:4,
- desc:"Elle allongée au bord du lit, les hanches surélevées avec un coussin dessous. Lui debout face à elle."},
-{name:"La Balançoire",pose:"missionnaire",difficulty:2,niveau:5,
- desc:"Elle sur le dos, jambes levées en l'air. Lui à genoux, tenant ses chevilles."},
-{name:"La Jonction Debout",pose:"debout",difficulty:3,niveau:5,
- desc:"Tous les deux debout, face à face. Elle passe une jambe autour de sa hanche."},
-{name:"Le Fauteuil du Roi",pose:"cavalier",difficulty:1,niveau:4,
- desc:"Lui assis sur une chaise, elle assise sur lui. Confortable : on peut s'enlacer."},
-{name:"La Nage Indienne",pose:"cotecote",difficulty:1,niveau:4,
- desc:"Allongés sur le côté, face à face, jambes mêlées. On se regarde, très intime."},
-{name:"La Sirène",pose:"missionnaire",difficulty:2,niveau:4,
- desc:"Elle allongée sur le côté, jambes serrées l'une contre l'autre. Lui à genoux derrière elle."},
-{name:"L'Équerre",pose:"equerre",difficulty:2,niveau:4,
- desc:"Elle allongée sur le dos, lui à genoux sur le côté, perpendiculaire à elle (le corps forme un T)."},
-{name:"Le Marteau",pose:"profond",difficulty:2,niveau:5,
- desc:"Elle sur le dos, genoux repliés contre sa poitrine. Lui face à elle. Pénétration très profonde."},
-{name:"La Montagne",pose:"amazone",difficulty:2,niveau:5,
- desc:"Lui assis, elle assise sur lui dos tourné et penchée en avant. Angle profond."},
-{name:"La Pirogue",pose:"cuillere",difficulty:3,niveau:5,
- desc:"Tous les deux allongés sur le ventre, lui sur son dos. Mouvements lents et serrés."},
 {name:"L'Arc de Triomphe",pose:"arc",difficulty:4,niveau:5,
  desc:"Position acrobatique : elle en pont (dos cambré, mains et pieds au sol), lui à genoux. Demande de la souplesse."},
-{name:"L'Écuyère",pose:"cavalier",difficulty:2,niveau:4,
- desc:"Lui allongé, elle assise sur lui face à lui et penchée en arrière, appuyée sur ses mains."},
-{name:"Le Ciseaux",pose:"cotecote",difficulty:3,niveau:5,
+{name:"L'Équerre",pose:"equerre",difficulty:2,niveau:4,
+ desc:"Elle allongée sur le dos, lui à genoux sur le côté, perpendiculaire à elle (le corps forme un T)."},
+{name:"Le Ciseaux",pose:"cotecote",difficulty:2,niveau:4,
  desc:"Allongés tête-bêche sur le côté, les jambes entremêlées comme des ciseaux."},
-{name:"La Cigogne",pose:"debout",difficulty:4,niveau:5,
- desc:"Debout face à face, elle lève une jambe et la pose sur son épaule. Demande de la souplesse."}
-,
-{name:"Le Lotus debout",pose:"lotus",difficulty:2,niveau:4,
- desc:"Debout, face à face : elle enroule ses jambes autour de sa taille, il la porte. Demande de la force."},
-{name:"La Tortue",pose:"cuillere",difficulty:2,niveau:4,
- desc:"Elle sur le ventre, hanches un peu relevées, lui allongé sur son dos. Mouvements lents."},
-{name:"Le Dauphin",pose:"arc",difficulty:2,niveau:4,
- desc:"Elle fait le pont (épaules et pieds au sol, bassin levé), lui à genoux entre ses jambes."},
-{name:"L'Amazone",pose:"amazone",difficulty:1,niveau:4,
- desc:"Lui allongé, elle assise sur lui dos tourné et penchée vers ses pieds."},
-{name:"Le Scorpion",pose:"missionnaire",difficulty:3,niveau:5,
- desc:"Elle sur le ventre, jambes repliées vers le haut. Lui la tient par les chevilles."},
-{name:"La Vague",pose:"cuillere",difficulty:2,niveau:5,
- desc:"Elle allongée, lui tenant ses hanches. Elle ondule du bassin pendant que lui reste immobile."},
-{name:"Le Bambou fendu",pose:"equerre",difficulty:3,niveau:5,
- desc:"Elle sur le dos, une jambe levée à la verticale posée sur son épaule, l'autre jambe à plat. Lui sur le côté."}
+{name:"La Chaise longue",prop:"coussin",pose:"missionnaire",difficulty:3,niveau:5,
+ desc:"La femme est allongée sur le dos, un coussin sous les reins pour élever son bassin. L'homme s'agenouille entre ses jambes, qu'elle pose sur ses épaules."},
+{name:"Le Tigre pénétrant",pose:"levrette",difficulty:2,niveau:4,
+ desc:"La femme est agenouillée, appuyée sur ses avant-bras, cambrée. L'homme peut tenir ses fesses ou ses hanches."},
+{name:"Les Chimpanzés",pose:"amazone",difficulty:4,niveau:5,
+ desc:"L'homme roule sur le dos, jambes repliées sur la poitrine. Elle prend position sur ses fesses, pieds sous ses aisselles, pour un va-et-vient langoureux."},
+{name:"La Bête à deux têtes",pose:"debout",difficulty:5,niveau:5,
+ desc:"L'homme est assis dans une posture virile. Elle vient s'empaler sur lui, jambes de part et d'autre de son cou, en équilibre instable d'une main."},
+{name:"La Berceuse",pose:"cavalier",difficulty:4,niveau:5,
+ desc:"Assis sur le lit, l'homme tend une jambe et plie l'autre sous ses fesses. Elle s'assoit sur sa jambe pliée, jambes ouvertes, pieds sur ses épaules ; il s'accroche à ses mollets."},
+{name:"La Grenouille à la nage",pose:"levrette",difficulty:3,niveau:4,
+ desc:"Partant de la position à quatre pattes, la femme baisse la poitrine sur le lit, mains croisées derrière la nuque. Il lui tient les mains pour marquer le rythme."},
+{name:"Le Néophyte",pose:"debout",difficulty:4,niveau:5,
+ desc:"L'homme domine, il la soulève en la tenant par les hanches pour une pénétration très profonde. Elle contracte sa musculature pour maintenir ses hanches à hauteur."},
+{name:"Le Bateau ivre",pose:"profond",difficulty:3,niveau:4,
+ desc:"L'homme tient les chevilles de sa partenaire et soulève un peu ses hanches pour une pénétration plus profonde, en penchant ses jambes de droite à gauche."},
+{name:"Masturbation mutuelle",pose:"cotecote",difficulty:1,niveau:4,
+ desc:"Le couple est assis l'un en face de l'autre, ou allongé côte-à-côte."},
+{name:"Le Nœud coulant",pose:"lotus",difficulty:4,niveau:5,
+ desc:"Assis face à face, fesses au plus près, jambes relevées en mode lotus en apesanteur. Mains et pieds joints, va-et-vient extatiques."},
+{name:"La Cravate du notaire",pose:"cotecote",difficulty:3,niveau:5,
+ desc:"Elle est allongée, lui vient placer ses fesses entre son visage et ses seins, dos à son visage, et glisse son pénis entre ses seins. Elle presse ses seins pour le branler et peut l'embrasser ou lécher son postérieur."},
+{name:"Branlette espagnole",pose:"cavalier",difficulty:2,niveau:4,
+ desc:"L'homme est sur le dos, elle s'agenouille sur lui pour prendre son sexe entre ses seins. Va-et-vient et pression jusqu'à ce que le gland découvre la peau des seins."},
+{name:"La Chaise",pose:"cavalier",difficulty:1,niveau:4,
+ desc:"Monsieur s'assoit pour accueillir sa femme sur lui, à califourchon, afin de la pénétrer vaginalement."},
+{name:"L'Indolent",pose:"levrette",difficulty:2,niveau:4,
+ desc:"Assis contre des coussins, jambes écartées, il présente son sexe en érection à sa compagne à quatre pattes devant lui, dos tourné. Elle vient s'empaler sur lui et impose son rythme."}
 ];
+// Fusionne KAMASUTRA (positions de base) avec les surcharges/ajouts admin (customKama, clé = nom).
+// Chaque position de base peut être éditée (texte/image) ou masquée ; l'admin peut aussi en ajouter de nouvelles.
+function getKamaData(includeDeleted){
+  var out = KAMASUTRA.map(function(k){
+    var ov = customKama[k.name];
+    if(ov && ov._deleted && !includeDeleted) return null;
+    return ov ? Object.assign({}, k, ov) : k;
+  }).filter(Boolean);
+  Object.keys(customKama).forEach(function(name){
+    var ov = customKama[name];
+    if(ov._new && (!ov._deleted || includeDeleted)) out.push(Object.assign({name:name}, ov));
+  });
+  return out;
+}
 
 var PRATIQUES_BASE = {
   Homme: {
@@ -4474,7 +4527,7 @@ var curRolePlayer = 1;
 var timerSecs=0, timerLeft=0, timerRun=false, timerInt=null;
 
 // ── localStorage keys ──
-var KEYS = { gages:'cg_v28', prat:'cp_v28', acc:'ca_v28', hidden:'hbg_v28', bonus:'cb_v28' };
+var KEYS = { gages:'cg_v28', prat:'cp_v28', acc:'ca_v28', hidden:'hbg_v28', bonus:'cb_v28', kama:'ck_v28' };
 // ── PRÉFÉRENCES GAGES (👍/👎 donnés en fin de partie) ──
 // Valeur 1 = aimé (boosté dans les prochaines parties), -1 = moins aimé (exclu des prochaines parties)
 // Ne concerne jamais les gages 100% perso, surprise, ni les sessions en mode Découverte/Brise-glace.
@@ -4685,6 +4738,7 @@ var ADMIN_ON = false; // Session uniquement : se réactive via le ❤ + code, se
 var customPrat     = loadCustom(KEYS.prat)   || {Homme:{},Femme:{}};
 var customAcc      = loadCustom(KEYS.acc)    || {};
 var hiddenBaseGages= loadCustom(KEYS.hidden) || [];
+var customKama     = loadCustom(KEYS.kama)   || {}; // clé = nom de la position ; {name,pose,difficulty,niveau,desc,image,_new,_deleted}
 
 function saveCustom(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 
@@ -5031,6 +5085,11 @@ function selectMode(m) {
     showWipOverlay();
     return;
   }
+  // Mode Kâmasûtra : flux autonome et gratuit, sans pratiques ni accessoires
+  if(m === 'kamasutra') {
+    goToKamaSetup();
+    return;
+  }
   // Premium gate for non-free modes
   var premiumModes = ['pimente','competition','decouverte','live','story'];
   if(premiumModes.indexOf(m) >= 0 && !isPremium()) {
@@ -5050,6 +5109,7 @@ function selectMode(m) {
   G.acc = null;            // nouvelle partie : objets pas encore choisis (la page Objets pré-coche depuis le profil si chargé, mais reste toujours affichée pour vérification — comme pour les pratiques)
   G._useCustomGages = false;
   G._selectedCustomGages = [];
+  G_duration = 45; applyDuration(45); // "Standard" toujours sélectionné par défaut pour une nouvelle partie
   // Map mode key to card HTML id (brise_glace → mc-brise-glace)
   var cardId = 'mc-' + m.replace(/_/g, '-');
   var el = document.getElementById(cardId);
@@ -5057,6 +5117,7 @@ function selectMode(m) {
   if(el) el.classList.add('sel');
   if(m === 'solo') { G.nb = 1; }
   else if(G.nb === 1) { G.nb = 2; }
+  goToSettings(); // un seul clic sur la carte de mode suffit à passer à l'étape suivante
 }
 
 function goNb() {
@@ -6276,7 +6337,7 @@ function pickFinale(player, usedKamaArr, all5, excludeTexts) {
   var kamaBuilt=0;
   [1,2,3,4].forEach(function(lv){(G.gagesByLevel[lv]||[]).forEach(function(g){if(g._kama)kamaBuilt++;});});
   if(hasKama&&kamaBuilt<1){
-    var km=shuffle(KAMASUTRA.filter(function(k){return k.niveau===5&&usedKamaArr.indexOf(k.name)<0;}));
+    var km=shuffle(getKamaData().filter(function(k){return k.niveau===5&&usedKamaArr.indexOf(k.name)<0;}));
     if(km.length) cands.push({type:'kama',data:km[0]});
   }
   if(hasPen){
@@ -6739,7 +6800,7 @@ function prepareGages() {
       var kamaInPool = pool.filter(function(g){return g._kama;}).length;
       if(lvl===4 && player.pratiques.indexOf('kamasutra')>=0 && kamaInPool<1) {
         var usedN=pool.filter(function(g){return g._kama;}).map(function(g){return g.name;});
-        var kp=shuffle(KAMASUTRA.filter(function(k){return k.niveau===4&&usedN.indexOf(k.name)<0;})).slice(0,1);
+        var kp=shuffle(getKamaData().filter(function(k){return k.niveau===4&&usedN.indexOf(k.name)<0;})).slice(0,1);
         kp.forEach(function(k){ pool.push(Object.assign({},k,{texte:'Kâmasûtra',niveau:4,genre:'Mixte',pratiques:['kamasutra'],accessoires:[],modes:[],solo:false,_p:player.prenom,_ch:false,_kama:true,_kamaLast:true})); });
       }
       if(G.mode==='pimente') {
@@ -6856,7 +6917,7 @@ function prepareGages() {
     var sol5=shuffle(all5.filter(function(g){return g.solo&&gageOk(g,G.players[0],5);}));
     if(sol5.length) pool5.push(Object.assign({},sol5[0],{_p:G.players[0].prenom,_ch:false,_kama:false}));
     if(G.players[0].pratiques.indexOf('kamasutra')>=0){
-      var ks=shuffle(KAMASUTRA.filter(function(k){return k.niveau===5&&G.usedKama.indexOf(k.name)<0;})).slice(0,1);
+      var ks=shuffle(getKamaData().filter(function(k){return k.niveau===5&&G.usedKama.indexOf(k.name)<0;})).slice(0,1);
       ks.forEach(function(k){pool5.push(Object.assign({},k,{texte:'Kâmasûtra',niveau:5,genre:'Mixte',pratiques:['kamasutra'],accessoires:[],modes:[],solo:false,_p:G.players[0].prenom,_ch:false,_kama:true}));});
     }
   } else {
@@ -7268,8 +7329,10 @@ function toggleGageFavEl(btn) {
 
 // ── Visuel humanoïde des positions (femme rose ♀ / homme bleu ♂) ──
 var _KF='#cf8aa0';
+var _KM='#5a86c2';
+function _fillFor(c){ return c===_KF ? 'url(#gradF)' : (c===_KM ? 'url(#gradM)' : c); }
 function _P(c,w,pts){ return '<polyline points="'+pts+'" fill="none" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"/>'; }
-function _HD(c,x,y){ return '<circle cx="'+x+'" cy="'+y+'" r="6.3" fill="'+c+'"/>'; }
+function _HD(c,x,y){ return '<circle cx="'+x+'" cy="'+y+'" r="6.3" fill="'+_fillFor(c)+'"/>'; }
 function _pt(x,y){ return x.toFixed(1)+','+y.toFixed(1)+' '; }
 // Tronc en silhouette genrée le long de la colonne hip→neck
 function _torso(hx,hy,nx,ny,c){
@@ -7279,7 +7342,7 @@ function _torso(hx,hy,nx,ny,c){
   var w = fem ? [7.5,4.6,6.6,5.6] : [5.4,6.0,7.4,9.0];
   function S(t,wd,s){ var bx=hx+dx*t, by=hy+dy*t; return _pt(bx+px*wd*s, by+py*wd*s); }
   var pts=S(0,w[0],1)+S(0.40,w[1],1)+S(0.72,w[2],1)+S(1,w[3],1)+S(1,w[3],-1)+S(0.72,w[2],-1)+S(0.40,w[1],-1)+S(0,w[0],-1);
-  return '<polygon points="'+pts+'" fill="'+c+'"/>';
+  return '<polygon points="'+pts+'" fill="'+_fillFor(c)+'"/>';
 }
 // Tête + cheveux (femme = chevelure marquée derrière la tête, à l'opposé du cou)
 function _head(nx,ny,hx,hy,c){
@@ -7377,12 +7440,32 @@ function kamaPoseSVG(pose, prop){
     arc:          _figArch(94,78,1,F)+_figKneel(158,80,-1,M),
     equerre:      _figLieBack(92,92,1,F)+_figKneel(150,76,-1,M)
   };
+  // Angle de vue affiché, pour aider à se repérer sur chaque schéma
+  var ANGLES = {
+    missionnaire:'Vue de côté', profond:'Vue de côté', levrette:'Vue de côté',
+    derriere:'Vue de côté', cavalier:'Vue de côté', amazone:'Vue de côté',
+    cuillere:'Vue de côté', lotus:'Vue de face', sixtynine:'Vue de dessus',
+    debout:'Vue de face', cotecote:'Vue de côté', arc:'Vue de côté', equerre:'Vue de côté'
+  };
   var propSvg = prop ? _prop(prop,104,108) : '';
   var inner = scenes[pose] || scenes.missionnaire;
+  var angleLabel = ANGLES[pose] || 'Vue de côté';
   return '<svg viewBox="0 0 240 138" width="100%" style="max-width:250px;display:block;margin:8px auto 2px" role="img" aria-label="Schéma de la position">'
+    + '<defs>'
+      + '<linearGradient id="gradF" x1="0" y1="0" x2="0" y2="1">'
+        + '<stop offset="0%" stop-color="#e3a9bd"/><stop offset="100%" stop-color="#b96e87"/>'
+      + '</linearGradient>'
+      + '<linearGradient id="gradM" x1="0" y1="0" x2="0" y2="1">'
+        + '<stop offset="0%" stop-color="#7ea3d6"/><stop offset="100%" stop-color="#456399"/>'
+      + '</linearGradient>'
+      + '<filter id="figShadow" x="-20%" y="-20%" width="140%" height="140%">'
+        + '<feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-color="#000" flood-opacity="0.35"/>'
+      + '</filter>'
+    + '</defs>'
     + '<rect x="0" y="0" width="240" height="138" rx="14" fill="rgba(255,255,255,0.03)"/>'
+    + '<text x="12" y="16" font-family="DM Sans,sans-serif" font-size="9.5" font-weight="700" fill="rgba(255,255,255,0.35)" letter-spacing="0.5">'+angleLabel.toUpperCase()+'</text>'
     + '<line x1="16" y1="120" x2="224" y2="120" stroke="rgba(255,255,255,0.12)" stroke-width="2" stroke-dasharray="4 5"/>'
-    + propSvg + inner
+    + '<g filter="url(#figShadow)">' + propSvg + inner + '</g>'
     + '<g font-family="DM Sans,sans-serif" font-size="11" font-weight="600">'
     + '<circle cx="158" cy="130" r="5" fill="#cf8aa0"/><text x="167" y="134" fill="#cf8aa0">Elle</text>'
     + '<circle cx="198" cy="130" r="5" fill="#5a86c2"/><text x="207" y="134" fill="#5a86c2">Lui</text>'
@@ -7392,11 +7475,14 @@ function renderKamaCard(gage, player) {
   var diff=gage.difficulty||1;
   var dots='';for(var i=0;i<5;i++) dots+='<span class="'+(i<diff?'on':'')+'"></span>';
   var diffLabel=['','Facile','Accessible','Intermédiaire','Avancée','Expert'][diff]||'';
+  var visual = gage.image
+    ? '<img src="'+gage.image+'" alt="'+gage.name+'" style="width:100%;max-width:280px;border-radius:14px;display:block;margin:8px auto 2px;object-fit:cover">'
+    : kamaPoseSVG(gage.pose, gage.prop);
   el('g-card').innerHTML='<div class="kama-card">'
     +'<div class="kama-icon">🪷</div>'
     +'<div class="kama-name">'+gage.name+'</div>'
     +'<div class="kama-diff" title="Difficulté : '+diffLabel+'">'+dots+'</div>'
-    +kamaPoseSVG(gage.pose, gage.prop)
+    +visual
     +'<div class="kama-desc">'+gage.desc+'</div>'
     +'</div>';
 }
@@ -8497,6 +8583,7 @@ function adminTab(tab, btn) {
   else if(tab==='memoire') { cnt.innerHTML = renderAdminMemoire(); }
   else if(tab==='data') { cnt.innerHTML = renderAdminData(); }
   else if(tab==='duree') { cnt.innerHTML = renderAdminDuree(); }
+  else if(tab==='kama') { cnt.innerHTML = renderAdminKama(); }
 }
 
 function renderAdminGages() {
@@ -8618,7 +8705,10 @@ function renderGageForm() {
     +'<div><label class="field-label">Niveau</label><select id="g-lvl" onchange="liveVal()"><option value="1">1–Sensuel</option><option value="2">2–Chaleur</option><option value="3">3–Hot</option><option value="4">4–Très hot</option><option value="5">5–Finish</option></select></div>'
     +'</div>'
     +'<label class="field-label">Mode</label>'
-    +'<select id="g-mode" onchange="liveVal()"><option value="">Tous modes</option><option value="classique">🎲 Classique</option><option value="pimente">🔥 Pimenté</option><option value="brise_glace">🧭 Découverte</option><option value="competition">🏆 Compétition</option></select>'
+    +'<select id="g-mode" onchange="liveVal()"><option value="">Tous modes</option><option value="classique">🎲 Classique</option><option value="pimente">🔥 Pimenté</option><option value="brise_glace">🧭 Découverte</option><option value="competition">🏆 Compétition</option><option value="story">🎭 Histoire</option></select>'
+    +'<label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:8px">'
+    +'<input type="checkbox" id="g-solo" onchange="liveVal()" style="width:18px;height:18px;flex:0 0 auto">'
+    +'<span style="font-size:13px;line-height:1.4"><strong>👤 Solo uniquement</strong><br><span style="color:var(--muted);font-size:11px">Ce gage ne sortira qu\'en mode Solo (jamais en couple).</span></span></label>'
     +'<label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card2);border:1px solid var(--gold);border-radius:10px;padding:10px 12px;margin-top:10px">'
     +'<input type="checkbox" id="g-perso100" style="width:18px;height:18px;flex:0 0 auto;accent-color:var(--gold)">'
     +'<span style="font-size:13px;line-height:1.4"><strong style="color:var(--gold)">🎯 Gage 100% personnalisé</strong><br><span style="color:var(--muted);font-size:11px">Proposé en début de partie (si pratiques/objets compatibles) puis garanti à 100%, invisible in-game.</span></span></label>'
@@ -8723,7 +8813,7 @@ function liveVal() {
       genre:(document.getElementById('g-genre')||{value:'Mixte'}).value,
       modes:_mode?[_mode]:[],
       accessoires:_accs, pratiques:_prats, pratiquesPartenaire:_pratsP,
-      solo:false,
+      solo:!!(document.getElementById('g-solo')||{}).checked,
       _perso100:!!(document.getElementById('g-perso100')||{}).checked
     };
     html += '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:2px 0 2px">Comment ce gage fonctionne in-game</div>' + buildGageInfoBadges(_fakeGage);
@@ -8745,8 +8835,9 @@ function saveGage() {
   var prats=[]; document.querySelectorAll('input[name="g-prat"]:checked').forEach(function(c){prats.push(c.value);});
   var pratsPartner=[]; document.querySelectorAll('input[name="g-prat-partner"]:checked').forEach(function(c){pratsPartner.push(c.value);});
   var perso100=!!(document.getElementById('g-perso100')||{}).checked;
+  var soloOnly=!!(document.getElementById('g-solo')||{}).checked;
   var rawIdx=(document.getElementById('edit-idx')||{value:'-1'}).value;
-  var gage={texte:txt,niveau:lvl,genre:genre,pratiques:prats,pratiquesPartenaire:pratsPartner,accessoires:accs,modes:mode?[mode]:[],solo:false,_perso100:perso100};
+  var gage={texte:txt,niveau:lvl,genre:genre,pratiques:prats,pratiquesPartenaire:pratsPartner,accessoires:accs,modes:mode?[mode]:[],solo:soloOnly,_perso100:perso100};
   if(rawIdx.indexOf('base_')===0){
     var bi=parseInt(rawIdx.replace('base_',''));
     customGages.push(gage);
@@ -8789,6 +8880,7 @@ function cancelGageEdit(){
   var fg=document.getElementById('g-genre'); if(fg) fg.value='Mixte';
   var fl=document.getElementById('g-lvl'); if(fl) fl.value='1';
   var fm=document.getElementById('g-mode'); if(fm) fm.value='';
+  var fs2=document.getElementById('g-solo'); if(fs2) fs2.checked=false;
   document.querySelectorAll('input[name="g-acc"],input[name="g-prat"],input[name="g-prat-partner"]').forEach(function(cb){cb.checked=false;cb.closest&&cb.closest('.admin-pill')&&cb.closest('.admin-pill').classList.remove('checked');});
   var sb=document.getElementById('g-save'); if(sb) sb.textContent='➕ Ajouter';
   var p100c=document.getElementById('g-perso100'); if(p100c) p100c.checked=false;
@@ -8851,6 +8943,7 @@ function editBaseGage(i){
   document.getElementById('g-genre').value=g.genre;
   document.getElementById('g-lvl').value=g.niveau;
   document.getElementById('g-mode').value=(g.modes&&g.modes[0])||'';
+  var gSoloB=document.getElementById('g-solo'); if(gSoloB) gSoloB.checked=!!g.solo;
   var p100b=document.getElementById('g-perso100'); if(p100b) p100b.checked=false;
   document.querySelectorAll('input[name="g-acc"]').forEach(function(cb){cb.checked=g.accessoires&&g.accessoires.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
   document.querySelectorAll('input[name="g-prat"]').forEach(function(cb){cb.checked=g.pratiques&&g.pratiques.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
@@ -8867,6 +8960,7 @@ function editCustomGage(i){
   document.getElementById('g-genre').value=g.genre;
   document.getElementById('g-lvl').value=g.niveau;
   document.getElementById('g-mode').value=(g.modes&&g.modes[0])||'';
+  var gSoloC=document.getElementById('g-solo'); if(gSoloC) gSoloC.checked=!!g.solo;
   var p100=document.getElementById('g-perso100'); if(p100) p100.checked=!!g._perso100;
   document.querySelectorAll('input[name="g-acc"]').forEach(function(cb){cb.checked=g.accessoires&&g.accessoires.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
   document.querySelectorAll('input[name="g-prat"]').forEach(function(cb){cb.checked=g.pratiques&&g.pratiques.indexOf(cb.value)>=0;cb.closest('.admin-pill').classList.toggle('checked',cb.checked);});
@@ -9355,6 +9449,257 @@ function resetDurConfig(){
   AUTO_GRACE_BY_LVL[1]=5; AUTO_GRACE_BY_LVL[2]=5; AUTO_GRACE_BY_LVL[3]=5; AUTO_GRACE_BY_LVL[4]=5; AUTO_GRACE_BY_LVL[5]=5;
   AUTO_PRE_PAUSE=1.5; AUTO_MECH_DELAY=5; AUTO_NO_TIMER_WAIT=15;
   adminTab('duree', document.getElementById('atab-duree-nav'));
+}
+
+// ══════════════ ADMIN — ONGLET KÂMASÛTRA ══════════════
+var _pendingKamaImage = null; // data URI en attente (ou 'REMOVE'), remise à null après save/annulation
+var _kamaEditingName = null;  // nom de la position en cours d'édition (null = nouvelle position)
+var KAMA_POSE_OPTIONS = ['missionnaire','levrette','cavalier','cuillere','lotus','sixtynine','cotecote','debout','equerre','profond','amazone','arc'];
+
+function renderAdminKama(){
+  var data = getKamaData(true); // inclut les positions masquées pour pouvoir les restaurer
+  var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Ajoute une position, modifie son texte, ou associe-lui une image qui remplacera le schéma par défaut in-game. Les images sont automatiquement redimensionnées et compressées pour ne pas alourdir la sauvegarde.</p>';
+  html += '<button class="btn" style="width:100%;margin-bottom:12px" onclick="kamaAdminForm(null)">➕ Nouvelle position</button>';
+  html += '<div id="kama-form-wrap"></div>';
+  html += '<div id="kama-list-items">';
+  data.forEach(function(k){
+    var ov = customKama[k.name];
+    var isDeleted = ov && ov._deleted;
+    var isCustomNew = ov && ov._new;
+    var isOverridden = ov && !ov._new && !ov._deleted;
+    var thumb = k.image
+      ? '<img src="'+k.image+'" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex:0 0 auto;opacity:'+(isDeleted?'0.4':'1')+'">'
+      : '<div style="width:52px;height:52px;flex:0 0 auto;border-radius:8px;overflow:hidden;background:var(--card2);opacity:'+(isDeleted?'0.4':'1')+'">'+kamaPoseSVG(k.pose)+'</div>';
+    var badges = '';
+    if(isCustomNew) badges += ' <span class="admin-mini-tag" style="color:var(--gold)">perso</span>';
+    if(isOverridden) badges += ' <span class="admin-mini-tag" style="color:var(--info)">modifié</span>';
+    if(isDeleted) badges += ' <span class="admin-mini-tag" style="color:var(--warn)">masqué</span>';
+    if(k.image) badges += ' <span class="admin-mini-tag">🖼️ image perso</span>';
+    var btns;
+    if(isDeleted){
+      btns = '<button class="btn info sm" style="padding:6px 10px" onclick="restoreKamaEntry(\''+k.name.replace(/'/g,"\\'")+'\')">👁️ Restaurer</button>';
+    } else {
+      btns = '<button class="btn info sm" style="padding:6px 10px" onclick="kamaAdminForm(\''+k.name.replace(/'/g,"\\'")+'\')">✏️</button>'
+        + (isOverridden ? '<button class="btn ghost sm" style="padding:6px 10px" onclick="resetKamaEntry(\''+k.name.replace(/'/g,"\\'")+'\')" title="Revenir à l\'original">↺</button>' : '')
+        + '<button class="btn danger sm" style="padding:6px 10px" onclick="deleteKamaEntry(\''+k.name.replace(/'/g,"\\'")+'\')">✕</button>';
+    }
+    html += '<div class="admin-list-item" style="display:flex;gap:10px;align-items:center;opacity:'+(isDeleted?'0.7':'1')+'">'
+      + thumb
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:13px;font-weight:700">'+k.name+badges+'</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:2px">Niv.'+k.niveau+' · '+(k.pose||'—')+' · difficulté '+(k.difficulty||1)+'/5</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:4px;flex:0 0 auto">'+btns+'</div>'
+    + '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+function kamaAdminForm(name){
+  _kamaEditingName = name;
+  _pendingKamaImage = null;
+  var data = name ? getKamaData(true).find(function(k){return k.name===name;}) : null;
+  var isNew = !name;
+  var wrap = document.getElementById('kama-form-wrap');
+  if(!wrap) return;
+  var html = '<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">';
+  html += '<h3 style="font-size:14px;color:var(--gold);margin-bottom:10px">'+(isNew?'➕ Nouvelle position':'✏️ '+name)+'</h3>';
+  html += '<label class="field-label">Nom</label><input type="text" id="km-name" value="'+(data?data.name.replace(/"/g,'&quot;'):'')+'" '+(isNew?'':'disabled')+' placeholder="Ex : La Vague" style="width:100%">';
+  if(!isNew) html += '<p style="font-size:10px;color:var(--muted);margin:2px 0 8px">Le nom ne peut pas être modifié une fois créé (sert de référence interne).</p>';
+  html += '<label class="field-label" style="margin-top:8px">Description</label><textarea id="km-desc" rows="3" placeholder="Décris la position..." style="width:100%">'+(data?data.desc:'')+'</textarea>';
+  html += '<div style="display:flex;gap:8px;margin-top:8px">';
+  html += '<div style="flex:1"><label class="field-label">Niveau</label><select id="km-niveau" style="width:100%"><option value="4"'+(data&&data.niveau===4?' selected':'')+'>4</option><option value="5"'+(!data||data.niveau===5?' selected':'')+'>5</option></select></div>';
+  html += '<div style="flex:1"><label class="field-label">Difficulté</label><select id="km-difficulty" style="width:100%">'+[1,2,3,4,5].map(function(d){return '<option value="'+d+'"'+(data&&data.difficulty===d?' selected':'')+'>'+d+'/5</option>';}).join('')+'</select></div>';
+  html += '</div>';
+  html += '<label class="field-label" style="margin-top:8px">Schéma par défaut (utilisé si aucune image)</label>';
+  html += '<select id="km-pose" style="width:100%">'+KAMA_POSE_OPTIONS.map(function(p){return '<option value="'+p+'"'+(data&&data.pose===p?' selected':'')+'>'+p+'</option>';}).join('')+'</select>';
+  html += '<label class="field-label" style="margin-top:10px">Image (remplace le schéma) — PNG, JPG ou WEBP</label>';
+  html += '<input type="file" accept="image/png,image/jpeg,image/webp" id="km-img-input" onchange="onKamaImageFile(this)" style="width:100%">';
+  html += '<p id="kama-img-err" style="font-size:11px;margin-top:4px;color:var(--muted)"></p>';
+  html += '<img id="kama-img-preview" src="'+(data&&data.image?data.image:'')+'" class="'+(data&&data.image?'':'hidden')+'" style="width:100%;max-width:240px;border-radius:10px;margin-top:6px;display:block">';
+  html += '<button type="button" class="btn ghost sm" id="kama-img-remove-btn" style="margin-top:6px" onclick="removeKamaImage()" '+((data&&data.image)?'':'style="display:none"')+'>🗑️ Retirer l\'image</button>';
+  html += '<div class="btn-row" style="margin-top:14px;gap:8px">';
+  html += '<button class="btn" style="flex:1" onclick="saveKamaEntry()">💾 Enregistrer</button>';
+  html += '<button class="btn ghost" style="flex:1" onclick="closeKamaForm()">Annuler</button>';
+  html += '</div></div>';
+  wrap.innerHTML = html;
+  wrap.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function onKamaImageFile(input){
+  var f = input.files && input.files[0];
+  var errEl = document.getElementById('kama-img-err');
+  var prevEl = document.getElementById('kama-img-preview');
+  var rmBtn = document.getElementById('kama-img-remove-btn');
+  if(errEl) errEl.textContent = '';
+  if(!f) return;
+  var okTypes = ['image/png','image/jpeg','image/jpg','image/webp'];
+  if(okTypes.indexOf(f.type)<0){
+    if(errEl){ errEl.textContent = '❌ Format non supporté ('+(f.type||'inconnu')+'). Utilise PNG, JPG ou WEBP.'; errEl.style.color='var(--warn)'; }
+    input.value=''; return;
+  }
+  if(f.size > 8*1024*1024){
+    if(errEl){ errEl.textContent = '❌ Fichier trop lourd ('+(f.size/1024/1024).toFixed(1)+' Mo). Maximum 8 Mo avant compression.'; errEl.style.color='var(--warn)'; }
+    input.value=''; return;
+  }
+  if(errEl){ errEl.textContent = '⏳ Traitement de l\'image…'; errEl.style.color='var(--muted)'; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var maxW = 700;
+      var scale = Math.min(1, maxW/img.width);
+      var w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+      var canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      _pendingKamaImage = dataUrl;
+      if(prevEl){ prevEl.src = dataUrl; prevEl.classList.remove('hidden'); }
+      if(rmBtn) rmBtn.style.display='inline-block';
+      if(errEl){ errEl.textContent = '✅ Image prête ('+w+'×'+h+'px, ~'+Math.round(dataUrl.length/1024)+' Ko)'; errEl.style.color='var(--success)'; }
+    };
+    img.onerror = function(){ if(errEl){ errEl.textContent = '❌ Impossible de lire cette image (fichier corrompu ?).'; errEl.style.color='var(--warn)'; } };
+    img.src = e.target.result;
+  };
+  reader.onerror = function(){ if(errEl){ errEl.textContent = '❌ Erreur de lecture du fichier.'; errEl.style.color='var(--warn)'; } };
+  reader.readAsDataURL(f);
+}
+function removeKamaImage(){
+  _pendingKamaImage = 'REMOVE';
+  var prevEl = document.getElementById('kama-img-preview'); if(prevEl) prevEl.classList.add('hidden');
+  var rmBtn = document.getElementById('kama-img-remove-btn'); if(rmBtn) rmBtn.style.display='none';
+  var inp = document.getElementById('km-img-input'); if(inp) inp.value='';
+  var errEl = document.getElementById('kama-img-err'); if(errEl) errEl.textContent='Image retirée — le schéma par défaut sera utilisé.';
+}
+function closeKamaForm(){
+  var wrap = document.getElementById('kama-form-wrap'); if(wrap) wrap.innerHTML='';
+  _kamaEditingName=null; _pendingKamaImage=null;
+}
+function saveKamaEntry(){
+  var name = ((document.getElementById('km-name')||{}).value||'').trim();
+  if(!name){ alert('Le nom est obligatoire.'); return; }
+  var isNew = !_kamaEditingName;
+  if(isNew && (KAMASUTRA.some(function(k){return k.name===name;}) || customKama[name])){
+    alert('Une position avec ce nom existe déjà.'); return;
+  }
+  var desc = ((document.getElementById('km-desc')||{}).value||'').trim();
+  if(!desc){ alert('La description est obligatoire.'); return; }
+  var niveau = parseInt((document.getElementById('km-niveau')||{}).value)||4;
+  var difficulty = parseInt((document.getElementById('km-difficulty')||{}).value)||1;
+  var pose = (document.getElementById('km-pose')||{}).value||'missionnaire';
+
+  var key = isNew ? name : _kamaEditingName;
+  var entry = Object.assign({}, customKama[key]||{}, { name:name, desc:desc, niveau:niveau, difficulty:difficulty, pose:pose });
+  if(isNew) entry._new = true;
+  delete entry._deleted;
+  if(_pendingKamaImage === 'REMOVE') delete entry.image;
+  else if(_pendingKamaImage) entry.image = _pendingKamaImage;
+
+  customKama[key] = entry;
+  saveCustom(KEYS.kama, customKama);
+  closeKamaForm();
+  adminTab('kama', document.getElementById('atab-kama-nav'));
+}
+function deleteKamaEntry(name){
+  var isCustomNew = customKama[name] && customKama[name]._new;
+  if(!confirm(isCustomNew ? 'Supprimer définitivement cette position perso ?' : 'Masquer cette position de base ? Elle ne sortira plus in-game — tu pourras la restaurer plus tard.')) return;
+  if(isCustomNew){
+    delete customKama[name];
+  } else {
+    customKama[name] = Object.assign({}, customKama[name]||{}, {_deleted:true});
+  }
+  saveCustom(KEYS.kama, customKama);
+  adminTab('kama', document.getElementById('atab-kama-nav'));
+}
+function restoreKamaEntry(name){
+  if(customKama[name]){ delete customKama[name]._deleted; saveCustom(KEYS.kama, customKama); }
+  adminTab('kama', document.getElementById('atab-kama-nav'));
+}
+function resetKamaEntry(name){
+  if(!confirm('Revenir au texte/image d\'origine pour "'+name+'" ? Tes modifications seront perdues.')) return;
+  delete customKama[name];
+  saveCustom(KEYS.kama, customKama);
+  adminTab('kama', document.getElementById('atab-kama-nav'));
+}
+
+// ══════════════ MODE DE JEU « KÂMASÛTRA » ══════════════
+// Flux autonome et gratuit : pas de pratiques ni d'accessoires à cocher.
+// Juste le nombre de joueurs, puis exploration aléatoire ou manuelle des positions.
+var KAMA_MODE = { nb: 2 };
+var _kamaLastShown = null; // évite de retirer 2 fois de suite la même position en aléatoire
+
+function goToKamaSetup(){
+  goTo('page-kama-setup');
+  kamaHighlightNb();
+}
+function kamaHighlightNb(){
+  [2,3,4].forEach(function(n){
+    var b = document.getElementById('kama-nb-'+n);
+    if(b) b.classList.toggle('sel', n===KAMA_MODE.nb);
+  });
+}
+function kamaSetNb(n){
+  KAMA_MODE.nb = n;
+  kamaHighlightNb();
+}
+function kamaStartRandom(){
+  goTo('page-kama-random');
+  kamaDrawRandom();
+}
+function kamaDrawRandom(){
+  var all = getKamaData();
+  if(!all.length) return;
+  var pool = all.filter(function(k){ return k.name !== _kamaLastShown; });
+  if(!pool.length) pool = all;
+  var pick = pool[Math.floor(Math.random()*pool.length)];
+  _kamaLastShown = pick.name;
+  renderKamaModeCard('kama-random-card', pick);
+  vibrate(12);
+}
+function renderKamaModeCard(containerId, k){
+  var box = document.getElementById(containerId);
+  if(!box) return;
+  var diff = k.difficulty||1;
+  var dots=''; for(var i=0;i<5;i++) dots+='<span class="'+(i<diff?'on':'')+'"></span>';
+  var visual = k.image
+    ? '<img src="'+k.image+'" alt="'+k.name+'" style="width:100%;max-width:280px;border-radius:14px;display:block;margin:8px auto 2px;object-fit:cover">'
+    : kamaPoseSVG(k.pose, k.prop);
+  box.innerHTML = '<div class="kama-card">'
+    + '<div class="kama-icon">🪷</div>'
+    + '<div class="kama-name">'+k.name+'</div>'
+    + '<div class="kama-diff">'+dots+'</div>'
+    + visual
+    + '<div class="kama-desc">'+k.desc+'</div>'
+    + '</div>';
+}
+function kamaStartManual(){
+  goTo('page-kama-manual');
+  renderKamaManualGrid();
+}
+function renderKamaManualGrid(){
+  var grid = document.getElementById('kama-manual-grid');
+  if(!grid) return;
+  var all = getKamaData();
+  if(!all.length){ grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px">Aucune position disponible.</p>'; return; }
+  grid.innerHTML = all.map(function(k,i){
+    var thumb = k.image
+      ? '<img src="'+k.image+'" style="width:100%;height:108px;object-fit:cover;border-radius:10px 10px 0 0;display:block">'
+      : '<div style="width:100%;height:108px;border-radius:10px 10px 0 0;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center">'+kamaPoseSVG(k.pose,k.prop)+'</div>';
+    return '<div onclick="kamaShowDetail('+i+')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+      + thumb
+      + '<div style="padding:8px 10px"><div style="font-size:12.5px;font-weight:700;line-height:1.3">'+k.name+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Niv.'+k.niveau+' · difficulté '+(k.difficulty||1)+'/5</div></div>'
+      + '</div>';
+  }).join('');
+}
+function kamaShowDetail(i){
+  var all = getKamaData();
+  var k = all[i];
+  if(!k) return;
+  var nameEl = document.getElementById('kama-detail-name');
+  if(nameEl) nameEl.textContent = k.name;
+  renderKamaModeCard('kama-detail-content', k);
+  goTo('page-kama-detail');
 }
 
 
