@@ -981,9 +981,10 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <button class="admin-tab" onclick="adminTab('accessoires',this)">🎭 Accessoires</button>
     <button class="admin-tab" id="atab-bonus-nav" onclick="adminTab('bonus',this)">🎁 Bonus</button>
     <button class="admin-tab" id="atab-mem-nav" onclick="adminTab('memoire',this)">🧠 Mémoire</button>
-    <button class="admin-tab" id="atab-data-nav" onclick="adminTab('data',this)">💾 Données</button>
     <button class="admin-tab" id="atab-duree-nav" onclick="adminTab('duree',this)">⏱ Durée</button>
     <button class="admin-tab" id="atab-kama-nav" onclick="adminTab('kama',this)">🪷 Kâmasûtra</button>
+    <button class="admin-tab" id="atab-nextgame-nav" onclick="adminTab('nextgame',this)">🎯 Prochaine partie</button>
+    <button class="admin-tab" id="atab-data-nav" onclick="adminTab('data',this)">💾 Données</button>
   </div>
   <div id="admin-content"></div>
   <button class="btn ghost" style="margin-top:14px" onclick="goTo('page-home')">← Retour</button>
@@ -1855,13 +1856,25 @@ function getKamaData(includeDeleted){
   var out = KAMASUTRA.map(function(k){
     var ov = customKama[k.name];
     if(ov && ov._deleted && !includeDeleted) return null;
-    return ov ? Object.assign({}, k, ov) : k;
+    var merged = ov ? Object.assign({}, k, ov) : Object.assign({}, k);
+    merged._key = k.name; // clé stable (nom d'origine) même si le nom affiché a été modifié
+    return merged;
   }).filter(Boolean);
-  Object.keys(customKama).forEach(function(name){
-    var ov = customKama[name];
-    if(ov._new && (!ov._deleted || includeDeleted)) out.push(Object.assign({name:name}, ov));
+  Object.keys(customKama).forEach(function(key){
+    var ov = customKama[key];
+    if(ov._new && (!ov._deleted || includeDeleted)){
+      var merged = Object.assign({name:key}, ov);
+      merged._key = key;
+      out.push(merged);
+    }
   });
   return out;
+}
+// Même liste, triée par difficulté croissante (du moins au plus difficile) — utilisée
+// pour tous les affichages type "liste"/"grille" (admin, mode de jeu manuel).
+// Le tirage aléatoire in-game continue d'utiliser getKamaData() non trié.
+function getKamaDataSorted(includeDeleted){
+  return getKamaData(includeDeleted).sort(function(a,b){ return (a.difficulty||1)-(b.difficulty||1); });
 }
 
 var PRATIQUES_BASE = {
@@ -4528,6 +4541,20 @@ var timerSecs=0, timerLeft=0, timerRun=false, timerInt=null;
 
 // ── localStorage keys ──
 var KEYS = { gages:'cg_v28', prat:'cp_v28', acc:'ca_v28', hidden:'hbg_v28', bonus:'cb_v28', kama:'ck_v28' };
+var PERSO_SEL_KEY = 'psel_v28'; // gages perso pré-sélectionnés depuis l'admin pour la prochaine partie
+var NEXT_GAME_KEY = 'ngp_v28'; // pool de gages (base + perso) choisi depuis l'admin, par durée
+var nextGamePool = loadCustom(NEXT_GAME_KEY) || {30:[], 45:[], 60:[]}; // clés "base:IDX" ou "perso:ID"
+function _ngKey(g, isBase, idx){ return (isBase?'base:':'perso:') + (isBase ? idx : String(g.id!=null?g.id:idx)); }
+function _ngLookup(key){
+  if(key.indexOf('base:')===0){
+    var idx = parseInt(key.slice(5),10);
+    return (GAGES_BASE[idx] && hiddenBaseGages.indexOf(idx)<0) ? {g:GAGES_BASE[idx], isBase:true, idx:idx} : null;
+  }
+  var pkey = key.slice(6);
+  for(var i=0;i<customGages.length;i++){ if(String(customGages[i].id!=null?customGages[i].id:i)===pkey) return {g:customGages[i], isBase:false, idx:i}; }
+  return null;
+}
+function saveNextGamePool(){ saveCustom(NEXT_GAME_KEY, nextGamePool); }
 // ── PRÉFÉRENCES GAGES (👍/👎 donnés en fin de partie) ──
 // Valeur 1 = aimé (boosté dans les prochaines parties), -1 = moins aimé (exclu des prochaines parties)
 // Ne concerne jamais les gages 100% perso, surprise, ni les sessions en mode Découverte/Brise-glace.
@@ -4545,7 +4572,7 @@ var GMEM_KEY = 'gmem_v28';
 var gageMemory = loadCustom(GMEM_KEY) || {};
 function saveGageMemory(){ saveCustom(GMEM_KEY, gageMemory); }
 function recordGageSignal(gage, playerName, type){
-  if(!gage || gage._kama || !gage.texte || gage.texte.charAt(0)==='🎓') return;
+  if(!gage || gage._kama || !gage.texte || gage.texte.slice(0,2)==='🎓') return;
   var texte = gage.texte;
   if(!gageMemory[texte]) gageMemory[texte] = { skips:0, changes:0, likes:0, niveau:gage.niveau||1, byName:{} };
   var entry = gageMemory[texte];
@@ -4590,7 +4617,7 @@ function renderCustomGagePicker(){
   var box = document.getElementById('custom-gage-picker');
   if(!box) return;
   var pool = perso100Gages();
-  if(!G._selectedPersoIds) G._selectedPersoIds = [];
+  if(!G._selectedPersoIds) G._selectedPersoIds = loadCustom(PERSO_SEL_KEY) || [];
   if(!pool.length){ box.innerHTML='<p style="font-size:12px;color:var(--muted);padding:6px 2px">Aucun gage 100% personnalisé créé pour le moment.</p>'; return; }
   if(!G._persoFilter) G._persoFilter = {type:'',niveau:'',prat:''};
   var f = G._persoFilter;
@@ -4732,6 +4759,7 @@ function togglePersoPick(evt, key, el){
     }
     G._selectedPersoIds.push(key);
   }
+  saveCustom(PERSO_SEL_KEY, G._selectedPersoIds);
   renderCustomGagePicker();
 }
 var ADMIN_ON = false; // Session uniquement : se réactive via le ❤ + code, se cache au retour à l'accueil
@@ -6780,11 +6808,11 @@ function prepareGages() {
     G.players.forEach(function(player){
       // Exclude guide gages from normal pool — they are injected separately below
       var discFilter=DISC_PRATS[lvl];
-      var cands=all.filter(function(g){
+      function _baseOk(g){
         if(g.niveau!==lvl) return false;
         if(levelUsedTexts[g.texte]) return false;
         if(!gageOk(g,player,lvl)) return false;
-        if(g.texte&&g.texte.charAt(0)==='🎓') return false;
+        if(g.texte&&g.texte.slice(0,2)==='🎓') return false;
         // Discovery mode: only allow pratiques unlocked at this level
         if(G.mode==='brise_glace' && discFilter!==null){
           if(g.pratiques&&g.pratiques.length>0){
@@ -6793,7 +6821,12 @@ function prepareGages() {
           }
         }
         return true;
-      });
+      }
+      // Pool "prochaine partie" préparé en admin pour cette durée : prioritaire si l'admin
+      // a effectivement choisi des gages pour ce niveau, sinon repli sur le pool normal.
+      var ngCurated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){ return r && r.g.niveau===lvl; }).map(function(r){ return r.g; });
+      var cands = ngCurated.length ? ngCurated.filter(_baseOk) : [];
+      if(!cands.length) cands = all.filter(_baseOk);
       var norm=buildVariedPool(cands,maxN,player);
       norm.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
       // Max 1 kâmasûtra per party at niv4 (any mode)
@@ -6853,18 +6886,23 @@ function prepareGages() {
       var normT=new Set(norm.map(function(g){return g.texte;}));
       if(!G.changePool[lvl]) G.changePool[lvl]={};
       // Also exclude guides from change pool
-      G.changePool[lvl][player.prenom]=(function(arr){var f=arr.filter(function(g){return !G.playedTexts.has(g.texte);});var s=arr.filter(function(g){return G.playedTexts.has(g.texte);});return shuffle(f).concat(shuffle(s));})(cands.filter(function(g){return !normT.has(g.texte)&&!(g.texte&&g.texte.charAt(0)==='🎓');}));
+      G.changePool[lvl][player.prenom]=(function(arr){var f=arr.filter(function(g){return !G.playedTexts.has(g.texte);});var s=arr.filter(function(g){return G.playedTexts.has(g.texte);});return shuffle(f).concat(shuffle(s));})(cands.filter(function(g){return !normT.has(g.texte)&&!(g.texte&&g.texte.slice(0,2)==='🎓');}));
     });
-    // Inject 1 distinct guide gage per player per level (1-4)
+    // Inject 1 distinct guide gage per player per level (1-4) — mais pas systématiquement :
+    // si peu de gages sont prévus ce niveau (ex: partie Rapide), le guide forcé prendrait
+    // une part disproportionnée du tour et nuirait à la variété. Standard/Longue inchangés.
     if(lvl>=1&&lvl<=4){
+      var _guideBudget = LVL_MAX[lvl]||5;
+      var _guideChance = _guideBudget<=2 ? 0.4 : (_guideBudget===3 ? 0.65 : 1);
+      if(Math.random() < _guideChance){
       var usedGuideTxt=[];
       G.players.forEach(function(player){
         var guides=allGages().filter(function(g){
-          return g.niveau===lvl&&gageOk(g,player,lvl)&&g.texte&&g.texte.charAt(0)==='🎓'&&usedGuideTxt.indexOf(g.texte)<0;
+          return g.niveau===lvl&&gageOk(g,player,lvl)&&g.texte&&g.texte.slice(0,2)==='🎓'&&usedGuideTxt.indexOf(g.texte)<0;
         });
         // Fallback: allow reuse if not enough distinct guides
         if(!guides.length) guides=allGages().filter(function(g){
-          return g.niveau===lvl&&gageOk(g,player,lvl)&&g.texte&&g.texte.charAt(0)==='🎓';
+          return g.niveau===lvl&&gageOk(g,player,lvl)&&g.texte&&g.texte.slice(0,2)==='🎓';
         });
         if(guides.length>0){
           var pick=guides[Math.floor(Math.random()*guides.length)];
@@ -6872,6 +6910,7 @@ function prepareGages() {
           pool.push(Object.assign({},pick,{_p:player.prenom,_ch:false,_kama:false}));
         }
       });
+      }
     }
     // Inject orientation-specific shared gages (trio/quartet/gay/lesbian)
     var config=getCoupleConfig();
@@ -7092,7 +7131,7 @@ function displayGage() {
       el('g-timer').classList.add('hidden');
       hideDice();
     } else {
-      if(gage.texte&&gage.texte.charAt(0)==='🎓') soundGuide();
+      if(gage.texte&&gage.texte.slice(0,2)==='🎓') soundGuide();
     renderGageCard(gage, player, partner);
       if(AUTO_PLAY_ON && G.gageIdx>0){
         setTimeout(function(){ speakGageText(gage, player, partner); }, AUTO_PRE_PAUSE*1000);
@@ -7554,7 +7593,7 @@ function nextGage(skipSound){
   var pool=G.gagesByLevel[G.level]||[];
   if(G.gageIdx<pool.length){
     var cur=pool[G.gageIdx];
-    if(cur&&!cur._kama&&cur.texte&&cur.texte.charAt(0)!==String.fromCodePoint(0x1F393)){
+    if(cur&&!cur._kama&&cur.texte&&cur.texte.slice(0,2)!==String.fromCodePoint(0x1F393)){
       var shortTxt=cur.texte.replace(/{prenom}/g,'vous').replace(/{partenaire}/g,'votre partenaire').replace(/\*\*([^*]+)\*\*/g,'$1').slice(0,80).trim();
       G.progressLog.push({level:G.level,prenom:cur._p,action:shortTxt});
       if(G.progressLog.length>20) G.progressLog.shift();
@@ -7588,7 +7627,7 @@ function validateGage(){
   var pts=G.level*(gage._ch?2:1);
   G.scores[p.prenom]=(G.scores[p.prenom]||0)+pts;
   // Log for progressive gages
-  if(gage&&!gage._kama&&gage.texte&&gage.texte.charAt(0)!=='🎓'){
+  if(gage&&!gage._kama&&gage.texte&&gage.texte.slice(0,2)!=='🎓'){
     var vTxt=gage.texte.replace(/\{prenom\}/g,'vous').replace(/\{partenaire\}/g,'votre partenaire').replace(/\*\*([^*]+)\*\*/g,'$1').substring(0,80).trim();
     G.progressLog.push({level:G.level,prenom:gage._p,action:vTxt});
     if(G.progressLog.length>20) G.progressLog.shift();
@@ -7606,7 +7645,7 @@ function changeGage(){
   var player=G.players.filter(function(p){return p.prenom===cur._p;})[0]||G.players[0];
   recordGageSignal(cur, cur._p, 'change');
   G._statChanged=(G._statChanged||0)+1;
-  if(cur && cur.texte && !cur._kama && cur.texte.charAt(0)!=='🎓'){
+  if(cur && cur.texte && !cur._kama && cur.texte.slice(0,2)!=='🎓'){
     G._changedThisSession = G._changedThisSession || [];
     G._changedThisSession.push({texte:cur.texte, prenom:cur._p, niveau:cur.niveau});
   }
@@ -7623,7 +7662,7 @@ function changeGage(){
     var all=allGages();
     var lvl=G.level;
     cp=shuffle(all.filter(function(g){
-      if(g.texte&&g.texte.charAt(0)==='🎓') return false;
+      if(g.texte&&g.texte.slice(0,2)==='🎓') return false;
       if(g.niveau!==lvl) return false;
       if(usedT.has(g.texte)) return false;
       if(!gageOk(g,player,lvl)) return false;
@@ -7632,11 +7671,23 @@ function changeGage(){
     G.changePool[G.level][player.prenom]=cp;
   }
   var newGage=null;
-  var isGuide=cur.texte&&cur.texte.charAt(0)==='🎓';
-  if(isGuide){
+  var isKama=cur._kama;
+  var isGuide=cur.texte&&cur.texte.slice(0,2)==='🎓';
+  if(isKama){
+    // Seul cas particulier : un gage Kâmasûtra ne se change que contre une AUTRE position
+    // Kâmasûtra de la base de données — jamais contre le pool général de gages.
+    var usedKamaNames = (G.usedKama||[]).concat([cur.name]);
+    var altKama = getKamaData().filter(function(k){ return usedKamaNames.indexOf(k.name)<0; });
+    if(!altKama.length) altKama = getKamaData().filter(function(k){ return k.name!==cur.name; });
+    if(altKama.length){
+      var kPick = shuffle(altKama)[0];
+      newGage = Object.assign({}, kPick, {texte:'Kâmasûtra', niveau:cur.niveau, genre:'Mixte', pratiques:['kamasutra'], accessoires:[], modes:[], solo:false, _p:player.prenom, _ch:false, _kama:true});
+      if(G.usedKama){ var oi=G.usedKama.indexOf(cur.name); if(oi>=0) G.usedKama.splice(oi,1); G.usedKama.push(kPick.name); }
+    }
+  } else if(isGuide){
     // Guide swapped with another guide
     var altGuides=allGages().filter(function(g){
-      return g.texte&&g.texte.charAt(0)==='🎓'&&g.niveau===G.level&&gageOk(g,player,G.level)&&!usedT.has(g.texte);
+      return g.texte&&g.texte.slice(0,2)==='🎓'&&g.niveau===G.level&&gageOk(g,player,G.level)&&!usedT.has(g.texte);
     });
     if(altGuides.length){
       var gPick=shuffle(altGuides)[0];
@@ -8140,7 +8191,7 @@ function showEnd(){
         // Pick best souvenir from progressLog
     var bestMem=null;
     if(G.progressLog&&G.progressLog.length>0){
-      var cands2=G.progressLog.filter(function(m){return m.action&&m.action.length>20&&m.action.charAt(0)!=='🎓';});
+      var cands2=G.progressLog.filter(function(m){return m.action&&m.action.length>20&&m.action.slice(0,2)!=='🎓';});
       if(cands2.length) bestMem=cands2.reduce(function(a,b){return b.action.length>a.action.length?b:a;});
     }
 
@@ -8584,6 +8635,7 @@ function adminTab(tab, btn) {
   else if(tab==='data') { cnt.innerHTML = renderAdminData(); }
   else if(tab==='duree') { cnt.innerHTML = renderAdminDuree(); }
   else if(tab==='kama') { cnt.innerHTML = renderAdminKama(); }
+  else if(tab==='nextgame') { cnt.innerHTML = renderAdminNextGame(); renderCustomGagePicker(); renderNextGamePicker(); }
 }
 
 function renderAdminGages() {
@@ -9456,14 +9508,115 @@ var _pendingKamaImage = null; // data URI en attente (ou 'REMOVE'), remise à nu
 var _kamaEditingName = null;  // nom de la position en cours d'édition (null = nouvelle position)
 var KAMA_POSE_OPTIONS = ['missionnaire','levrette','cavalier','cuillere','lotus','sixtynine','cotecote','debout','equerre','profond','amazone','arc'];
 
+function renderAdminNextGame(){
+  var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Choisis ici quels gages personnalisés "🎯 garantis à 100%" seront proposés au démarrage de la prochaine partie. C\'est exactement la même sélection que celle vue par le joueur en configuration — tu peux la préparer à l\'avance, ou l\'ajuster après coup.</p>'
+    + '<div id="custom-gage-picker"></div>';
+  html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">';
+  html += '<h3 style="font-size:14px;color:var(--gold);margin-bottom:6px">🗂️ Pool de gages par durée</h3>';
+  html += '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Choisis des gages — de base ou perso, autant que tu veux — pour une durée de partie précise. Le jeu tirera ensuite dedans en priorité, en respectant les pratiques/accessoires réellement choisis par les joueurs. Aucun plafond ici : un avertissement s\'affiche juste si tu dépasses largement la capacité d\'un niveau pour cette durée.</p>';
+  html += '<div id="ng-content"></div>';
+  html += '</div>';
+  return html;
+}
+var _ngDuration = 45;
+var _ngFilter = {kw:'', lvl:'', src:'all', type:''};
+function renderNextGamePicker(){
+  var box = document.getElementById('ng-content');
+  if(!box) return;
+  var ids = nextGamePool[_ngDuration] || [];
+  var html = '<div style="display:flex;gap:6px;margin-bottom:10px">'
+    + [30,45,60].map(function(d){
+        var lbl = d===30?'⚡ Rapide':(d===45?'⏱ Standard':'🌙 Longue');
+        return '<button class="btn '+(d===_ngDuration?'':'ghost')+' sm" style="flex:1" onclick="ngSetDuration('+d+')">'+lbl+'</button>';
+      }).join('')
+    + '</div>';
+
+  // Récapitulatif par niveau, avec avertissement non-bloquant (pas de blocage, juste une alerte visuelle)
+  var byLvl = {};
+  ids.forEach(function(k){ var r=_ngLookup(k); if(r){ var n=r.g.niveau||1; byLvl[n]=(byLvl[n]||0)+1; } });
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+  [1,2,3,4,5].forEach(function(lvl){
+    var count = byLvl[lvl]||0;
+    var cap = LVL_MAX[lvl]||99;
+    var over = lvl<=4 && count>cap;
+    html += '<div style="flex:1;min-width:64px;text-align:center;background:var(--card2);border:1px solid '+(over?'var(--warn)':'var(--border)')+';border-radius:8px;padding:6px 4px">'
+      + '<div style="font-size:10px;color:var(--muted)">Niv.'+lvl+'</div>'
+      + '<div style="font-size:14px;font-weight:700;color:'+(over?'var(--warn)':'var(--text)')+'">'+count+(lvl<=4?'/'+cap:'')+'</div>'
+      + '</div>';
+  });
+  html += '</div>';
+  var anyOver = [1,2,3,4].some(function(lvl){ return (byLvl[lvl]||0) > (LVL_MAX[lvl]||99); });
+  if(anyOver){
+    html += '<div class="val-box" style="background:rgba(224,137,74,.12);border:1px solid var(--warn);border-radius:10px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--warn)">⚠️ Pour la durée sélectionnée, un ou plusieurs niveaux dépassent le nombre de gages par joueur normalement prévu (voir l\'onglet ⏱ Durée). Le jeu piochera quand même dedans, mais tous ne pourront pas sortir dans une seule partie.</div>';
+  }
+
+  html += '<div class="search-box" style="margin-bottom:8px"><input type="text" id="ng-kw" placeholder="🔍 Mot-clé…" oninput="ngFilterChange()" value="'+_ngFilter.kw+'"><select id="ng-lvl" onchange="ngFilterChange()"><option value="">Tous niveaux</option>'
+    + [1,2,3,4,5].map(function(n){return '<option value="'+n+'"'+(_ngFilter.lvl===String(n)?' selected':'')+'>Niv.'+n+'</option>';}).join('')
+    + '</select></div>';
+  html += '<div class="search-box" style="margin-bottom:10px"><select id="ng-src" onchange="ngFilterChange()"><option value="all"'+(_ngFilter.src==='all'?' selected':'')+'>Base + Perso</option><option value="base"'+(_ngFilter.src==='base'?' selected':'')+'>Base uniquement</option><option value="custom"'+(_ngFilter.src==='custom'?' selected':'')+'>Perso uniquement</option></select><select id="ng-type" onchange="ngFilterChange()"><option value="">Tous types</option><option value="action">🎯 Action</option><option value="choix">🔀 Choix</option><option value="question">❓ Question</option><option value="defi">⚡ Défi</option><option value="guide">🎓 Guide</option><option value="massage">💆 Massage</option><option value="kamasutra">🕉 Kama</option></select></div>';
+
+  html += '<div id="ng-list-items"></div>';
+  box.innerHTML = html;
+  ngRenderList();
+}
+function ngSetDuration(d){
+  _ngDuration = d;
+  renderNextGamePicker();
+}
+function ngFilterChange(){
+  _ngFilter.kw = (document.getElementById('ng-kw')||{value:''}).value.toLowerCase();
+  _ngFilter.lvl = (document.getElementById('ng-lvl')||{value:''}).value;
+  _ngFilter.src = (document.getElementById('ng-src')||{value:'all'}).value;
+  _ngFilter.type = (document.getElementById('ng-type')||{value:''}).value;
+  ngRenderList();
+}
+function ngRenderList(){
+  var div = document.getElementById('ng-list-items');
+  if(!div) return;
+  var f = _ngFilter;
+  var ids = nextGamePool[_ngDuration] || [];
+  var items = [];
+  if(f.src!=='base') customGages.forEach(function(g,i){
+    if(f.kw && g.texte.toLowerCase().indexOf(f.kw)<0) return;
+    if(f.lvl && String(g.niveau)!==f.lvl) return;
+    if(f.type && getGageType(g)!==f.type) return;
+    items.push({g:g, isBase:false, key:_ngKey(g,false,i)});
+  });
+  if(f.src!=='custom') GAGES_BASE.forEach(function(g,i){
+    if(hiddenBaseGages.indexOf(i)>=0) return;
+    if(f.kw && g.texte.toLowerCase().indexOf(f.kw)<0) return;
+    if(f.lvl && String(g.niveau)!==f.lvl) return;
+    if(f.type && getGageType(g)!==f.type) return;
+    items.push({g:g, isBase:true, key:_ngKey(g,true,i)});
+  });
+  if(!items.length){ div.innerHTML='<p style="text-align:center;color:var(--muted);padding:16px;font-size:12px">Aucun gage trouvé — affine ta recherche.</p>'; return; }
+  if(items.length>150) items = items.slice(0,150); // évite un rendu trop lourd, affiner la recherche pour aller plus loin
+  div.innerHTML = items.map(function(it){
+    var g=it.g;
+    var checked = ids.indexOf(it.key)>=0;
+    var txt2 = g.texte.length>75?g.texte.substring(0,75)+'…':g.texte;
+    var badge = it.isBase ? '<span class="admin-mini-tag" style="color:var(--info)">base</span> ' : '<span class="admin-mini-tag" style="color:var(--gold)">perso</span> ';
+    return '<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
+      + '<input type="checkbox" onchange="ngToggle(\''+it.key.replace(/'/g,"\\'")+'\')" '+(checked?'checked':'')+' style="width:18px;height:18px;flex:0 0 auto;margin-top:1px">'
+      + '<span style="font-size:12.5px;line-height:1.4"><span style="display:inline-block;background:var(--card);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-right:5px;vertical-align:1px">Niv.'+(g.niveau||1)+'</span>'+badge+txt2+'</span>'
+      + '</label>';
+  }).join('');
+}
+function ngToggle(key){
+  var ids = nextGamePool[_ngDuration] = nextGamePool[_ngDuration] || [];
+  var idx = ids.indexOf(key);
+  if(idx>=0) ids.splice(idx,1); else ids.push(key);
+  saveNextGamePool();
+  renderNextGamePicker();
+}
 function renderAdminKama(){
-  var data = getKamaData(true); // inclut les positions masquées pour pouvoir les restaurer
+  var data = getKamaDataSorted(true); // inclut les positions masquées, triées par difficulté croissante
   var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Ajoute une position, modifie son texte, ou associe-lui une image qui remplacera le schéma par défaut in-game. Les images sont automatiquement redimensionnées et compressées pour ne pas alourdir la sauvegarde.</p>';
   html += '<button class="btn" style="width:100%;margin-bottom:12px" onclick="kamaAdminForm(null)">➕ Nouvelle position</button>';
   html += '<div id="kama-form-wrap"></div>';
   html += '<div id="kama-list-items">';
   data.forEach(function(k){
-    var ov = customKama[k.name];
+    var ov = customKama[k._key];
     var isDeleted = ov && ov._deleted;
     var isCustomNew = ov && ov._new;
     var isOverridden = ov && !ov._new && !ov._deleted;
@@ -9475,13 +9628,14 @@ function renderAdminKama(){
     if(isOverridden) badges += ' <span class="admin-mini-tag" style="color:var(--info)">modifié</span>';
     if(isDeleted) badges += ' <span class="admin-mini-tag" style="color:var(--warn)">masqué</span>';
     if(k.image) badges += ' <span class="admin-mini-tag">🖼️ image perso</span>';
+    var keyEsc = k._key.replace(/'/g,"\\'");
     var btns;
     if(isDeleted){
-      btns = '<button class="btn info sm" style="padding:6px 10px" onclick="restoreKamaEntry(\''+k.name.replace(/'/g,"\\'")+'\')">👁️ Restaurer</button>';
+      btns = '<button class="btn info sm" style="padding:6px 10px" onclick="restoreKamaEntry(\''+keyEsc+'\')">👁️ Restaurer</button>';
     } else {
-      btns = '<button class="btn info sm" style="padding:6px 10px" onclick="kamaAdminForm(\''+k.name.replace(/'/g,"\\'")+'\')">✏️</button>'
-        + (isOverridden ? '<button class="btn ghost sm" style="padding:6px 10px" onclick="resetKamaEntry(\''+k.name.replace(/'/g,"\\'")+'\')" title="Revenir à l\'original">↺</button>' : '')
-        + '<button class="btn danger sm" style="padding:6px 10px" onclick="deleteKamaEntry(\''+k.name.replace(/'/g,"\\'")+'\')">✕</button>';
+      btns = '<button class="btn info sm" style="padding:6px 10px" onclick="kamaAdminForm(\''+keyEsc+'\')">✏️</button>'
+        + (isOverridden ? '<button class="btn ghost sm" style="padding:6px 10px" onclick="resetKamaEntry(\''+keyEsc+'\')" title="Revenir à l\'original">↺</button>' : '')
+        + '<button class="btn danger sm" style="padding:6px 10px" onclick="deleteKamaEntry(\''+keyEsc+'\')">✕</button>';
     }
     html += '<div class="admin-list-item" style="display:flex;gap:10px;align-items:center;opacity:'+(isDeleted?'0.7':'1')+'">'
       + thumb
@@ -9495,17 +9649,16 @@ function renderAdminKama(){
   html += '</div>';
   return html;
 }
-function kamaAdminForm(name){
-  _kamaEditingName = name;
+function kamaAdminForm(key){
+  _kamaEditingName = key;
   _pendingKamaImage = null;
-  var data = name ? getKamaData(true).find(function(k){return k.name===name;}) : null;
-  var isNew = !name;
+  var data = key ? getKamaData(true).find(function(k){return k._key===key;}) : null;
+  var isNew = !key;
   var wrap = document.getElementById('kama-form-wrap');
   if(!wrap) return;
   var html = '<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">';
-  html += '<h3 style="font-size:14px;color:var(--gold);margin-bottom:10px">'+(isNew?'➕ Nouvelle position':'✏️ '+name)+'</h3>';
-  html += '<label class="field-label">Nom</label><input type="text" id="km-name" value="'+(data?data.name.replace(/"/g,'&quot;'):'')+'" '+(isNew?'':'disabled')+' placeholder="Ex : La Vague" style="width:100%">';
-  if(!isNew) html += '<p style="font-size:10px;color:var(--muted);margin:2px 0 8px">Le nom ne peut pas être modifié une fois créé (sert de référence interne).</p>';
+  html += '<h3 style="font-size:14px;color:var(--gold);margin-bottom:10px">'+(isNew?'➕ Nouvelle position':'✏️ '+data.name)+'</h3>';
+  html += '<label class="field-label">Nom</label><input type="text" id="km-name" value="'+(data?data.name.replace(/"/g,'&quot;'):'')+'" placeholder="Ex : La Vague" style="width:100%">';
   html += '<label class="field-label" style="margin-top:8px">Description</label><textarea id="km-desc" rows="3" placeholder="Décris la position..." style="width:100%">'+(data?data.desc:'')+'</textarea>';
   html += '<div style="display:flex;gap:8px;margin-top:8px">';
   html += '<div style="flex:1"><label class="field-label">Niveau</label><select id="km-niveau" style="width:100%"><option value="4"'+(data&&data.niveau===4?' selected':'')+'>4</option><option value="5"'+(!data||data.niveau===5?' selected':'')+'>5</option></select></div>';
@@ -9580,7 +9733,8 @@ function saveKamaEntry(){
   var name = ((document.getElementById('km-name')||{}).value||'').trim();
   if(!name){ alert('Le nom est obligatoire.'); return; }
   var isNew = !_kamaEditingName;
-  if(isNew && (KAMASUTRA.some(function(k){return k.name===name;}) || customKama[name])){
+  var isRename = !isNew && name !== _kamaEditingName;
+  if((isNew || isRename) && getKamaData(true).some(function(k){ return k.name===name && k._key!==_kamaEditingName; })){
     alert('Une position avec ce nom existe déjà.'); return;
   }
   var desc = ((document.getElementById('km-desc')||{}).value||'').trim();
@@ -9680,7 +9834,7 @@ function kamaStartManual(){
 function renderKamaManualGrid(){
   var grid = document.getElementById('kama-manual-grid');
   if(!grid) return;
-  var all = getKamaData();
+  var all = getKamaDataSorted();
   if(!all.length){ grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px">Aucune position disponible.</p>'; return; }
   grid.innerHTML = all.map(function(k,i){
     var thumb = k.image
@@ -9693,7 +9847,7 @@ function renderKamaManualGrid(){
   }).join('');
 }
 function kamaShowDetail(i){
-  var all = getKamaData();
+  var all = getKamaDataSorted();
   var k = all[i];
   if(!k) return;
   var nameEl = document.getElementById('kama-detail-name');
