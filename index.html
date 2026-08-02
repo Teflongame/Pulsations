@@ -9591,16 +9591,31 @@ function ngRenderList(){
   });
   if(!items.length){ div.innerHTML='<p style="text-align:center;color:var(--muted);padding:16px;font-size:12px">Aucun gage trouvé — affine ta recherche.</p>'; return; }
   if(items.length>150) items = items.slice(0,150); // évite un rendu trop lourd, affiner la recherche pour aller plus loin
-  div.innerHTML = items.map(function(it){
+  div.innerHTML = items.map(function(it,idx){
     var g=it.g;
     var checked = ids.indexOf(it.key)>=0;
-    var txt2 = g.texte.length>75?g.texte.substring(0,75)+'…':g.texte;
+    var truncated = g.texte.length>75;
+    var txt2 = truncated ? g.texte.substring(0,75)+'…' : g.texte;
     var badge = it.isBase ? '<span class="admin-mini-tag" style="color:var(--info)">base</span> ' : '<span class="admin-mini-tag" style="color:var(--gold)">perso</span> ';
+    var domId = 'ngtxt_'+idx;
+    var lvlTag = '<span style="display:inline-block;background:var(--card);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-right:5px;vertical-align:1px">Niv.'+(g.niveau||1)+'</span>';
+    var textBlock = truncated
+      ? '<span id="'+domId+'_short" onclick="ngToggleText(event,\''+domId+'\')" style="cursor:pointer">'+txt2+' <span style="color:var(--gold);font-size:10px">▾ voir tout</span></span>'
+        + '<span id="'+domId+'_full" class="hidden" onclick="ngToggleText(event,\''+domId+'\')" style="cursor:pointer;display:block;margin-top:4px">'+g.texte+' <span style="color:var(--gold);font-size:10px">▴ réduire</span></span>'
+      : txt2;
     return '<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
       + '<input type="checkbox" onchange="ngToggle(\''+it.key.replace(/'/g,"\\'")+'\')" '+(checked?'checked':'')+' style="width:18px;height:18px;flex:0 0 auto;margin-top:1px">'
-      + '<span style="font-size:12.5px;line-height:1.4"><span style="display:inline-block;background:var(--card);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-right:5px;vertical-align:1px">Niv.'+(g.niveau||1)+'</span>'+badge+txt2+'</span>'
+      + '<span style="font-size:12.5px;line-height:1.4">'+lvlTag+badge+textBlock+'</span>'
       + '</label>';
   }).join('');
+}
+function ngToggleText(evt, domId){
+  if(evt){ evt.preventDefault(); evt.stopPropagation(); }
+  var shortEl = document.getElementById(domId+'_short');
+  var fullEl = document.getElementById(domId+'_full');
+  if(!shortEl || !fullEl) return;
+  shortEl.classList.toggle('hidden');
+  fullEl.classList.toggle('hidden');
 }
 function ngToggle(key){
   var ids = nextGamePool[_ngDuration] = nextGamePool[_ngDuration] || [];
