@@ -5391,15 +5391,8 @@ function renderPlayerPage() {
     html += '<div id="prat-area"></div>';
   }
   var isLast = curPlayer >= G.nb;
-  // Case "Gages personnalisés" : UNIQUEMENT pour l'homme (genre Homme), qu'il soit joueur 1 ou 2. La femme n'y a jamais accès.
-  if(!isDisc && !isSolo && perso100Gages().length>0){
-    var cgChecked = G._useCustomGages ? 'checked' : '';
-    var cgShow = (currentGenre==='Homme') ? 'flex' : 'none';
-    html += '<label id="custom-gage-toggle" style="display:'+cgShow+';align-items:center;gap:10px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:14px">'
-      + '<input type="checkbox" id="use-custom-gages" '+cgChecked+' onchange="toggleCustomGagePicker(this.checked)" style="width:18px;height:18px;flex:0 0 auto">'
-      + '<span style="font-size:14px">Gages personnalisés <span style="color:var(--muted);font-size:12px">(max 8)</span></span></label>';
-    html += '<div id="custom-gage-picker" style="display:'+(G._useCustomGages?'block':'none')+';margin-top:8px"></div>';
-  }
+  // La sélection de gages perso se fait désormais depuis l'admin (onglet 🎯 Prochaine
+  // partie) — plus de case à cocher ici, la présélection s'applique automatiquement.
   html += '<button class="btn" style="margin-top:16px" onclick="savePlayer()">' + (isLast ? 'Confirmer ✓' : 'Joueur suivant →') + '</button>';
   html += '<button class="btn ghost" onclick="' + (curPlayer===1 ? "goTo('page-acc')" : 'backPlayer()') + '">← Retour</button>';
   document.getElementById('player-content').innerHTML = html;
@@ -5413,9 +5406,7 @@ function selGenre(g) {
   var gbh=document.getElementById('gb-h'); if(gbh) gbh.classList.toggle('sel', g==='Homme');
   var gbf=document.getElementById('gb-f'); if(gbf) gbf.classList.toggle('sel', g==='Femme');
   var gbt=document.getElementById('gb-t'); if(gbt) gbt.classList.toggle('sel', g==='Trans');
-  // La case "Gages personnalisés" n'existe que pour l'homme
-  var cgt=document.getElementById('custom-gage-toggle');
-  if(cgt) cgt.style.display = (g==='Homme') ? 'flex' : 'none';
+  // (ancien toggle "Gages personnalisés" retiré — la présélection vient de l'admin)
   renderProfileSuggestions(g);
   renderPratiques(g, G.nb===1, []);
 }
@@ -5849,12 +5840,10 @@ function proceedAfterPlayers(){
 function proceedAfterPlayersCore(){
   var pool = perso100Gages();
   var compat = [];
-  if(G._useCustomGages && pool.length){
-    if(G._selectedPersoIds && G._selectedPersoIds.length){
-      pool = pool.filter(function(g,i){ return G._selectedPersoIds.indexOf(String(g.id!=null?g.id:i)) >= 0; });
-    } else {
-      pool = [];
-    }
+  // La sélection se fait désormais depuis l'admin (onglet 🎯 Prochaine partie) : dès qu'elle
+  // contient des gages, elle s'applique automatiquement — plus besoin de case à cocher in-game.
+  if(pool.length && G._selectedPersoIds && G._selectedPersoIds.length){
+    pool = pool.filter(function(g,i){ return G._selectedPersoIds.indexOf(String(g.id!=null?g.id:i)) >= 0; });
     compat = pool.filter(customGageCompatible);
   }
   G._selectedCustomGages = compat;
@@ -7119,8 +7108,6 @@ function displayGage() {
   pb.textContent=(player.genre==='Homme'?'👨':'👩')+' '+player.prenom;
   pb.className='player-badge '+(player.genre==='Homme'?'homme':'femme');
   el('g-challenge').classList.toggle('hidden',!gage._ch);
-  // Mark as played for history
-  markPlayed(gage.texte);
   if(!gage._kama && gage.texte){
     G._sessionSeenGages = G._sessionSeenGages || [];
     if(!G._sessionSeenGages.some(function(s){ return s.texte===gage.texte; })){
@@ -7620,6 +7607,9 @@ function nextGage(skipSound){
     // de gage → signal implicite qu'il/elle aime ce gage (mémoire admin + stats de fin).
     if(_curGageEngaged) recordGageSignal(cur, cur&&cur._p, 'like');
     G._statRealized=(G._statRealized||0)+1;
+    // Marqué "joué" seulement ici (avance réelle), pas au simple affichage — sinon un gage
+    // juste regardé (partie de test, retour rapide à l'accueil) apparaissait à tort comme déjà joué.
+    if(cur) markPlayed(cur.texte);
   }
   G.gageIdx++;
   autoSaveGame();
@@ -9557,15 +9547,30 @@ var _pendingKamaImage = null; // data URI en attente (ou 'REMOVE'), remise à nu
 var _kamaEditingName = null;  // nom de la position en cours d'édition (null = nouvelle position)
 var KAMA_POSE_OPTIONS = ['missionnaire','levrette','cavalier','cuillere','lotus','sixtynine','cotecote','debout','equerre','profond','amazone','arc'];
 
+var _ngPersoOpen = true;
 function renderAdminNextGame(){
-  var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Choisis ici quels gages personnalisés "🎯 garantis à 100%" seront proposés au démarrage de la prochaine partie. C\'est exactement la même sélection que celle vue par le joueur en configuration — tu peux la préparer à l\'avance, ou l\'ajuster après coup.</p>'
+  var html = '<div onclick="ngTogglePerso()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">'
+    + '<strong style="font-size:13px">🎯 Gages personnalisés garantis à 100%</strong>'
+    + '<span id="ng-perso-chev" style="font-size:14px;color:var(--muted)">'+(_ngPersoOpen?'▴':'▾')+'</span>'
+    + '</div>';
+  html += '<div id="ng-perso-wrap" class="'+(_ngPersoOpen?'':'hidden')+'">';
+  html += '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Choisis ici quels gages personnalisés "🎯 garantis à 100%" seront proposés au démarrage de la prochaine partie. C\'est exactement la même sélection que celle vue par le joueur en configuration — tu peux la préparer à l\'avance, ou l\'ajuster après coup.</p>'
     + '<div id="custom-gage-picker"></div>';
+  html += '</div>';
   html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">';
   html += '<h3 style="font-size:14px;color:var(--gold);margin-bottom:6px">🗂️ Pool de gages par durée</h3>';
   html += '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Choisis des gages — de base ou perso, autant que tu veux — pour une durée de partie précise. Le jeu tirera ensuite dedans en priorité, en respectant les pratiques/accessoires réellement choisis par les joueurs. Aucun plafond ici : un avertissement s\'affiche juste si tu dépasses largement la capacité d\'un niveau pour cette durée.</p>';
   html += '<div id="ng-content"></div>';
   html += '</div>';
   return html;
+}
+function ngTogglePerso(){
+  _ngPersoOpen = !_ngPersoOpen;
+  var wrap = document.getElementById('ng-perso-wrap');
+  var chev = document.getElementById('ng-perso-chev');
+  if(wrap) wrap.classList.toggle('hidden', !_ngPersoOpen);
+  if(chev) chev.textContent = _ngPersoOpen ? '▴' : '▾';
+  if(_ngPersoOpen) renderCustomGagePicker(); // repeupler si on ré-ouvre après un rendu vide pendant la fermeture
 }
 var _ngDuration = 45;
 var _ngFilter = {kw:'', lvl:'', src:'all', type:''};
@@ -9581,7 +9586,10 @@ function renderNextGamePicker(){
     + '</div>';
   html += '<button class="btn ghost sm" style="width:100%;margin-bottom:10px" onclick="ngResetCurrent()">🔄 Réinitialiser la sélection ('+(['⚡ Rapide','⏱ Standard','🌙 Longue'][[30,45,60].indexOf(_ngDuration)])+')</button>';
 
-  // Récapitulatif par niveau ET par genre, avertissement non-bloquant (pas de blocage, juste une alerte visuelle)
+  // Récapitulatif par niveau ET par genre — comparé à la capacité RÉELLE de la durée affichée
+  // (DURATION_PRESETS[_ngDuration]), pas au LVL_MAX global qui peut correspondre à une autre durée.
+  var durCap = DURATION_PRESETS[_ngDuration] || {1:5,2:4,3:4,4:3};
+  function capFor(lvl){ return lvl<=4 ? (durCap[lvl]||5) : 99; }
   var byLvl = {}, byLvlGenre = {};
   ids.forEach(function(k){
     var r=_ngLookup(k); if(!r) return;
@@ -9594,7 +9602,7 @@ function renderNextGamePicker(){
   html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
   [1,2,3,4,5].forEach(function(lvl){
     var count = byLvl[lvl]||0;
-    var cap = LVL_MAX[lvl]||99;
+    var cap = capFor(lvl);
     var bg = byLvlGenre[lvl]||{Homme:0,Femme:0};
     var over = lvl<=4 && (count>cap || bg.Homme>cap || bg.Femme>cap);
     html += '<div style="flex:1;min-width:74px;text-align:center;background:var(--card2);border:1px solid '+(over?'var(--warn)':'var(--border)')+';border-radius:8px;padding:6px 4px">'
@@ -9604,7 +9612,7 @@ function renderNextGamePicker(){
       + '</div>';
   });
   html += '</div>';
-  var anyOver = [1,2,3,4].some(function(lvl){ var bg=byLvlGenre[lvl]||{Homme:0,Femme:0}; return (byLvl[lvl]||0) > (LVL_MAX[lvl]||99) || bg.Homme>(LVL_MAX[lvl]||99) || bg.Femme>(LVL_MAX[lvl]||99); });
+  var anyOver = [1,2,3,4].some(function(lvl){ var bg=byLvlGenre[lvl]||{Homme:0,Femme:0}; var cap=capFor(lvl); return (byLvl[lvl]||0) > cap || bg.Homme>cap || bg.Femme>cap; });
   if(anyOver){
     html += '<div class="val-box" style="background:rgba(224,137,74,.12);border:1px solid var(--warn);border-radius:10px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--warn)">⚠️ Pour cette durée, un ou plusieurs niveaux dépassent le nombre de gages par joueur normalement prévu — parfois pour un seul genre (ex: 5 gages Femme alors qu\'il n\'en faut que 2). Pas de blocage : le jeu garantit ceux qui rentrent dans le quota et garde le reste en réserve pour une prochaine partie (grâce à la mémoire des gages déjà joués).</div>';
   }
