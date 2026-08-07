@@ -4545,14 +4545,31 @@ var PERSO_SEL_KEY = 'psel_v28'; // gages perso pré-sélectionnés depuis l'admi
 var NEXT_GAME_KEY = 'ngp_v28'; // pool de gages (base + perso) choisi depuis l'admin, par durée
 var nextGamePool = loadCustom(NEXT_GAME_KEY) || {30:[], 45:[], 60:[]}; // clés "base:IDX" ou "perso:ID"
 function _ngKey(g, isBase, idx){ return (isBase?'base:':'perso:') + (isBase ? idx : String(g.id!=null?g.id:idx)); }
+function _ngKeyKama(k){ return 'kama:'+k._key; }
+function _curatedKamaKeys(duration){
+  return (nextGamePool[duration!=null?duration:G_duration]||[]).filter(function(k){ return k.indexOf('kama:')===0; }).map(function(k){ return k.slice(5); });
+}
 function _ngLookup(key){
   if(key.indexOf('base:')===0){
     var idx = parseInt(key.slice(5),10);
-    return (GAGES_BASE[idx] && hiddenBaseGages.indexOf(idx)<0) ? {g:GAGES_BASE[idx], isBase:true, idx:idx} : null;
+    return (GAGES_BASE[idx] && hiddenBaseGages.indexOf(idx)<0) ? {g:GAGES_BASE[idx], isBase:true, idx:idx, src:'base'} : null;
+  }
+  if(key.indexOf('kama:')===0){
+    var kkey = key.slice(5);
+    var k = getKamaData().find(function(x){ return x._key===kkey; });
+    if(!k) return null;
+    var kg = Object.assign({}, k, {texte:'Kâmasûtra', genre:'Mixte', pratiques:['kamasutra'], accessoires:[], modes:[], solo:false, _kama:true});
+    return {g:kg, isBase:true, idx:-1, src:'kama'};
   }
   var pkey = key.slice(6);
-  for(var i=0;i<customGages.length;i++){ if(String(customGages[i].id!=null?customGages[i].id:i)===pkey) return {g:customGages[i], isBase:false, idx:i}; }
+  for(var i=0;i<customGages.length;i++){ if(String(customGages[i].id!=null?customGages[i].id:i)===pkey) return {g:customGages[i], isBase:false, idx:i, src:'custom'}; }
   return null;
+}
+function _kamaPool(){
+  var curated = _curatedKamaKeys();
+  if(!curated.length) return getKamaData();
+  var narrowed = getKamaData().filter(function(k){ return curated.indexOf(k._key)>=0; });
+  return narrowed.length ? narrowed : getKamaData();
 }
 function saveNextGamePool(){ saveCustom(NEXT_GAME_KEY, nextGamePool); }
 // ── PRÉFÉRENCES GAGES (👍/👎 donnés en fin de partie) ──
@@ -4680,6 +4697,7 @@ function renderCustomGagePicker(){
         var used0=_persoLevelGenreCount(pool, lvl0, g.genre);
         quotaBadge = '<span class="tip" title="Places perso déjà prises pour ce genre à ce niveau (plafonné à la capacité du niveau, pour garder l\'alternance stricte)." style="display:inline-block;margin-left:6px;font-size:10px;color:'+(used0>=cap0?'var(--warn)':'var(--muted)')+'">'+(g.genre==='Homme'?'👨':'👩')+' '+used0+'/'+cap0+'</span>';
       }
+      var playedBadge = _isTextPlayed(g.texte) ? '<span class="tip" title="Ce gage a déjà été joué lors d\'une ancienne partie sauvegardée." style="display:inline-block;margin-left:6px;font-size:10px;color:var(--success)">✓ déjà joué</span>' : '';
       h += '<label class="perso-pick-item'+(checked?' checked':'')+'" style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
         + '<span class="perso-pick-rank" data-key="'+key+'" onclick="togglePersoPick(event,\''+key+'\',this)" '
         + 'style="flex:0 0 auto;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;'
@@ -4687,7 +4705,7 @@ function renderCustomGagePicker(){
         + 'transition:transform .15s">'+(checked ? (rk+1) : '+')+'</span>'
         + '<span style="font-size:13px;line-height:1.4">'
         + '<span style="display:inline-block;background:var(--card);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-right:5px;vertical-align:1px">Niv.'+(g.niveau||1)+'</span>'
-        + preview + pvBadge + quotaBadge + '</span></label>';
+        + preview + pvBadge + quotaBadge + playedBadge + '</span></label>';
     });
   }
 
@@ -6365,7 +6383,7 @@ function pickFinale(player, usedKamaArr, all5, excludeTexts) {
   var kamaBuilt=0;
   [1,2,3,4].forEach(function(lv){(G.gagesByLevel[lv]||[]).forEach(function(g){if(g._kama)kamaBuilt++;});});
   if(hasKama&&kamaBuilt<1){
-    var km=shuffle(getKamaData().filter(function(k){return k.niveau===5&&usedKamaArr.indexOf(k.name)<0;}));
+    var km=shuffle(_kamaPool().filter(function(k){return k.niveau===5&&usedKamaArr.indexOf(k.name)<0;}));
     if(km.length) cands.push({type:'kama',data:km[0]});
   }
   if(hasPen){
@@ -6833,7 +6851,7 @@ function prepareGages() {
       var kamaInPool = pool.filter(function(g){return g._kama;}).length;
       if(lvl===4 && player.pratiques.indexOf('kamasutra')>=0 && kamaInPool<1) {
         var usedN=pool.filter(function(g){return g._kama;}).map(function(g){return g.name;});
-        var kp=shuffle(getKamaData().filter(function(k){return k.niveau===4&&usedN.indexOf(k.name)<0;})).slice(0,1);
+        var kp=shuffle(_kamaPool().filter(function(k){return k.niveau===4&&usedN.indexOf(k.name)<0;})).slice(0,1);
         kp.forEach(function(k){ pool.push(Object.assign({},k,{texte:'Kâmasûtra',niveau:4,genre:'Mixte',pratiques:['kamasutra'],accessoires:[],modes:[],solo:false,_p:player.prenom,_ch:false,_kama:true,_kamaLast:true})); });
       }
       if(G.mode==='pimente') {
@@ -6956,7 +6974,7 @@ function prepareGages() {
     var sol5=shuffle(all5.filter(function(g){return g.solo&&gageOk(g,G.players[0],5);}));
     if(sol5.length) pool5.push(Object.assign({},sol5[0],{_p:G.players[0].prenom,_ch:false,_kama:false}));
     if(G.players[0].pratiques.indexOf('kamasutra')>=0){
-      var ks=shuffle(getKamaData().filter(function(k){return k.niveau===5&&G.usedKama.indexOf(k.name)<0;})).slice(0,1);
+      var ks=shuffle(_kamaPool().filter(function(k){return k.niveau===5&&G.usedKama.indexOf(k.name)<0;})).slice(0,1);
       ks.forEach(function(k){pool5.push(Object.assign({},k,{texte:'Kâmasûtra',niveau:5,genre:'Mixte',pratiques:['kamasutra'],accessoires:[],modes:[],solo:false,_p:G.players[0].prenom,_ch:false,_kama:true}));});
     }
   } else {
@@ -7677,8 +7695,8 @@ function changeGage(){
     // Seul cas particulier : un gage Kâmasûtra ne se change que contre une AUTRE position
     // Kâmasûtra de la base de données — jamais contre le pool général de gages.
     var usedKamaNames = (G.usedKama||[]).concat([cur.name]);
-    var altKama = getKamaData().filter(function(k){ return usedKamaNames.indexOf(k.name)<0; });
-    if(!altKama.length) altKama = getKamaData().filter(function(k){ return k.name!==cur.name; });
+    var altKama = _kamaPool().filter(function(k){ return usedKamaNames.indexOf(k.name)<0; });
+    if(!altKama.length) altKama = _kamaPool().filter(function(k){ return k.name!==cur.name; });
     if(altKama.length){
       var kPick = shuffle(altKama)[0];
       newGage = Object.assign({}, kPick, {texte:'Kâmasûtra', niveau:cur.niveau, genre:'Mixte', pratiques:['kamasutra'], accessoires:[], modes:[], solo:false, _p:player.prenom, _ch:false, _kama:true});
@@ -8747,6 +8765,7 @@ function renderGageForm() {
     +'<button class="btn ghost sm" onclick="insertTpl(2)" style="font-size:11px">❓ Question</button>'
     +'<button class="btn ghost sm" onclick="insertTpl(3)" style="font-size:11px">🎓 Guide</button>'
     +'<button class="btn ghost sm" onclick="insertTpl(4)" style="font-size:11px">⚡ Défi</button>'
+    +'<button class="btn ghost sm" onclick="insertTpl(5)" style="font-size:11px">📋 Choix multiples</button>'
     +'</div>'
     +'<h3>Texte du gage</h3>'
     +'<p style="font-size:12px;color:var(--muted);margin-bottom:6px"><code>{prenom}</code> = joueur · <code>{partenaire}</code> = partenaire · <code>**gras**</code></p>'
@@ -8851,7 +8870,7 @@ function liveVal() {
   var errs=[],warns=[],infos=[];
   if(!txt) errs.push('Texte vide.');
   else{if(txt.indexOf('{prenom}')<0)warns.push("Pas de {prenom}.");if(txt.length>280)warns.push("Texte trop long.");}
-  if(txt.length>=10){var sim=findSimilar(txt,(document.getElementById('edit-idx')||{value:'-1'}).value);if(sim.length)warns.push('<strong>'+sim.length+' gage(s) similaire(s) :</strong><div style="margin-top:4px">'+sim.map(function(s){return '<div style="font-size:11px;padding:4px 8px;background:rgba(240,192,96,0.08);border-radius:6px;margin-top:3px">Niv.'+s.niveau+' '+s.genre+' — '+s.texte.substring(0,60)+'…</div>';}).join('')+'</div>');}
+  if(txt.length>=10){var sim=findSimilar(txt,(document.getElementById('edit-idx')||{value:'-1'}).value);if(sim.length)warns.push('<strong>'+sim.length+' gage(s) similaire(s) :</strong><div style="margin-top:4px">'+sim.map(function(s){return '<div style="font-size:11px;padding:4px 8px;background:rgba(240,192,96,0.08);border-radius:6px;margin-top:3px;line-height:1.4">Niv.'+s.niveau+' '+s.genre+' — '+s.texte+'</div>';}).join('')+'</div>');}
   var secs=txt?extractTimer(txt):null; if(secs)infos.push('⏱ Timer: '+Math.floor(secs/60)+'m'+(secs%60?secs%60+'s':''));
   var html='';
   if(txt){
@@ -8922,7 +8941,8 @@ function insertTpl(t){
     "{prenom}, choix : **A** [option A] — **[durée]**, ou **B** [option B] — **[durée]**.",
     "❓ {prenom} : [Question à poser à {partenaire}]",
     "🎓 Guide : {prenom}, [explication technique précise]. Essayez — **[durée]**.",
-    "⚡ Défi : {prenom}, [défi à réaliser]. Si réussi : +1 point bonus."
+    "⚡ Défi : {prenom}, [défi à réaliser]. Si réussi : +1 point bonus.",
+    "❓ {prenom}, parmi ces [thème], laquelle/lequel trouves-tu le/la plus [qualificatif] chez {partenaire} ?\n\n• [Option 1]\n• [Option 2]\n• [Option 3]\n• [Option 4]\n• [Option 5]"
   ];
   ta.value=T[t]||""; ta.focus(); liveVal();
 }
@@ -9242,23 +9262,52 @@ function renderAdminMemoire(){
     return b.total - a.total;
   });
 
-  html += '<h3 style="font-size:13px;color:var(--gold);margin:14px 0 8px">📉 Gages les moins aimés</h3>';
+  html += '<h3 style="font-size:13px;color:var(--gold);margin:14px 0 8px">📉 Gages les moins aimés — classés par pratique</h3>';
   if(!rows.length){
     html += '<p style="font-size:12px;color:var(--muted)">Aucune donnée pour l\'instant — joue quelques parties pour voir apparaître des statistiques ici.</p>';
   } else {
-    var shown = rows.slice(0,40);
-    html += '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">';
-    shown.forEach(function(r,i){
-      var preview = r.texte.replace(/\{prenom\}/g,'X').replace(/\{partenaire\}/g,'Y').replace(/\*\*([^*]+)\*\*/g,'$1');
-      if(preview.length>85) preview = preview.slice(0,85)+'…';
-      html += '<div style="padding:9px 12px;'+(i?'border-top:1px solid var(--border)':'')+';cursor:pointer" onclick="memGoToGage(\''+encodeURIComponent(r.texte)+'\')">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
-        + '<span style="font-size:12.5px;flex:1">'+(r.disliked?'👎 ':'')+preview+'</span>'
-        + '<span style="font-size:10px;color:var(--muted);white-space:nowrap">'+(r.niveau?('Niv.'+r.niveau+' · '):'')+'👍'+r.likes+' ⏭'+r.skips+' 🔀'+r.changes+'</span>'
-        + '</div></div>';
+    var shown = rows.slice(0,80);
+    var pratMap = pratLabelMap();
+    var groups = {}, groupOrder = [];
+    shown.forEach(function(r){
+      var gg = _findGageByTexte(r.texte);
+      var prats = (gg && gg.pratiques && gg.pratiques.length) ? gg.pratiques : null;
+      var mainPrat = prats ? prats[0] : '__none__';
+      var label = prats ? (pratLabel(pratMap, mainPrat)||mainPrat) : '(sans pratique associée)';
+      if(!groups[mainPrat]){ groups[mainPrat]={label:label, rows:[]}; groupOrder.push(mainPrat); }
+      groups[mainPrat].rows.push(r);
     });
-    html += '</div>';
-    if(rows.length>40) html += '<p style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(rows.length-40)+' autres gages avec un signal (les plus significatifs sont affichés en premier)</p>';
+    groupOrder.sort(function(a,b){
+      var ta=groups[a].rows.reduce(function(s,r){return s+r.total+(r.disliked?3:0);},0);
+      var tb=groups[b].rows.reduce(function(s,r){return s+r.total+(r.disliked?3:0);},0);
+      return tb-ta;
+    });
+    groupOrder.forEach(function(pratId, gi){
+      var grp = groups[pratId];
+      var gDomId = 'memgrp_'+gi;
+      html += '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px">';
+      html += '<div onclick="memToggleGroup(\''+gDomId+'\')" style="padding:9px 12px;cursor:pointer;background:var(--card2);display:flex;justify-content:space-between;align-items:center">'
+        + '<strong style="font-size:12.5px">'+grp.label+'</strong>'
+        + '<span style="font-size:11px;color:var(--muted)">'+grp.rows.length+' gage(s) <span id="chev_'+gDomId+'">▾</span></span>'
+        + '</div>';
+      html += '<div id="'+gDomId+'" class="hidden">';
+      grp.rows.forEach(function(r,i){
+        var preview = r.texte.replace(/\{prenom\}/g,'X').replace(/\{partenaire\}/g,'Y').replace(/\*\*([^*]+)\*\*/g,'$1');
+        var truncated = preview.length>85;
+        var short = truncated ? preview.slice(0,85)+'…' : preview;
+        var rDomId = gDomId+'_r'+i;
+        html += '<div style="padding:9px 12px;'+(i?'border-top:1px solid var(--border)':'')+'">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+          + '<span onclick="memToggleText(event,\''+rDomId+'\')" style="font-size:12.5px;flex:1;cursor:pointer">'+(r.disliked?'👎 ':'')+'<span id="'+rDomId+'_short">'+short+(truncated?' <span style="color:var(--gold);font-size:10px">▾</span>':'')+'</span></span>'
+          + '<span style="font-size:10px;color:var(--muted);white-space:nowrap">'+(r.niveau?('Niv.'+r.niveau+' · '):'')+'👍'+r.likes+' ⏭'+r.skips+' 🔀'+r.changes+'</span>'
+          + '</div>'
+          + (truncated ? '<div id="'+rDomId+'_full" class="hidden" onclick="memToggleText(event,\''+rDomId+'\')" style="font-size:12px;color:var(--text);margin-top:5px;line-height:1.5;cursor:pointer">'+preview+' <span style="color:var(--gold);font-size:10px">▴ réduire</span></div>' : '')
+          + '<button class="btn info sm" style="margin-top:6px;padding:4px 10px;font-size:11px" onclick="memGoToGage(\''+encodeURIComponent(r.texte)+'\')">✏️ Éditer ce gage</button>'
+          + '</div>';
+      });
+      html += '</div></div>';
+    });
+    if(rows.length>80) html += '<p style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(rows.length-80)+' autres gages avec un signal (les plus significatifs sont affichés en premier)</p>';
   }
 
   // ── Par prénom (reconnaît les joueurs qui reviennent) ──
@@ -9530,34 +9579,50 @@ function renderNextGamePicker(){
         return '<button class="btn '+(d===_ngDuration?'':'ghost')+' sm" style="flex:1" onclick="ngSetDuration('+d+')">'+lbl+'</button>';
       }).join('')
     + '</div>';
+  html += '<button class="btn ghost sm" style="width:100%;margin-bottom:10px" onclick="ngResetCurrent()">🔄 Réinitialiser la sélection ('+(['⚡ Rapide','⏱ Standard','🌙 Longue'][[30,45,60].indexOf(_ngDuration)])+')</button>';
 
-  // Récapitulatif par niveau, avec avertissement non-bloquant (pas de blocage, juste une alerte visuelle)
-  var byLvl = {};
-  ids.forEach(function(k){ var r=_ngLookup(k); if(r){ var n=r.g.niveau||1; byLvl[n]=(byLvl[n]||0)+1; } });
+  // Récapitulatif par niveau ET par genre, avertissement non-bloquant (pas de blocage, juste une alerte visuelle)
+  var byLvl = {}, byLvlGenre = {};
+  ids.forEach(function(k){
+    var r=_ngLookup(k); if(!r) return;
+    var n=r.g.niveau||1; var g=r.g.genre||'Mixte';
+    byLvl[n]=(byLvl[n]||0)+1;
+    if(!byLvlGenre[n]) byLvlGenre[n]={Homme:0,Femme:0};
+    if(g==='Homme'||g==='Mixte') byLvlGenre[n].Homme++;
+    if(g==='Femme'||g==='Mixte') byLvlGenre[n].Femme++;
+  });
   html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
   [1,2,3,4,5].forEach(function(lvl){
     var count = byLvl[lvl]||0;
     var cap = LVL_MAX[lvl]||99;
-    var over = lvl<=4 && count>cap;
-    html += '<div style="flex:1;min-width:64px;text-align:center;background:var(--card2);border:1px solid '+(over?'var(--warn)':'var(--border)')+';border-radius:8px;padding:6px 4px">'
+    var bg = byLvlGenre[lvl]||{Homme:0,Femme:0};
+    var over = lvl<=4 && (count>cap || bg.Homme>cap || bg.Femme>cap);
+    html += '<div style="flex:1;min-width:74px;text-align:center;background:var(--card2);border:1px solid '+(over?'var(--warn)':'var(--border)')+';border-radius:8px;padding:6px 4px">'
       + '<div style="font-size:10px;color:var(--muted)">Niv.'+lvl+'</div>'
       + '<div style="font-size:14px;font-weight:700;color:'+(over?'var(--warn)':'var(--text)')+'">'+count+(lvl<=4?'/'+cap:'')+'</div>'
+      + '<div style="font-size:9px;color:var(--muted);margin-top:1px">👨'+bg.Homme+(lvl<=4&&bg.Homme>cap?'⚠️':'')+' · 👩'+bg.Femme+(lvl<=4&&bg.Femme>cap?'⚠️':'')+'</div>'
       + '</div>';
   });
   html += '</div>';
-  var anyOver = [1,2,3,4].some(function(lvl){ return (byLvl[lvl]||0) > (LVL_MAX[lvl]||99); });
+  var anyOver = [1,2,3,4].some(function(lvl){ var bg=byLvlGenre[lvl]||{Homme:0,Femme:0}; return (byLvl[lvl]||0) > (LVL_MAX[lvl]||99) || bg.Homme>(LVL_MAX[lvl]||99) || bg.Femme>(LVL_MAX[lvl]||99); });
   if(anyOver){
-    html += '<div class="val-box" style="background:rgba(224,137,74,.12);border:1px solid var(--warn);border-radius:10px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--warn)">⚠️ Pour la durée sélectionnée, un ou plusieurs niveaux dépassent le nombre de gages par joueur normalement prévu (voir l\'onglet ⏱ Durée). Le jeu piochera quand même dedans, mais tous ne pourront pas sortir dans une seule partie.</div>';
+    html += '<div class="val-box" style="background:rgba(224,137,74,.12);border:1px solid var(--warn);border-radius:10px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--warn)">⚠️ Pour cette durée, un ou plusieurs niveaux dépassent le nombre de gages par joueur normalement prévu — parfois pour un seul genre (ex: 5 gages Femme alors qu\'il n\'en faut que 2). Pas de blocage : le jeu garantit ceux qui rentrent dans le quota et garde le reste en réserve pour une prochaine partie (grâce à la mémoire des gages déjà joués).</div>';
   }
 
   html += '<div class="search-box" style="margin-bottom:8px"><input type="text" id="ng-kw" placeholder="🔍 Mot-clé…" oninput="ngFilterChange()" value="'+_ngFilter.kw+'"><select id="ng-lvl" onchange="ngFilterChange()"><option value="">Tous niveaux</option>'
     + [1,2,3,4,5].map(function(n){return '<option value="'+n+'"'+(_ngFilter.lvl===String(n)?' selected':'')+'>Niv.'+n+'</option>';}).join('')
     + '</select></div>';
-  html += '<div class="search-box" style="margin-bottom:10px"><select id="ng-src" onchange="ngFilterChange()"><option value="all"'+(_ngFilter.src==='all'?' selected':'')+'>Base + Perso</option><option value="base"'+(_ngFilter.src==='base'?' selected':'')+'>Base uniquement</option><option value="custom"'+(_ngFilter.src==='custom'?' selected':'')+'>Perso uniquement</option></select><select id="ng-type" onchange="ngFilterChange()"><option value="">Tous types</option><option value="action">🎯 Action</option><option value="choix">🔀 Choix</option><option value="question">❓ Question</option><option value="defi">⚡ Défi</option><option value="guide">🎓 Guide</option><option value="massage">💆 Massage</option><option value="kamasutra">🕉 Kama</option></select></div>';
+  html += '<div class="search-box" style="margin-bottom:10px"><select id="ng-src" onchange="ngFilterChange()"><option value="all"'+(_ngFilter.src==='all'?' selected':'')+'>Base + Perso + Kama</option><option value="base"'+(_ngFilter.src==='base'?' selected':'')+'>Base uniquement</option><option value="custom"'+(_ngFilter.src==='custom'?' selected':'')+'>Perso uniquement</option><option value="kama"'+(_ngFilter.src==='kama'?' selected':'')+'>Kâmasûtra uniquement</option></select><select id="ng-type" onchange="ngFilterChange()"><option value="">Tous types</option><option value="action">🎯 Action</option><option value="choix">🔀 Choix</option><option value="question">❓ Question</option><option value="defi">⚡ Défi</option><option value="guide">🎓 Guide</option><option value="massage">💆 Massage</option><option value="kamasutra">🕉 Kama</option></select></div>';
 
   html += '<div id="ng-list-items"></div>';
   box.innerHTML = html;
   ngRenderList();
+}
+function ngResetCurrent(){
+  if(!confirm('Vider la sélection pour '+(['⚡ Rapide','⏱ Standard','🌙 Longue'][[30,45,60].indexOf(_ngDuration)])+' ?')) return;
+  nextGamePool[_ngDuration] = [];
+  saveNextGamePool();
+  renderNextGamePicker();
 }
 function ngSetDuration(d){
   _ngDuration = d;
@@ -9570,33 +9635,55 @@ function ngFilterChange(){
   _ngFilter.type = (document.getElementById('ng-type')||{value:''}).value;
   ngRenderList();
 }
+function _isTextPlayed(texte){
+  try{
+    var arr = JSON.parse(localStorage.getItem(PLAYED_KEY)||'[]');
+    return Array.isArray(arr) && arr.indexOf(texte)>=0;
+  }catch(e){ return false; }
+}
 function ngRenderList(){
   var div = document.getElementById('ng-list-items');
   if(!div) return;
   var f = _ngFilter;
   var ids = nextGamePool[_ngDuration] || [];
   var items = [];
-  if(f.src!=='base') customGages.forEach(function(g,i){
+  if(f.src==='all' || f.src==='kama'){
+    if(!f.type || f.type==='kamasutra') getKamaDataSorted().forEach(function(k){
+      var searchTxt = (k.name+' '+k.desc).toLowerCase();
+      if(f.kw && searchTxt.indexOf(f.kw)<0) return;
+      if(f.lvl && String(k.niveau)!==f.lvl) return;
+      items.push({g:{texte:'🕉 '+k.name+' — '+k.desc, niveau:k.niveau, genre:'Mixte'}, isBase:true, src:'kama', key:_ngKeyKama(k)});
+    });
+  }
+  if(f.src==='all' || f.src==='custom') customGages.forEach(function(g,i){
     if(f.kw && g.texte.toLowerCase().indexOf(f.kw)<0) return;
     if(f.lvl && String(g.niveau)!==f.lvl) return;
     if(f.type && getGageType(g)!==f.type) return;
-    items.push({g:g, isBase:false, key:_ngKey(g,false,i)});
+    items.push({g:g, isBase:false, src:'custom', key:_ngKey(g,false,i)});
   });
-  if(f.src!=='custom') GAGES_BASE.forEach(function(g,i){
+  if(f.src==='all' || f.src==='base') GAGES_BASE.forEach(function(g,i){
     if(hiddenBaseGages.indexOf(i)>=0) return;
     if(f.kw && g.texte.toLowerCase().indexOf(f.kw)<0) return;
     if(f.lvl && String(g.niveau)!==f.lvl) return;
     if(f.type && getGageType(g)!==f.type) return;
-    items.push({g:g, isBase:true, key:_ngKey(g,true,i)});
+    items.push({g:g, isBase:true, src:'base', key:_ngKey(g,true,i)});
   });
   if(!items.length){ div.innerHTML='<p style="text-align:center;color:var(--muted);padding:16px;font-size:12px">Aucun gage trouvé — affine ta recherche.</p>'; return; }
   if(items.length>150) items = items.slice(0,150); // évite un rendu trop lourd, affiner la recherche pour aller plus loin
+  var SRC_BADGE = {
+    base:'<span class="admin-mini-tag" style="color:var(--info)">base</span> ',
+    custom:'<span class="admin-mini-tag" style="color:var(--gold)">perso</span> ',
+    kama:'<span class="admin-mini-tag" style="color:var(--gold)">🕉 kama</span> '
+  };
+  var GENRE_BADGE = {Homme:'👨', Femme:'👩', Mixte:'⚧'};
   div.innerHTML = items.map(function(it,idx){
     var g=it.g;
     var checked = ids.indexOf(it.key)>=0;
     var truncated = g.texte.length>75;
     var txt2 = truncated ? g.texte.substring(0,75)+'…' : g.texte;
-    var badge = it.isBase ? '<span class="admin-mini-tag" style="color:var(--info)">base</span> ' : '<span class="admin-mini-tag" style="color:var(--gold)">perso</span> ';
+    var badge = SRC_BADGE[it.src]||'';
+    var genreBadge = '<span class="admin-mini-tag" title="Genre du gage">'+(GENRE_BADGE[g.genre]||'⚧')+'</span> ';
+    var playedBadge = _isTextPlayed(g.texte) ? '<span class="admin-mini-tag tip" title="Ce gage a déjà été joué lors d\'une ancienne partie sauvegardée." style="color:var(--success)">✓ déjà joué</span> ' : '';
     var domId = 'ngtxt_'+idx;
     var lvlTag = '<span style="display:inline-block;background:var(--card);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-right:5px;vertical-align:1px">Niv.'+(g.niveau||1)+'</span>';
     var textBlock = truncated
@@ -9605,7 +9692,7 @@ function ngRenderList(){
       : txt2;
     return '<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
       + '<input type="checkbox" onchange="ngToggle(\''+it.key.replace(/'/g,"\\'")+'\')" '+(checked?'checked':'')+' style="width:18px;height:18px;flex:0 0 auto;margin-top:1px">'
-      + '<span style="font-size:12.5px;line-height:1.4">'+lvlTag+badge+textBlock+'</span>'
+      + '<span style="font-size:12.5px;line-height:1.4">'+lvlTag+genreBadge+badge+playedBadge+'<br>'+textBlock+'</span>'
       + '</label>';
   }).join('');
 }
@@ -9872,6 +9959,25 @@ function kamaShowDetail(i){
 }
 
 
+function _findGageByTexte(texte){
+  for(var i=0;i<GAGES_BASE.length;i++){ if(GAGES_BASE[i].texte===texte) return GAGES_BASE[i]; }
+  for(var j=0;j<customGages.length;j++){ if(customGages[j].texte===texte) return customGages[j]; }
+  return null;
+}
+function memToggleGroup(domId){
+  var panel=document.getElementById(domId), chev=document.getElementById('chev_'+domId);
+  if(!panel) return;
+  var open = panel.classList.toggle('hidden')===false;
+  if(chev) chev.textContent = open ? '▴' : '▾';
+}
+function memToggleText(evt, domId){
+  if(evt){ evt.preventDefault(); evt.stopPropagation(); }
+  var shortEl = document.getElementById(domId+'_short');
+  var fullEl = document.getElementById(domId+'_full');
+  if(!shortEl || !fullEl) return;
+  shortEl.classList.toggle('hidden');
+  fullEl.classList.toggle('hidden');
+}
 function memGoToGage(encodedTexte){
   var texte = decodeURIComponent(encodedTexte);
   adminTab('gages', document.getElementById('atab-gages-nav'));
