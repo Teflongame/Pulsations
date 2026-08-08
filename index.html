@@ -40,6 +40,12 @@
   --success:#1a8e5e; --info:#2a6ec6; --warn:#c25f24; --blue:#3a5fd5; --rose:#c06a82;
   --shadow:0 10px 28px rgba(80,40,40,.12);
 }
+[data-theme="bleu-nuit"] {
+  --bg:#0a0e1c; --card:#121a30; --card2:#1a2440; --border:rgba(130,160,255,0.14);
+  --accent:#6e8fd9; --accent-soft:#96aee6; --gold:#d8c157; --text:#e8ecf7; --muted:#8b93b8;
+  --success:#4fb894; --info:#6e8fd9; --warn:#e0a04a; --blue:#6e8fd9; --rose:#a893d9;
+  --noir:#0a0e1c; --shadow:0 10px 30px rgba(0,0,10,.55); --accent-rgb:110,143,217;
+}
 html { background:#0d0a14; }
 body { background:var(--bg); color:var(--text); font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:16px; line-height:1.5; min-height:100vh; overscroll-behavior:none; }
 #page-game { position:relative; }
@@ -154,6 +160,11 @@ select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
 
 .gage-text-body{display:block;margin:0;text-align:center;line-height:1.6;width:100%}
 .gage-text-body strong{display:inline;white-space:normal}
+.gage-intro{margin-bottom:10px}
+.gage-choices{list-style:none;margin:10px auto 0;padding:0;text-align:left;display:inline-block;max-width:94%}
+.gage-choices li{position:relative;padding-left:22px;margin-bottom:11px;line-height:1.45;font-size:15px}
+.gage-choices li:last-child{margin-bottom:0}
+.gage-choices li::before{content:"•";position:absolute;left:3px;top:0;color:var(--gold);font-weight:700;font-size:17px}
 .gage-card {
   position:relative;
   border-radius:16px; padding:30px 24px; text-align:center; font-size:16.5px; line-height:1.8;
@@ -523,6 +534,13 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 [data-theme='noir-or'] .btn { background:var(--accent); color:#1c1608; box-shadow:0 6px 16px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.25); }
 [data-theme='noir-or'] input[type=text], [data-theme='noir-or'] select { color:var(--text); }
 
+[data-theme='bleu-nuit'] {
+  --bg:#080c18; --card:#101836; --card2:#182348; --border:rgba(130,160,255,0.16);
+  --text:#e8ecf7; --muted:#8b93b8; --accent:#6e8fd9; --accent-soft:#96aee6; --accent-rgb:110,143,217; --gold:#d8c157;
+  --shadow:0 10px 30px rgba(0,0,10,.55);
+}
+[data-theme='bleu-nuit'] .gage-card { border-color:rgba(110,143,217,.35); }
+
 /* ── DURÉE DE PARTIE ── */
 .duration-row { display:flex; gap:8px; justify-content:center; margin:10px 0 6px; }
 .dur-btn { background:var(--card); border:1.5px solid var(--border); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; color:var(--text); transition:border-color .15s, background .15s; flex:1; text-align:center; }
@@ -656,6 +674,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
         <button onclick="setTheme('');closeThemeMenu()" class="theme-opt" data-t="">🌙 Nuit<br><small>Sombre classique</small></button>
         <button onclick="setTheme('velours');closeThemeMenu()" class="theme-opt" data-t="velours">🍷 Velours<br><small>Bordeaux intense</small></button>
         <button onclick="setTheme('noir-or');closeThemeMenu()" class="theme-opt" data-t="noir-or">✨ Noir &amp; Or<br><small>Luxe épuré</small></button>
+        <button onclick="setTheme('bleu-nuit');closeThemeMenu()" class="theme-opt" data-t="bleu-nuit">🌌 Bleu Nuit<br><small>Ciel étoilé</small></button>
         <button onclick="setTheme('clair');closeThemeMenu()" class="theme-opt" data-t="clair">☀️ Clair<br><small>Fond blanc</small></button>
       </div>
     </div>
@@ -765,6 +784,40 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   </div>
 </div>
 
+
+<!-- PAGE BOUTIQUE -->
+<div class="page" id="page-boutique">
+  <div class="page-header"><h1>🛍️ Boutique</h1><p>Accessoires, jeux et idées pour aller plus loin</p></div>
+
+  <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:11.5px;color:var(--muted);line-height:1.5">
+    Ces liens t'emmènent vers des boutiques externes (Dorcel Store, Amazon) pour t'aider à trouver facilement ce qu'il te faut. On ne touche aucune commission et on ne garantit ni les prix ni la disponibilité — vérifie toujours sur place avant d'acheter.
+  </div>
+
+  <h3 style="font-size:14px;color:var(--gold);margin-bottom:8px">🔥 Boutiques générales</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+    <a href="https://www.amazon.fr/s?k=jouets%20adultes%20couple" target="_blank" rel="noopener" class="btn ghost sm" style="text-decoration:none;text-align:center">🛒 Amazon</a>
+    <a href="https://www.dorcelstore.com/" target="_blank" rel="noopener" class="btn ghost sm" style="text-decoration:none;text-align:center">🔥 Dorcel Store</a>
+    <a href="https://www.adameteve.fr/" target="_blank" rel="noopener" class="btn ghost sm" style="text-decoration:none;text-align:center">🍎 Adam &amp; Eve</a>
+    <a href="https://www.passagedudesir.com/" target="_blank" rel="noopener" class="btn ghost sm" style="text-decoration:none;text-align:center">🚪 Passage du Désir</a>
+    <a href="https://www.ruedesplaisirs.com/" target="_blank" rel="noopener" class="btn ghost sm" style="text-decoration:none;text-align:center">🛣️ Rue des Plaisirs</a>
+    <a href="https://www.espaceplaisir.fr/" target="_blank" rel="noopener" class="btn ghost sm" style="text-decoration:none;text-align:center">🌹 Espace Plaisir</a>
+  </div>
+  <p style="font-size:10.5px;color:var(--muted);margin-bottom:18px;line-height:1.4">Si un site affiche une erreur (403 / accès refusé), c'est un blocage temporaire de leur côté (protection anti-robot), pas un souci de l'app — réessaie plus tard, ou pioche parmi les autres boutiques en attendant.</p>
+
+  <h3 style="font-size:14px;color:var(--gold);margin-bottom:8px">🎯 Accessoires utilisés dans le jeu</h3>
+  <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Retrouve directement sur Amazon les accessoires que tu peux cocher en début de partie.</p>
+  <div id="shop-acc-list"></div>
+
+  <h3 style="font-size:14px;color:var(--gold);margin:18px 0 8px">🎲 Jeux de société sur le même thème</h3>
+  <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">D'autres jeux coquins pour couple, à découvrir en dehors de l'app.</p>
+  <div id="shop-games-list"></div>
+
+  <h3 style="font-size:14px;color:var(--gold);margin:18px 0 8px">✨ Autres accessoires à découvrir</h3>
+  <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Pas encore dans le jeu, mais qui pourraient te plaire.</p>
+  <div id="shop-extra-list"></div>
+
+  <div class="btn-row" style="margin-top:16px"><button class="btn ghost" onclick="goTo('page-home')">← Retour à l'accueil</button></div>
+</div>
 
 <!-- PAGE PROFILS -->
 <div class="page" id="page-profiles">
@@ -881,6 +934,17 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <div style="font-size:12px;color:var(--muted);margin-top:2px" id="dur-time-est">—</div>
   </div>
 
+  <!-- Voix de la narration -->
+  <div style="margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px">
+    <div onclick="ngToggleDurVoice()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <strong style="font-size:13px">🔊 Voix de la soirée</strong>
+      <span id="dur-voice-chev" style="font-size:13px;color:var(--muted)">▾</span>
+    </div>
+    <div id="dur-voice-wrap" class="hidden" style="margin-top:10px">
+      <div id="dur-voice-settings-list"></div>
+    </div>
+  </div>
+
   <div class="btn-row" style="margin-top:14px">
     <button class="btn ghost" onclick="goTo('page-nb')">← Retour</button>
     <button class="btn" onclick="goToAccFromDuration()">Suivant →</button>
@@ -958,12 +1022,12 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   <div class="gage-counter" id="g-counter"></div>
   <div class="game-actions">
     <div class="action-row">
-      <button class="btn ghost sm hidden" id="btn-skip" onclick="skipGage()"><span data-i18n="btn_skip">⏭ Passer</span></button>
-      <button class="btn success sm hidden" id="btn-validate" onclick="validateGage()"><span data-i18n="btn_validate">✅ Réalisé</span></button>
+      <button class="btn ghost sm hidden" id="btn-skip" onclick="skipGage()"><span>⏭ Passer</span></button>
+      <button class="btn success sm hidden" id="btn-validate" onclick="validateGage()"><span>✅ Réalisé</span></button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button class="btn ghost" id="btn-prev" onclick="prevGage()" style="flex:1;display:none"><span data-i18n="btn_prev">← Préc.</span></button>
-      <button class="btn ghost sm" id="btn-change" onclick="changeGage()" style="flex:1"><span data-i18n="btn_change">🔀 Changer</span></button>
+      <button class="btn ghost" id="btn-prev" onclick="prevGage()" style="flex:1;display:none"><span>← Préc.</span></button>
+      <button class="btn ghost sm" id="btn-change" onclick="changeGage()" style="flex:1"><span>🔀 Changer</span></button>
       <button class="btn" id="btn-next" onclick="nextGage()" style="flex:1">Suivant →</button>
     </div>
     <div class="cost-hint hidden" id="cost-hint">🏆 Changer/Passer = -<span id="cost-pts">1</span> pt</div>
@@ -4697,7 +4761,8 @@ function renderCustomGagePicker(){
         var used0=_persoLevelGenreCount(pool, lvl0, g.genre);
         quotaBadge = '<span class="tip" title="Places perso déjà prises pour ce genre à ce niveau (plafonné à la capacité du niveau, pour garder l\'alternance stricte)." style="display:inline-block;margin-left:6px;font-size:10px;color:'+(used0>=cap0?'var(--warn)':'var(--muted)')+'">'+(g.genre==='Homme'?'👨':'👩')+' '+used0+'/'+cap0+'</span>';
       }
-      var playedBadge = _isTextPlayed(g.texte) ? '<span class="tip" title="Ce gage a déjà été joué lors d\'une ancienne partie sauvegardée." style="display:inline-block;margin-left:6px;font-size:10px;color:var(--success)">✓ déjà joué</span>' : '';
+      var playedBadge = _isTextPlayed(g.texte) ? '<span class="tip" title="Ce gage a déjà été joué (timer/dé engagé) lors d\'une ancienne partie sauvegardée." style="display:inline-block;margin-left:6px;font-size:10px;color:var(--success)">✓ déjà joué</span>' : '';
+      var changedBadge = _wasChanged(g.texte) ? '<span class="tip" title="Ce gage a déjà été changé (bouton Changer) au moins une fois par le passé." style="display:inline-block;margin-left:6px;font-size:10px;color:var(--accent)">🔀 changé</span>' : '';
       h += '<label class="perso-pick-item'+(checked?' checked':'')+'" style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
         + '<span class="perso-pick-rank" data-key="'+key+'" onclick="togglePersoPick(event,\''+key+'\',this)" '
         + 'style="flex:0 0 auto;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;'
@@ -4705,7 +4770,7 @@ function renderCustomGagePicker(){
         + 'transition:transform .15s">'+(checked ? (rk+1) : '+')+'</span>'
         + '<span style="font-size:13px;line-height:1.4">'
         + '<span style="display:inline-block;background:var(--card);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-right:5px;vertical-align:1px">Niv.'+(g.niveau||1)+'</span>'
-        + preview + pvBadge + quotaBadge + playedBadge + '</span></label>';
+        + preview + pvBadge + quotaBadge + playedBadge + changedBadge + '</span></label>';
     });
   }
 
@@ -4806,6 +4871,8 @@ function goTo(pageId) {
   // Feedback tab visible only on home page
   var fbTab=document.getElementById('feedback-tab');
   if(fbTab) fbTab.style.display = (pageId==='page-home') ? 'flex' : 'none';
+  var shopTab=document.getElementById('shop-tab');
+  if(shopTab) shopTab.style.display = (pageId==='page-home') ? 'flex' : 'none';
 // Premium badge
 (function(){
   var pb=document.getElementById('premium-badge');
@@ -4839,6 +4906,75 @@ function goTo(pageId) {
 var _fbType = 'idee';
 var _fbRating = 0;
 function openFeedback(){ document.getElementById('feedback-overlay').style.display='flex'; }
+function goToBoutique(){ renderBoutique(); goTo('page-boutique'); }
+
+// ══════════════ BOUTIQUE ══════════════
+function shopAmazonLink(query){ return 'https://www.amazon.fr/s?k='+encodeURIComponent(query); }
+var SHOP_ITEM_EXCLUDE = ['Musique']; // pas un produit à acheter
+var SHOP_QUERY_OVERRIDES = { 'Appareil photo': 'appareil photo instantané pellicule' }; // instantané plutôt que numérique générique
+function shopRow(label, query, sub){
+  var q = SHOP_QUERY_OVERRIDES[label] || query;
+  return '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;gap:10px">'
+    + '<span style="font-size:13px;line-height:1.3">'+label+(sub?'<br><span style="font-size:10.5px;color:var(--muted)">'+sub+'</span>':'')+'</span>'
+    + '<a href="'+shopAmazonLink(q)+'" target="_blank" rel="noopener" class="btn ghost sm" style="padding:6px 12px;font-size:11px;text-decoration:none;white-space:nowrap;flex:0 0 auto">🛒 Amazon</a>'
+    + '</div>';
+}
+function renderBoutique(){
+  // Accessoires réellement utilisés in-game (reflète aussi les ajouts admin)
+  var accBox = document.getElementById('shop-acc-list');
+  if(accBox){
+    var accData = getAccData();
+    var html = '';
+    Object.keys(accData).forEach(function(cat){
+      if(cat==='Sans accessoires' || cat==='Vidéos' || cat==='Aliments' || cat==='Boissons') return; // rien à acheter pour ces catégories
+      var items = (accData[cat]||[]).filter(function(n){ return SHOP_ITEM_EXCLUDE.indexOf(n)<0; });
+      if(!items.length) return;
+      html += '<div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 5px">'+cat+'</div>';
+      items.forEach(function(name){
+        html += shopRow(name, name+' coquin couple');
+      });
+    });
+    accBox.innerHTML = html || '<p style="font-size:12px;color:var(--muted)">Aucun accessoire pour le moment.</p>';
+  }
+  // Jeux de société sur le même thème (couple / coquin)
+  var gamesBox = document.getElementById('shop-games-list');
+  if(gamesBox){
+    var games = [
+      {name:'The Couples Game', sub:'Jeu de cartes — ~300 questions pour se redécouvrir à deux'},
+      {name:'LovBirdz jeu de société couple', sub:'Devinez les réponses de votre moitié, univers tendre et complice'},
+      {name:'Top Ten 18+ jeu adulte', sub:'Jeu coopératif déjanté, 500 thèmes à improviser'},
+      {name:"Relation Foireuse Édition Très Foireuse", sub:"Jeu d'ambiance irrévérencieux sur le thème de l'amour"},
+      {name:'Left Right Dilemma jeu adulte', sub:"Dilemmes déjantés à deviner en couple"},
+      {name:'Hot Room escape game érotique couple', sub:"Escape room coquin à faire à deux à la maison"}
+    ];
+    gamesBox.innerHTML = games.map(function(g){ return shopRow(g.name, g.name, g.sub); }).join('');
+  }
+  // Autres idées d'accessoires, pas encore présents dans le jeu
+  var extraBox = document.getElementById('shop-extra-list');
+  if(extraBox){
+    var extras = [
+      {name:'Déguisement jeu de rôle couple', sub:''},
+      {name:'Bougie de massage érotique', sub:''},
+      {name:"Kit d'initiation shibari débutant", sub:''},
+      {name:'Balle mordante / bâillon soft', sub:''},
+      {name:'Dés coquins position', sub:''}
+    ];
+    var lingerieBrands = [
+      {label:'🛒 Amazon', url:shopAmazonLink('lingerie coquine femme')},
+      {label:'💗 Lounge', url:'https://www.lounge.com/'},
+      {label:'🖤 Etam', url:'https://www.etam.com/'},
+      {label:'💕 Victoria\'s Secret', url:'https://fr.victoriassecret.com/'},
+      {label:'🤍 Intimissimi', url:'https://www.intimissimi.com/'},
+      {label:'💋 Undiz', url:'https://www.undiz.com/'}
+    ];
+    var lingerieHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px">'
+      + '<div style="font-size:13px;margin-bottom:8px">Lingerie coquine femme</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+      + lingerieBrands.map(function(b){ return '<a href="'+b.url+'" target="_blank" rel="noopener" class="btn ghost sm" style="padding:6px 8px;font-size:11px;text-decoration:none;text-align:center;margin:0">'+b.label+'</a>'; }).join('')
+      + '</div></div>';
+    extraBox.innerHTML = lingerieHTML + extras.map(function(g){ return shopRow(g.name, g.name); }).join('');
+  }
+}
 function closeFeedback(){ document.getElementById('feedback-overlay').style.display='none'; }
 function selFbType(btn, type){
   _fbType = type;
@@ -5195,7 +5331,16 @@ function goToDurationPage() {
     var c = document.getElementById('dur-card-'+d);
     if(c) c.classList.toggle('sel', G_duration===d);
   });
+  renderVoiceSettings('dur-voice-settings-list');
   goTo('page-duration');
+}
+function ngToggleDurVoice(){
+  var wrap = document.getElementById('dur-voice-wrap');
+  var chev = document.getElementById('dur-voice-chev');
+  if(!wrap) return;
+  var open = wrap.classList.toggle('hidden')===false;
+  if(chev) chev.textContent = open ? '▴' : '▾';
+  if(open) renderVoiceSettings('dur-voice-settings-list');
 }
 
 // ── Durée moyenne par gage par niveau (secondes) ──
@@ -6895,24 +7040,32 @@ function prepareGages() {
       // Also exclude guides from change pool
       G.changePool[lvl][player.prenom]=(function(arr){var f=arr.filter(function(g){return !G.playedTexts.has(g.texte);});var s=arr.filter(function(g){return G.playedTexts.has(g.texte);});return shuffle(f).concat(shuffle(s));})(cands.filter(function(g){return !normT.has(g.texte)&&!(g.texte&&g.texte.slice(0,2)==='🎓');}));
     });
-    // Inject 1 distinct guide gage per player per level (1-4) — mais pas systématiquement :
-    // si peu de gages sont prévus ce niveau (ex: partie Rapide), le guide forcé prendrait
-    // une part disproportionnée du tour et nuirait à la variété. Standard/Longue inchangés.
+    // Inject guide gage(s) per player par niveau (1-4) — respecte la présélection admin
+    // "Prochaine partie" si elle contient des guides, mais JAMAIS plus de 50% de la capacité
+    // du niveau par joueur (évite la prépondérance même si l'admin en a présélectionné plus).
+    // Si peu de gages sont prévus ce niveau (ex: partie Rapide), le guide n'est pas systématique,
+    // pour ne pas nuire à la variété. Standard/Longue inchangés.
     if(lvl>=1&&lvl<=4){
       var _guideBudget = LVL_MAX[lvl]||5;
       var _guideChance = _guideBudget<=2 ? 0.4 : (_guideBudget===3 ? 0.65 : 1);
+      var _maxGuides = Math.max(1, Math.floor(_guideBudget*0.5)); // jamais plus de 50% du niveau
       if(Math.random() < _guideChance){
       var usedGuideTxt=[];
+      var curatedGuides = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
+        return r && r.g.niveau===lvl && r.g.texte && r.g.texte.slice(0,2)==='🎓';
+      }).map(function(r){ return r.g; });
       G.players.forEach(function(player){
-        var guides=allGages().filter(function(g){
-          return g.niveau===lvl&&gageOk(g,player,lvl)&&g.texte&&g.texte.slice(0,2)==='🎓'&&usedGuideTxt.indexOf(g.texte)<0;
-        });
+        var guideSource = curatedGuides.length ? curatedGuides : allGages().filter(function(g){ return g.texte&&g.texte.slice(0,2)==='🎓'; });
+        var guides=shuffle(guideSource.filter(function(g){
+          return g.niveau===lvl&&gageOk(g,player,lvl)&&usedGuideTxt.indexOf(g.texte)<0;
+        }));
         // Fallback: allow reuse if not enough distinct guides
-        if(!guides.length) guides=allGages().filter(function(g){
-          return g.niveau===lvl&&gageOk(g,player,lvl)&&g.texte&&g.texte.slice(0,2)==='🎓';
-        });
-        if(guides.length>0){
-          var pick=guides[Math.floor(Math.random()*guides.length)];
+        if(!guides.length) guides=shuffle(guideSource.filter(function(g){
+          return g.niveau===lvl&&gageOk(g,player,lvl);
+        }));
+        var nToAdd = Math.min(curatedGuides.length ? _maxGuides : 1, guides.length);
+        for(var gi=0; gi<nToAdd; gi++){
+          var pick=guides[gi];
           usedGuideTxt.push(pick.texte);
           pool.push(Object.assign({},pick,{_p:player.prenom,_ch:false,_kama:false}));
         }
@@ -7213,6 +7366,21 @@ var _autoOnNarrationEnd = function(){}; // appelé par speakGageText quand la na
 loadDurConfig(); // charge la calibration sauvegardée (durées + mode auto), maintenant que tout est déclaré
 var _voiceFR = null;
 var VOICE_PREF_KEY = 'voice_id_v28';
+var VOICE_STYLE_KEY = 'voice_style_v28';
+var VOICE_STYLES = [
+  {id:'sensuelle', genre:'f', label:'💋 Sensuelle', desc:'Douce, lente, enveloppante', rate:0.78, pitch:0.90},
+  {id:'hot_f',      genre:'f', label:'🔥 Hot', desc:'Grave, très lente, suggestive', rate:0.72, pitch:0.84},
+  {id:'stricte',    genre:'f', label:'😈 Stricte / Dominatrice', desc:'Ferme, posée, autoritaire', rate:1.02, pitch:0.86},
+  {id:'douce',      genre:'f', label:'🌸 Douce / Tendre', desc:'Chaleureuse et rassurante', rate:0.92, pitch:1.05},
+  {id:'sensuel_h',  genre:'m', label:'💋 Sensuel', desc:'Grave et posé', rate:0.78, pitch:0.92},
+  {id:'hot_h',      genre:'m', label:'🔥 Hot', desc:'Très grave, lent, intense', rate:0.72, pitch:0.86},
+  {id:'strict_h',   genre:'m', label:'😈 Strict / Autoritaire', desc:'Ferme et direct', rate:1.04, pitch:0.90},
+  {id:'chaleureux_h',genre:'m', label:'☀️ Chaleureux', desc:'Convivial et rassurant', rate:0.94, pitch:1.02}
+];
+var voiceStyleId = (function(){ try{ return localStorage.getItem(VOICE_STYLE_KEY)||'sensuelle'; }catch(e){ return 'sensuelle'; } })();
+function _currentVoiceStyle(){
+  return VOICE_STYLES.find(function(s){return s.id===voiceStyleId;}) || VOICE_STYLES[0];
+}
 var _FEMALE_VOICE_NAMES = ['amelie','amélie','audrey','aurelie','aurélie','celine','céline','chantal','charline','marie','virginie','lea','léa','julie','hortense','denise','eloise','éloise','elise','élise','sandrine','manon','claire','camille','emma','lucie','justine','severine','séverine','nathalie','zosia','flo','ines','inès'];
 var _MALE_VOICE_NAMES = ['thomas','paul','henri','nicolas','antoine','daniel','pierre','jean','louis','maxime','guillaume','yannick','bruno','remi','rémi'];
 function _voiceGender(v){
@@ -7247,29 +7415,73 @@ function setVoicePref(id){
   _saveVoicePref(id);
   _voiceFR = _pickFrenchVoice();
   renderVoiceSettings();
+  renderVoiceSettings('dur-voice-settings-list');
   if('speechSynthesis' in window){
     speechSynthesis.cancel();
+    var st=_currentVoiceStyle();
     var utt=new SpeechSynthesisUtterance('Voici comment je vais te lire les gages, ce soir.');
     utt.lang='fr-FR'; if(_voiceFR) utt.voice=_voiceFR;
-    utt.rate=0.80; utt.pitch=0.90;
+    utt.rate=st.rate; utt.pitch=st.pitch;
     speechSynthesis.speak(utt);
   }
 }
-function renderVoiceSettings(){
-  var box = document.getElementById('voice-settings-list');
+function setVoiceStyle(id){
+  voiceStyleId = id;
+  try{ localStorage.setItem(VOICE_STYLE_KEY, id); }catch(e){}
+  // Un style Homme/Femme doit aussi basculer vers une voix système du bon genre si
+  // l'appareil en propose une — sinon changer de style ne changeait que le rythme,
+  // pas le timbre, ce qui donnait l'impression qu'on ne pouvait jamais changer de genre.
+  var st = _currentVoiceStyle();
+  var fr = _frVoices();
+  var wantGender = st.genre; // 'f' ou 'm'
+  var curGender = _voiceFR ? _voiceGender(_voiceFR) : null;
+  if(fr.length && curGender!==wantGender){
+    var match = fr.find(function(v){ return _voiceGender(v)===wantGender; });
+    if(match){
+      _voiceFR = match;
+      _saveVoicePref(match.name+'|'+match.lang);
+    }
+  }
+  renderVoiceSettings();
+  renderVoiceSettings('dur-voice-settings-list');
+  if(voiceNarrationOn && 'speechSynthesis' in window){
+    speechSynthesis.cancel();
+    var utt=new SpeechSynthesisUtterance('Voilà le ton que j\'utiliserai pour te lire les gages.');
+    utt.lang='fr-FR'; if(_voiceFR) utt.voice=_voiceFR;
+    utt.rate=st.rate; utt.pitch=st.pitch;
+    speechSynthesis.speak(utt);
+  }
+}
+function renderVoiceSettings(containerId){
+  var box = document.getElementById(containerId||'voice-settings-list');
   if(!box) return;
   if(!('speechSynthesis' in window)){
     box.innerHTML = '<p style="font-size:12px;color:var(--muted)">Narration vocale non supportée par ce navigateur.</p>';
     return;
   }
   var fr = _frVoices();
+  var html = '';
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Style de voix</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">';
+  html += VOICE_STYLES.map(function(s){
+    var sel = s.id===voiceStyleId;
+    return '<button type="button" class="btn '+(sel?'':'ghost')+' sm tip" title="'+s.desc+'" style="text-align:left;font-size:12px" onclick="setVoiceStyle(\''+s.id+'\')">'+s.label+(sel?' ✓':'')+'</button>';
+  }).join('');
+  html += '</div>';
   if(!fr.length){
-    box.innerHTML = '<p style="font-size:12px;color:var(--muted)">Chargement des voix disponibles…</p>';
+    html += '<p style="font-size:12px;color:var(--muted)">Chargement des voix disponibles…</p>';
+    box.innerHTML = html;
     return;
   }
   var savedId = _loadVoicePref();
   var currentId = _voiceFR ? (_voiceFR.name+'|'+_voiceFR.lang) : '';
-  box.innerHTML = fr.map(function(v){
+  var hasF = fr.some(function(v){return _voiceGender(v)==='f';});
+  var hasM = fr.some(function(v){return _voiceGender(v)==='m';});
+  if(!(hasF && hasM)){
+    html += '<p style="font-size:11px;color:var(--warn);margin-bottom:8px;line-height:1.4">⚠️ Ton appareil ne propose qu\'une seule voix française installée ('+fr.length+' au total) — impossible de basculer réellement entre une voix homme et femme ici, seuls le rythme et le ton du style changent. Pour avoir le choix, installe une voix française supplémentaire dans les réglages vocaux de ton téléphone.</p>';
+  }
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Voix de l\'appareil</div>';
+  html += fr.map(function(v){
     var id=v.name+'|'+v.lang;
     var g=_voiceGender(v);
     var icon = g==='f' ? '♀️' : (g==='m' ? '♂️' : '🎙️');
@@ -7277,9 +7489,10 @@ function renderVoiceSettings(){
     return '<button type="button" class="btn '+(sel?'':'ghost')+' sm" style="width:100%;text-align:left;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center" onclick="setVoicePref(\''+id.replace(/'/g,"\\'")+'\')">'
       +'<span>'+icon+' '+v.name+'</span>'+(sel?'<span>✓</span>':'')+'</button>';
   }).join('');
+  box.innerHTML = html;
 }
 if('speechSynthesis' in window){
-  speechSynthesis.onvoiceschanged = function(){ _voiceFR = _pickFrenchVoice(); renderVoiceSettings(); };
+  speechSynthesis.onvoiceschanged = function(){ _voiceFR = _pickFrenchVoice(); renderVoiceSettings(); renderVoiceSettings('dur-voice-settings-list'); };
   _voiceFR = _pickFrenchVoice();
 }
 function updateVoiceToggleBtn(){
@@ -7321,14 +7534,30 @@ function speakGageText(gage, player, partner){
   var utt = new SpeechSynthesisUtterance(raw);
   utt.lang = 'fr-FR';
   if(_voiceFR) utt.voice = _voiceFR;
-  utt.rate = 0.80;
-  utt.pitch = 0.90;
+  var _st = _currentVoiceStyle();
+  utt.rate = _st.rate;
+  utt.pitch = _st.pitch;
   if(AUTO_PLAY_ON){
     utt.onend = function(){ _autoOnNarrationEnd(); };
   }
   speechSynthesis.speak(utt);
 }
 
+// Transforme un texte de gage (avec placeholders déjà remplacés) en HTML : si des lignes
+// commencent par • ou -, elles deviennent une vraie liste de choix empilée verticalement ;
+// sinon, les sauts de ligne simples deviennent des <br>. Réutilisé en jeu ET dans l'aperçu admin.
+function formatGageBodyHTML(txt){
+  var lines = txt.split('\n');
+  var bulletIdx = -1;
+  for(var i=0;i<lines.length;i++){ if(/^\s*[•\-]\s+/.test(lines[i])){ bulletIdx=i; break; } }
+  if(bulletIdx >= 0){
+    var introLines = lines.slice(0,bulletIdx).filter(function(l){return l.trim()!=='';});
+    var optionLines = lines.slice(bulletIdx).filter(function(l){return l.trim()!=='';});
+    return (introLines.length ? '<div class="gage-intro">'+introLines.join('<br>')+'</div>' : '')
+      + '<ul class="gage-choices">' + optionLines.map(function(l){ return '<li>'+l.replace(/^\s*[•\-]\s*/,'')+'</li>'; }).join('') + '</ul>';
+  }
+  return lines.join('<br>');
+}
 function renderGageCard(gage, player, partner) {
   var pColor = player.genre==='Homme' ? 'var(--blue)' : 'var(--rose)';
   var isStory = G.mode==='story';
@@ -7341,6 +7570,7 @@ function renderGageCard(gage, player, partner) {
     .replace(/{role_h}/g, '<strong style="color:var(--blue)">'+roleHLabel+'</strong>')
     .replace(/{role_f}/g, '<strong style="color:var(--rose)">'+roleFLabel+'</strong>')
     .replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:var(--gold)">$1</strong>');
+  txt = formatGageBodyHTML(txt);
   var cls = 'gage-card';
   if(gage._ch) cls += ' challenge';
   else if(gage.texte && gage.texte.charAt(0)==='\u2753') cls += ' question';
@@ -7607,9 +7837,12 @@ function nextGage(skipSound){
     // de gage → signal implicite qu'il/elle aime ce gage (mémoire admin + stats de fin).
     if(_curGageEngaged) recordGageSignal(cur, cur&&cur._p, 'like');
     G._statRealized=(G._statRealized||0)+1;
-    // Marqué "joué" seulement ici (avance réelle), pas au simple affichage — sinon un gage
-    // juste regardé (partie de test, retour rapide à l'accueil) apparaissait à tort comme déjà joué.
-    if(cur) markPlayed(cur.texte);
+    // Marqué "joué" via Suivant : si le gage n'a ni timer ni dé, rien à engager donc
+    // Suivant suffit. S'il a un timer/dé, il faut l'avoir vraiment démarré/lancé.
+    if(cur){
+      var _hasMech = !!(extractTimer(cur.texte) || hasDiceRef(cur.texte));
+      if(!_hasMech || _curGageEngaged) markPlayed(cur.texte);
+    }
   }
   G.gageIdx++;
   autoSaveGame();
@@ -8854,6 +9087,7 @@ function liveVal() {
       var pColor=previewGenre==='Homme'?'var(--blue)':(previewGenre==='Femme'?'var(--rose)':'var(--accent)');
       var cardClass='gage-card '+(previewGenre==='Homme'?'homme':(previewGenre==='Femme'?'femme':''));
       var formatted=txt.replace(/\{prenom\}/g,'<strong style="color:'+pColor+'">Alice</strong>').replace(/\{partenaire\}/g,'<strong style="color:var(--gold)">Bob</strong>').replace(/\*\*([^*]+)\*\*/g,'<strong style="color:var(--gold)">$1</strong>');
+      formatted = formatGageBodyHTML(formatted);
       prev.innerHTML='<div class="'+cardClass+'" style="font-size:14px;padding:14px;min-height:60px;margin:0">'+formatted+'</div>';
     } else prev.classList.add('hidden');
   }
@@ -9040,11 +9274,31 @@ function findSimilar(txt,skipIdx){var all=GAGES_BASE.concat(customGages),res=[];
 
 var _pratList = []; // cache for deletePrat by index
 
+// Sélecteur réutilisable : catégorie existante (menu déroulant) ou nouvelle catégorie (texte libre)
+function catSelectHTML(prefix, cats, current){
+  var opts = '<option value="">— Choisir —</option>' + cats.map(function(c){ return '<option value="'+c+'"'+(c===current?' selected':'')+'>'+c+'</option>'; }).join('') + '<option value="__new__">➕ Nouvelle catégorie…</option>';
+  return '<select id="'+prefix+'-select" onchange="onCatSelectChange(\''+prefix+'\')">'+opts+'</select>'
+    + '<input type="text" id="'+prefix+'-new" placeholder="Nom de la nouvelle catégorie" class="hidden" style="margin-top:6px;width:100%">';
+}
+function onCatSelectChange(prefix){
+  var sel = document.getElementById(prefix+'-select');
+  var inp = document.getElementById(prefix+'-new');
+  if(!sel || !inp) return;
+  inp.classList.toggle('hidden', sel.value!=='__new__');
+  if(sel.value==='__new__') inp.focus();
+}
+function getCatValue(prefix){
+  var sel = document.getElementById(prefix+'-select');
+  var inp = document.getElementById(prefix+'-new');
+  if(!sel) return '';
+  if(sel.value==='__new__') return (inp?inp.value:'').trim();
+  return sel.value;
+}
 function renderAdminPrat(){
   _pratList = [];
   var pd=getPratData();
   var html='<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn sm ghost" onclick="showPratForm()" style="flex:1">➕ Nouvelle</button><button class="btn sm ghost" onclick="showPratList()" style="flex:1">📋 Liste</button></div>';
-  html+='<div id="prat-form-wrap"><div class="field-row"><div><label class="field-label">Genre</label><select id="np-genre"><option value="Homme">Homme</option><option value="Femme">Femme</option></select></div><div><label class="field-label">Catégorie</label><input type="text" id="np-cat" placeholder="Ex: Sexe oral"></div></div><label class="field-label">ID unique</label><input type="text" id="np-id" placeholder="oral_actif_2"><label class="field-label">Nom affiché</label><input type="text" id="np-label" placeholder="Oral actif Niv.2"><textarea id="np-desc" placeholder="Description..." style="min-height:60px"></textarea><div class="btn-row"><button class="btn ghost sm" id="np-cancel" style="display:none" onclick="cancelPratEdit()">Annuler</button><button class="btn sm" onclick="savePrat()">➕ Ajouter</button></div></div>';
+  html+='<div id="prat-form-wrap"><div class="field-row"><div><label class="field-label">Genre</label><select id="np-genre" onchange="onPratGenreChange()"><option value="Homme">Homme</option><option value="Femme">Femme</option></select></div><div><label class="field-label">Catégorie</label><div id="np-cat-wrap">'+catSelectHTML('np-cat', Object.keys(pd['Homme']||{}), '')+'</div></div></div><label class="field-label">ID unique</label><input type="text" id="np-id" placeholder="oral_actif_2"><label class="field-label">Nom affiché</label><input type="text" id="np-label" placeholder="Oral actif Niv.2"><textarea id="np-desc" placeholder="Description..." style="min-height:60px"></textarea><div class="btn-row"><button class="btn ghost sm" id="np-cancel" style="display:none" onclick="cancelPratEdit()">Annuler</button><button class="btn sm" onclick="savePrat()">➕ Ajouter</button></div></div>';
   html+='<div id="prat-list-wrap" class="hidden">';
   ['Homme','Femme'].forEach(function(g){
     html+='<div class="cat-title">👤 '+g+'</div>';
@@ -9066,22 +9320,29 @@ function editPratByIdx(i){
   var item=_pratList[i]; if(!item) return;
   showPratForm();
   var eg=document.getElementById("np-genre"); if(eg) eg.value=item.g;
-  var ec=document.getElementById("np-cat"); if(ec) ec.value=item.cat;
+  var pd=getPratData();
+  var wrap=document.getElementById('np-cat-wrap'); if(wrap) wrap.innerHTML=catSelectHTML('np-cat', Object.keys(pd[item.g]||{}), item.cat);
   var ei=document.getElementById("np-id"); if(ei) ei.value=item.id;
   var el2=document.getElementById("np-label"); if(el2) el2.value=item.label||"";
   var ed=document.getElementById("np-desc"); if(ed) ed.value=item.desc||"";
   var cb=document.getElementById("np-cancel"); if(cb) cb.style.display="";
 }
+function onPratGenreChange(){
+  var g = document.getElementById('np-genre').value;
+  var pd = getPratData();
+  var wrap = document.getElementById('np-cat-wrap');
+  if(wrap) wrap.innerHTML = catSelectHTML('np-cat', Object.keys(pd[g]||{}), '');
+}
 function showPratForm(){document.getElementById('prat-form-wrap').classList.remove('hidden');document.getElementById('prat-list-wrap').classList.add('hidden');}
 function showPratList(){document.getElementById('prat-form-wrap').classList.add('hidden');document.getElementById('prat-list-wrap').classList.remove('hidden');}
-function cancelPratEdit(){['np-genre','np-cat','np-id','np-label','np-desc'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});document.getElementById('np-cancel').style.display='none';}
+function cancelPratEdit(){['np-id','np-label','np-desc'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var eg=document.getElementById('np-genre');if(eg)eg.value='Homme';onPratGenreChange();document.getElementById('np-cancel').style.display='none';}
 function savePrat(){
-  var g=document.getElementById('np-genre').value,cat=document.getElementById('np-cat').value.trim(),id=document.getElementById('np-id').value.trim().replace(/\s+/g,'_'),label=document.getElementById('np-label').value.trim(),desc=document.getElementById('np-desc').value.trim();
-  if(!cat||!id||!label){alert('Remplis tous les champs.');return;}
+  var g=document.getElementById('np-genre').value,cat=getCatValue('np-cat'),id=document.getElementById('np-id').value.trim().replace(/\s+/g,'_'),label=document.getElementById('np-label').value.trim(),desc=document.getElementById('np-desc').value.trim();
+  if(!cat||!id||!label){alert('Choisis ou crée une catégorie, et remplis ID + nom.');return;}
   if(!customPrat[g])customPrat[g]={};if(!customPrat[g][cat])customPrat[g][cat]=[];
   var ei=customPrat[g][cat].findIndex(function(x){return x.id===id;});
   if(ei>=0)customPrat[g][cat][ei]={id:id,label:label,desc:desc};else customPrat[g][cat].push({id:id,label:label,desc:desc});
-  saveCustom(KEYS.prat,customPrat);cancelPratEdit();alert('Pratique enregistrée !');
+  saveCustom(KEYS.prat,customPrat);cancelPratEdit();adminTab('pratiques',null);alert('Pratique enregistrée !');
 }
 function deletePrat(g,cat,id){
   if(!confirm('Supprimer ?'))return;
@@ -9096,7 +9357,7 @@ function renderAdminAcc(){
   _accList = [];
   var ad=getAccData();
   var html='<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn sm ghost" onclick="showAccForm()" style="flex:1">➕ Ajouter</button><button class="btn sm ghost" onclick="showAccList()" style="flex:1">📋 Liste</button></div>';
-  html+='<div id="acc-form-wrap"><div class="field-row"><div><label class="field-label">Catégorie</label><input type="text" id="na-cat" placeholder="Ex: BDSM"></div><div><label class="field-label">Nom</label><input type="text" id="na-name" placeholder="Ex: Fouet"></div></div><button class="btn sm" onclick="saveAcc()" style="margin-top:8px">➕ Ajouter</button></div>';
+  html+='<div id="acc-form-wrap"><div class="field-row"><div><label class="field-label">Catégorie</label>'+catSelectHTML('na-cat', Object.keys(ad), '')+'</div><div><label class="field-label">Nom</label><input type="text" id="na-name" placeholder="Ex: Fouet"></div></div><button class="btn sm" onclick="saveAcc()" style="margin-top:8px">➕ Ajouter</button></div>';
   html+='<div id="acc-list-wrap" class="hidden">';
   Object.keys(ad).forEach(function(cat){
     html+='<div class="cat-title">'+cat+'</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">';
@@ -9112,12 +9373,13 @@ function deleteAccByIdx(i){ var item=_accList[i]; if(!item) return; deleteAcc(it
 function showAccForm(){document.getElementById('acc-form-wrap').classList.remove('hidden');document.getElementById('acc-list-wrap').classList.add('hidden');}
 function showAccList(){document.getElementById('acc-form-wrap').classList.add('hidden');document.getElementById('acc-list-wrap').classList.remove('hidden');}
 function saveAcc(){
-  var cat=document.getElementById('na-cat').value.trim(),name=document.getElementById('na-name').value.trim();
-  if(!cat||!name){alert('Remplis catégorie et nom.');return;}
+  var cat=getCatValue('na-cat'),name=document.getElementById('na-name').value.trim();
+  if(!cat||!name){alert('Choisis ou crée une catégorie, et donne un nom.');return;}
   if(!customAcc[cat])customAcc[cat]=[];
   var ad=getAccData();if(ad[cat]&&ad[cat].indexOf(name)>=0){alert('Déjà existant.');return;}
   customAcc[cat].push(name);saveCustom(KEYS.acc,customAcc);
-  document.getElementById('na-cat').value='';document.getElementById('na-name').value='';
+  document.getElementById('na-name').value='';
+  adminTab('accessoires',null);
   alert('Accessoire ajouté !');
 }
 function deleteAcc(cat,name){
@@ -9286,12 +9548,15 @@ function renderAdminMemoire(){
         var truncated = preview.length>85;
         var short = truncated ? preview.slice(0,85)+'…' : preview;
         var rDomId = gDomId+'_r'+i;
+        var playedTag = _isTextPlayed(r.texte) ? '<span class="admin-mini-tag tip" title="Ce gage a déjà été joué (timer/dé engagé) lors d\'une ancienne partie sauvegardée." style="color:var(--success)">✓ déjà joué</span> ' : '';
+        var changedTag = (r.changes>0 || r.skips>0) ? '<span class="admin-mini-tag tip" title="Changé '+r.changes+' fois, passé '+r.skips+' fois." style="color:var(--accent)">🔀 changé</span> ' : '';
         html += '<div style="padding:9px 12px;'+(i?'border-top:1px solid var(--border)':'')+'">'
           + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
           + '<span onclick="memToggleText(event,\''+rDomId+'\')" style="font-size:12.5px;flex:1;cursor:pointer">'+(r.disliked?'👎 ':'')+'<span id="'+rDomId+'_short">'+short+(truncated?' <span style="color:var(--gold);font-size:10px">▾</span>':'')+'</span></span>'
-          + '<span style="font-size:10px;color:var(--muted);white-space:nowrap">'+(r.niveau?('Niv.'+r.niveau+' · '):'')+'👍'+r.likes+' ⏭'+r.skips+' 🔀'+r.changes+'</span>'
+          + '<span style="font-size:10px;color:var(--muted);white-space:nowrap">'+(r.niveau?('Niv.'+r.niveau+' · '):'')+'👍'+r.likes+' <span style="color:'+(r.skips>0?'var(--accent)':'var(--muted)')+';font-weight:'+(r.skips>0?'700':'400')+'">⏭'+r.skips+'</span> <span style="color:'+(r.changes>0?'var(--accent)':'var(--muted)')+';font-weight:'+(r.changes>0?'700':'400')+'">🔀'+r.changes+'</span></span>'
           + '</div>'
           + (truncated ? '<div id="'+rDomId+'_full" class="hidden" onclick="memToggleText(event,\''+rDomId+'\')" style="font-size:12px;color:var(--text);margin-top:5px;line-height:1.5;cursor:pointer">'+preview+' <span style="color:var(--gold);font-size:10px">▴ réduire</span></div>' : '')
+          + '<div style="margin-top:5px">'+playedTag+changedTag+'</div>'
           + '<button class="btn info sm" style="margin-top:6px;padding:4px 10px;font-size:11px" onclick="memGoToGage(\''+encodeURIComponent(r.texte)+'\')">✏️ Éditer ce gage</button>'
           + '</div>';
       });
@@ -9573,7 +9838,31 @@ function ngTogglePerso(){
   if(_ngPersoOpen) renderCustomGagePicker(); // repeupler si on ré-ouvre après un rendu vide pendant la fermeture
 }
 var _ngDuration = 45;
-var _ngFilter = {kw:'', lvl:'', src:'all', type:''};
+var _ngFilter = {kw:'', lvl:'', src:'all', type:'', genre:'', prat:'', acc:''};
+function _ngPratOptions(){
+  var pd = getPratData();
+  var seen = {}, opts = [];
+  ['Homme','Femme'].forEach(function(g){
+    Object.keys(pd[g]||{}).forEach(function(cat){
+      (pd[g][cat]||[]).forEach(function(p){
+        if(seen[p.id]) return;
+        seen[p.id]=true;
+        opts.push('<option value="'+p.id+'"'+(_ngFilter.prat===p.id?' selected':'')+'>'+p.label+'</option>');
+      });
+    });
+  });
+  return opts.join('');
+}
+function _ngAccOptions(){
+  var ad = getAccData();
+  var opts = [];
+  Object.keys(ad).forEach(function(cat){
+    (ad[cat]||[]).forEach(function(a){
+      opts.push('<option value="'+a+'"'+(_ngFilter.acc===a?' selected':'')+'>'+a+'</option>');
+    });
+  });
+  return opts.join('');
+}
 function renderNextGamePicker(){
   var box = document.getElementById('ng-content');
   if(!box) return;
@@ -9604,15 +9893,16 @@ function renderNextGamePicker(){
     var count = byLvl[lvl]||0;
     var cap = capFor(lvl);
     var bg = byLvlGenre[lvl]||{Homme:0,Femme:0};
-    var over = lvl<=4 && (count>cap || bg.Homme>cap || bg.Femme>cap);
+    var over = lvl<=4 && (bg.Homme>cap || bg.Femme>cap);
     html += '<div style="flex:1;min-width:74px;text-align:center;background:var(--card2);border:1px solid '+(over?'var(--warn)':'var(--border)')+';border-radius:8px;padding:6px 4px">'
       + '<div style="font-size:10px;color:var(--muted)">Niv.'+lvl+'</div>'
-      + '<div style="font-size:14px;font-weight:700;color:'+(over?'var(--warn)':'var(--text)')+'">'+count+(lvl<=4?'/'+cap:'')+'</div>'
-      + '<div style="font-size:9px;color:var(--muted);margin-top:1px">👨'+bg.Homme+(lvl<=4&&bg.Homme>cap?'⚠️':'')+' · 👩'+bg.Femme+(lvl<=4&&bg.Femme>cap?'⚠️':'')+'</div>'
+      + '<div style="font-size:13px;font-weight:700;color:'+((lvl<=4&&bg.Homme>cap)?'var(--warn)':'var(--text)')+'">👨 '+bg.Homme+(lvl<=4?'/'+cap:'')+'</div>'
+      + '<div style="font-size:13px;font-weight:700;color:'+((lvl<=4&&bg.Femme>cap)?'var(--warn)':'var(--text)')+'">👩 '+bg.Femme+(lvl<=4?'/'+cap:'')+'</div>'
+      + '<div style="font-size:9px;color:var(--muted);margin-top:2px">'+count+' au total</div>'
       + '</div>';
   });
   html += '</div>';
-  var anyOver = [1,2,3,4].some(function(lvl){ var bg=byLvlGenre[lvl]||{Homme:0,Femme:0}; var cap=capFor(lvl); return (byLvl[lvl]||0) > cap || bg.Homme>cap || bg.Femme>cap; });
+  var anyOver = [1,2,3,4].some(function(lvl){ var bg=byLvlGenre[lvl]||{Homme:0,Femme:0}; var cap=capFor(lvl); return bg.Homme>cap || bg.Femme>cap; });
   if(anyOver){
     html += '<div class="val-box" style="background:rgba(224,137,74,.12);border:1px solid var(--warn);border-radius:10px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--warn)">⚠️ Pour cette durée, un ou plusieurs niveaux dépassent le nombre de gages par joueur normalement prévu — parfois pour un seul genre (ex: 5 gages Femme alors qu\'il n\'en faut que 2). Pas de blocage : le jeu garantit ceux qui rentrent dans le quota et garde le reste en réserve pour une prochaine partie (grâce à la mémoire des gages déjà joués).</div>';
   }
@@ -9621,6 +9911,13 @@ function renderNextGamePicker(){
     + [1,2,3,4,5].map(function(n){return '<option value="'+n+'"'+(_ngFilter.lvl===String(n)?' selected':'')+'>Niv.'+n+'</option>';}).join('')
     + '</select></div>';
   html += '<div class="search-box" style="margin-bottom:10px"><select id="ng-src" onchange="ngFilterChange()"><option value="all"'+(_ngFilter.src==='all'?' selected':'')+'>Base + Perso + Kama</option><option value="base"'+(_ngFilter.src==='base'?' selected':'')+'>Base uniquement</option><option value="custom"'+(_ngFilter.src==='custom'?' selected':'')+'>Perso uniquement</option><option value="kama"'+(_ngFilter.src==='kama'?' selected':'')+'>Kâmasûtra uniquement</option></select><select id="ng-type" onchange="ngFilterChange()"><option value="">Tous types</option><option value="action">🎯 Action</option><option value="choix">🔀 Choix</option><option value="question">❓ Question</option><option value="defi">⚡ Défi</option><option value="guide">🎓 Guide</option><option value="massage">💆 Massage</option><option value="kamasutra">🕉 Kama</option></select></div>';
+  html += '<div class="search-box" style="margin-bottom:10px"><select id="ng-genre" onchange="ngFilterChange()"><option value=""'+(_ngFilter.genre===''?' selected':'')+'>Tous genres</option><option value="Mixte"'+(_ngFilter.genre==='Mixte'?' selected':'')+'>⚧ Couple / Mixte</option><option value="Femme"'+(_ngFilter.genre==='Femme'?' selected':'')+'>👩 Femme</option><option value="Homme"'+(_ngFilter.genre==='Homme'?' selected':'')+'>👨 Homme</option></select></div>';
+  html += '<div class="search-box" style="margin-bottom:10px">'
+    + '<select id="ng-prat" onchange="ngFilterChange()"><option value="">Toutes pratiques</option>'
+    + _ngPratOptions() + '</select>'
+    + '<select id="ng-acc" onchange="ngFilterChange()"><option value="">Tous accessoires</option>'
+    + _ngAccOptions() + '</select>'
+    + '</div>';
 
   html += '<div id="ng-list-items"></div>';
   box.innerHTML = html;
@@ -9641,6 +9938,9 @@ function ngFilterChange(){
   _ngFilter.lvl = (document.getElementById('ng-lvl')||{value:''}).value;
   _ngFilter.src = (document.getElementById('ng-src')||{value:'all'}).value;
   _ngFilter.type = (document.getElementById('ng-type')||{value:''}).value;
+  _ngFilter.genre = (document.getElementById('ng-genre')||{value:''}).value;
+  _ngFilter.prat = (document.getElementById('ng-prat')||{value:''}).value;
+  _ngFilter.acc = (document.getElementById('ng-acc')||{value:''}).value;
   ngRenderList();
 }
 function _isTextPlayed(texte){
@@ -9649,6 +9949,10 @@ function _isTextPlayed(texte){
     return Array.isArray(arr) && arr.indexOf(texte)>=0;
   }catch(e){ return false; }
 }
+function _wasChanged(texte){
+  var m = gageMemory[texte];
+  return !!(m && (m.changes>0 || m.skips>0));
+}
 function ngRenderList(){
   var div = document.getElementById('ng-list-items');
   if(!div) return;
@@ -9656,7 +9960,7 @@ function ngRenderList(){
   var ids = nextGamePool[_ngDuration] || [];
   var items = [];
   if(f.src==='all' || f.src==='kama'){
-    if(!f.type || f.type==='kamasutra') getKamaDataSorted().forEach(function(k){
+    if((!f.type || f.type==='kamasutra') && (!f.genre || f.genre==='Mixte') && (!f.prat || f.prat==='kamasutra') && !f.acc) getKamaDataSorted().forEach(function(k){
       var searchTxt = (k.name+' '+k.desc).toLowerCase();
       if(f.kw && searchTxt.indexOf(f.kw)<0) return;
       if(f.lvl && String(k.niveau)!==f.lvl) return;
@@ -9667,6 +9971,9 @@ function ngRenderList(){
     if(f.kw && g.texte.toLowerCase().indexOf(f.kw)<0) return;
     if(f.lvl && String(g.niveau)!==f.lvl) return;
     if(f.type && getGageType(g)!==f.type) return;
+    if(f.genre && (g.genre||'Mixte')!==f.genre) return;
+    if(f.prat && (!g.pratiques || g.pratiques.indexOf(f.prat)<0)) return;
+    if(f.acc && (!g.accessoires || g.accessoires.indexOf(f.acc)<0)) return;
     items.push({g:g, isBase:false, src:'custom', key:_ngKey(g,false,i)});
   });
   if(f.src==='all' || f.src==='base') GAGES_BASE.forEach(function(g,i){
@@ -9674,6 +9981,9 @@ function ngRenderList(){
     if(f.kw && g.texte.toLowerCase().indexOf(f.kw)<0) return;
     if(f.lvl && String(g.niveau)!==f.lvl) return;
     if(f.type && getGageType(g)!==f.type) return;
+    if(f.genre && (g.genre||'Mixte')!==f.genre) return;
+    if(f.prat && (!g.pratiques || g.pratiques.indexOf(f.prat)<0)) return;
+    if(f.acc && (!g.accessoires || g.accessoires.indexOf(f.acc)<0)) return;
     items.push({g:g, isBase:true, src:'base', key:_ngKey(g,true,i)});
   });
   if(!items.length){ div.innerHTML='<p style="text-align:center;color:var(--muted);padding:16px;font-size:12px">Aucun gage trouvé — affine ta recherche.</p>'; return; }
@@ -9691,7 +10001,8 @@ function ngRenderList(){
     var txt2 = truncated ? g.texte.substring(0,75)+'…' : g.texte;
     var badge = SRC_BADGE[it.src]||'';
     var genreBadge = '<span class="admin-mini-tag" title="Genre du gage">'+(GENRE_BADGE[g.genre]||'⚧')+'</span> ';
-    var playedBadge = _isTextPlayed(g.texte) ? '<span class="admin-mini-tag tip" title="Ce gage a déjà été joué lors d\'une ancienne partie sauvegardée." style="color:var(--success)">✓ déjà joué</span> ' : '';
+    var playedBadge = _isTextPlayed(g.texte) ? '<span class="admin-mini-tag tip" title="Ce gage a déjà été joué (timer/dé engagé) lors d\'une ancienne partie sauvegardée." style="color:var(--success)">✓ déjà joué</span> ' : '';
+    var changedBadge = _wasChanged(g.texte) ? '<span class="admin-mini-tag tip" title="Ce gage a déjà été changé (bouton Changer) au moins une fois par le passé." style="color:var(--accent)">🔀 changé</span> ' : '';
     var domId = 'ngtxt_'+idx;
     var lvlTag = '<span style="display:inline-block;background:var(--card);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-right:5px;vertical-align:1px">Niv.'+(g.niveau||1)+'</span>';
     var textBlock = truncated
@@ -9700,7 +10011,7 @@ function ngRenderList(){
       : txt2;
     return '<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
       + '<input type="checkbox" onchange="ngToggle(\''+it.key.replace(/'/g,"\\'")+'\')" '+(checked?'checked':'')+' style="width:18px;height:18px;flex:0 0 auto;margin-top:1px">'
-      + '<span style="font-size:12.5px;line-height:1.4">'+lvlTag+genreBadge+badge+playedBadge+'<br>'+textBlock+'</span>'
+      + '<span style="font-size:12.5px;line-height:1.4">'+lvlTag+genreBadge+badge+playedBadge+changedBadge+'<br>'+textBlock+'</span>'
       + '</label>';
   }).join('');
 }
@@ -11856,6 +12167,11 @@ applyLang();
 <!-- ══ FEEDBACK TAB ══ -->
 <button id="feedback-tab" onclick="openFeedback()" style="display:flex;position:fixed;bottom:16px;right:16px;z-index:400;background:var(--card);border:1.5px solid var(--gold);color:var(--gold);border-radius:24px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
   💬 Avis
+</button>
+
+<!-- ══ SHOP TAB ══ -->
+<button id="shop-tab" onclick="goToBoutique()" style="display:flex;position:fixed;bottom:16px;left:16px;z-index:400;background:var(--card);border:1.5px solid var(--accent);color:var(--accent);border-radius:24px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
+  🛍️ Boutique
 </button>
 
 <!-- FEEDBACK OVERLAY -->
