@@ -6957,8 +6957,20 @@ function prepareGages() {
     var pool=[];
     var maxN=LVL_MAX[lvl];
     var levelUsedTexts={}; // évite qu'un même texte de gage soit tiré pour 2 joueurs différents dans ce niveau
+    // Décision du guide UNE FOIS par niveau (partagée entre les deux joueurs) : respecte la
+    // présélection admin "Prochaine partie" si elle contient des guides, plafonné à 50% de la
+    // capacité du niveau. Le guide est désormais compté DANS le quota du niveau, pas ajouté
+    // en plus — le total par joueur reste toujours exactement celui de la durée choisie.
+    var _guideBudget = LVL_MAX[lvl]||5;
+    var _guideChance = _guideBudget<=2 ? 0.4 : (_guideBudget===3 ? 0.65 : 1);
+    var _maxGuides = Math.max(1, Math.floor(_guideBudget*0.5)); // jamais plus de 50% du niveau
+    var _guidesOnThisLevel = lvl>=1 && lvl<=4 && Math.random() < _guideChance;
+    var _curatedGuides = _guidesOnThisLevel ? (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
+      return r && r.g.niveau===lvl && r.g.texte && r.g.texte.slice(0,2)==='🎓';
+    }).map(function(r){ return r.g; }) : [];
+    var _usedGuideTxt=[];
     G.players.forEach(function(player){
-      // Exclude guide gages from normal pool — they are injected separately below
+      // Exclude guide gages from normal pool — sélectionnés séparément ci-dessous, dans le quota
       var discFilter=DISC_PRATS[lvl];
       function _baseOk(g){
         if(g.niveau!==lvl) return false;
@@ -6974,6 +6986,22 @@ function prepareGages() {
         }
         return true;
       }
+      // Détermine combien de guides ce joueur aura CE niveau (0 à _maxGuides), pour réserver
+      // leur place dans le quota avant de construire le pool de gages "normaux".
+      var _guidePicks = [];
+      if(_guidesOnThisLevel){
+        var guideSource = _curatedGuides.length ? _curatedGuides : allGages().filter(function(g){ return g.texte&&g.texte.slice(0,2)==='🎓'; });
+        var guidesAvail=shuffle(guideSource.filter(function(g){
+          return g.niveau===lvl&&gageOk(g,player,lvl)&&_usedGuideTxt.indexOf(g.texte)<0;
+        }));
+        if(!guidesAvail.length) guidesAvail=shuffle(guideSource.filter(function(g){
+          return g.niveau===lvl&&gageOk(g,player,lvl);
+        }));
+        var nGuides = Math.min(_curatedGuides.length ? _maxGuides : 1, guidesAvail.length, maxN);
+        _guidePicks = guidesAvail.slice(0, nGuides);
+        _guidePicks.forEach(function(g){ _usedGuideTxt.push(g.texte); });
+      }
+      var regularMaxN = maxN - _guidePicks.length;
       // Pool "prochaine partie" préparé en admin pour cette durée : les gages curatés valides
       // pour ce joueur sont garantis, et le reste du quota du niveau est complété depuis le
       // pool général si la présélection ne suffit pas — le nombre total reste toujours celui
@@ -6982,17 +7010,18 @@ function prepareGages() {
       var curatedValid = ngCurated.length ? ngCurated.filter(_baseOk) : [];
       var cands = all.filter(_baseOk); // ensemble complet des gages éligibles pour ce joueur (sert aussi au pool de secours "Changer")
       var norm;
-      if(curatedValid.length >= maxN){
-        norm = buildVariedPool(curatedValid, maxN, player);
+      if(curatedValid.length >= regularMaxN){
+        norm = buildVariedPool(curatedValid, regularMaxN, player);
       } else if(curatedValid.length > 0){
         var curatedTexts = curatedValid.map(function(g){ return g.texte; });
-        var remaining = maxN - curatedValid.length;
+        var remaining = regularMaxN - curatedValid.length;
         var generalPad = cands.filter(function(g){ return curatedTexts.indexOf(g.texte)<0; });
         norm = curatedValid.concat(buildVariedPool(generalPad, remaining, player));
       } else {
-        norm = buildVariedPool(cands, maxN, player);
+        norm = buildVariedPool(cands, regularMaxN, player);
       }
       norm.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
+      _guidePicks.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
       // Max 1 kâmasûtra per party at niv4 (any mode)
       var kamaInPool = pool.filter(function(g){return g._kama;}).length;
       if(lvl===4 && player.pratiques.indexOf('kamasutra')>=0 && kamaInPool<1) {
@@ -7052,38 +7081,6 @@ function prepareGages() {
       // Also exclude guides from change pool
       G.changePool[lvl][player.prenom]=(function(arr){var f=arr.filter(function(g){return !G.playedTexts.has(g.texte);});var s=arr.filter(function(g){return G.playedTexts.has(g.texte);});return shuffle(f).concat(shuffle(s));})(cands.filter(function(g){return !normT.has(g.texte)&&!(g.texte&&g.texte.slice(0,2)==='🎓');}));
     });
-    // Inject guide gage(s) per player par niveau (1-4) — respecte la présélection admin
-    // "Prochaine partie" si elle contient des guides, mais JAMAIS plus de 50% de la capacité
-    // du niveau par joueur (évite la prépondérance même si l'admin en a présélectionné plus).
-    // Si peu de gages sont prévus ce niveau (ex: partie Rapide), le guide n'est pas systématique,
-    // pour ne pas nuire à la variété. Standard/Longue inchangés.
-    if(lvl>=1&&lvl<=4){
-      var _guideBudget = LVL_MAX[lvl]||5;
-      var _guideChance = _guideBudget<=2 ? 0.4 : (_guideBudget===3 ? 0.65 : 1);
-      var _maxGuides = Math.max(1, Math.floor(_guideBudget*0.5)); // jamais plus de 50% du niveau
-      if(Math.random() < _guideChance){
-      var usedGuideTxt=[];
-      var curatedGuides = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
-        return r && r.g.niveau===lvl && r.g.texte && r.g.texte.slice(0,2)==='🎓';
-      }).map(function(r){ return r.g; });
-      G.players.forEach(function(player){
-        var guideSource = curatedGuides.length ? curatedGuides : allGages().filter(function(g){ return g.texte&&g.texte.slice(0,2)==='🎓'; });
-        var guides=shuffle(guideSource.filter(function(g){
-          return g.niveau===lvl&&gageOk(g,player,lvl)&&usedGuideTxt.indexOf(g.texte)<0;
-        }));
-        // Fallback: allow reuse if not enough distinct guides
-        if(!guides.length) guides=shuffle(guideSource.filter(function(g){
-          return g.niveau===lvl&&gageOk(g,player,lvl);
-        }));
-        var nToAdd = Math.min(curatedGuides.length ? _maxGuides : 1, guides.length);
-        for(var gi=0; gi<nToAdd; gi++){
-          var pick=guides[gi];
-          usedGuideTxt.push(pick.texte);
-          pool.push(Object.assign({},pick,{_p:player.prenom,_ch:false,_kama:false}));
-        }
-      });
-      }
-    }
     // Inject orientation-specific shared gages (trio/quartet/gay/lesbian)
     var config=getCoupleConfig();
     if(config!=='hetero'&&config!=='solo'){
