@@ -6974,12 +6974,24 @@ function prepareGages() {
         }
         return true;
       }
-      // Pool "prochaine partie" préparé en admin pour cette durée : prioritaire si l'admin
-      // a effectivement choisi des gages pour ce niveau, sinon repli sur le pool normal.
+      // Pool "prochaine partie" préparé en admin pour cette durée : les gages curatés valides
+      // pour ce joueur sont garantis, et le reste du quota du niveau est complété depuis le
+      // pool général si la présélection ne suffit pas — le nombre total reste toujours celui
+      // demandé par la durée choisie, même si l'admin a plus/moins de gages pour un sexe que l'autre.
       var ngCurated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){ return r && r.g.niveau===lvl; }).map(function(r){ return r.g; });
-      var cands = ngCurated.length ? ngCurated.filter(_baseOk) : [];
-      if(!cands.length) cands = all.filter(_baseOk);
-      var norm=buildVariedPool(cands,maxN,player);
+      var curatedValid = ngCurated.length ? ngCurated.filter(_baseOk) : [];
+      var cands = all.filter(_baseOk); // ensemble complet des gages éligibles pour ce joueur (sert aussi au pool de secours "Changer")
+      var norm;
+      if(curatedValid.length >= maxN){
+        norm = buildVariedPool(curatedValid, maxN, player);
+      } else if(curatedValid.length > 0){
+        var curatedTexts = curatedValid.map(function(g){ return g.texte; });
+        var remaining = maxN - curatedValid.length;
+        var generalPad = cands.filter(function(g){ return curatedTexts.indexOf(g.texte)<0; });
+        norm = curatedValid.concat(buildVariedPool(generalPad, remaining, player));
+      } else {
+        norm = buildVariedPool(cands, maxN, player);
+      }
       norm.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
       // Max 1 kâmasûtra per party at niv4 (any mode)
       var kamaInPool = pool.filter(function(g){return g._kama;}).length;
@@ -7420,7 +7432,8 @@ function setVoicePref(id){
     speechSynthesis.cancel();
     var st=_currentVoiceStyle();
     var utt=new SpeechSynthesisUtterance('Voici comment je vais te lire les gages, ce soir.');
-    utt.lang='fr-FR'; if(_voiceFR) utt.voice=_voiceFR;
+    var freshVoice1 = _pickFrenchVoice();
+    utt.lang='fr-FR'; if(freshVoice1) utt.voice=freshVoice1;
     utt.rate=st.rate; utt.pitch=st.pitch;
     speechSynthesis.speak(utt);
   }
@@ -7447,7 +7460,8 @@ function setVoiceStyle(id){
   if(voiceNarrationOn && 'speechSynthesis' in window){
     speechSynthesis.cancel();
     var utt=new SpeechSynthesisUtterance('Voilà le ton que j\'utiliserai pour te lire les gages.');
-    utt.lang='fr-FR'; if(_voiceFR) utt.voice=_voiceFR;
+    var freshVoice2 = _pickFrenchVoice();
+    utt.lang='fr-FR'; if(freshVoice2) utt.voice=freshVoice2;
     utt.rate=st.rate; utt.pitch=st.pitch;
     speechSynthesis.speak(utt);
   }
@@ -7461,6 +7475,7 @@ function renderVoiceSettings(containerId){
   }
   var fr = _frVoices();
   var html = '';
+  html += '<button type="button" class="btn ghost sm" style="width:100%;margin-bottom:10px" onclick="renderVoiceSettings(\''+(containerId||'voice-settings-list')+'\')">🔄 Rafraîchir la liste des voix</button>';
   html += '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Style de voix</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">';
   html += VOICE_STYLES.map(function(s){
@@ -7533,7 +7548,8 @@ function speakGageText(gage, player, partner){
   if(!raw.trim()) return;
   var utt = new SpeechSynthesisUtterance(raw);
   utt.lang = 'fr-FR';
-  if(_voiceFR) utt.voice = _voiceFR;
+  var freshVoice = _pickFrenchVoice(); // re-résolu à chaque lecture, jamais depuis le cache
+  if(freshVoice) utt.voice = freshVoice;
   var _st = _currentVoiceStyle();
   utt.rate = _st.rate;
   utt.pitch = _st.pitch;
