@@ -6446,6 +6446,9 @@ function buildVariedPool(candidates, maxN, player) {
         if(G._recentGages&&G._recentGages.indexOf(g.texte)>=0) sc-=3;
         // Already-played malus — strong push to avoid repeats
         if(G.playedTexts.has(g.texte)) sc-=4;
+        // Bonus pour un gage noté 👍 en fin de partie précédente — influence le tirage
+        // sans jamais dépasser le quota du niveau (contrairement à un ajout à part).
+        if(gagePrefs[g.texte]===1) sc+=1.2;
         if(sc>bestScore){bestScore=sc;best=i;}
       });
       return best;
@@ -6508,6 +6511,19 @@ function pickFinale(player, usedKamaArr, all5, excludeTexts) {
   var spermePrats = ['sperme_gout_1','sperme_gout_2','finish_corps'];
   var femmeFinish = player.genre==='Femme' &&
     player.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; });
+
+  // PRIORITÉ : gages "Prochaine partie" présélectionnés en admin pour le niveau 5, valides
+  // pour ce joueur — essayés en premier, avant kâmasûtra/pénétration/repli classique. La
+  // règle "finish toujours en dernier" pour la femme reste prioritaire et n'est pas concernée.
+  if(!femmeFinish){
+    var curated5 = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
+      return r && r.g.niveau===5 && !r.g._kama;
+    }).map(function(r){ return r.g; });
+    var curatedValid5 = shuffle(curated5.filter(function(g){
+      return !g.solo && excludeTexts.indexOf(g.texte)<0 && gageOk(g,player,5);
+    }));
+    if(curatedValid5.length) return {type:'gage', data:curatedValid5[0]};
+  }
 
   var hasPen = !femmeFinish &&
     (player.pratiques.indexOf('penetration_h')>=0||player.pratiques.indexOf('penetration_f')>=0);
@@ -6957,10 +6973,9 @@ function prepareGages() {
     var pool=[];
     var maxN=LVL_MAX[lvl];
     var levelUsedTexts={}; // évite qu'un même texte de gage soit tiré pour 2 joueurs différents dans ce niveau
-    // Décision du guide UNE FOIS par niveau (partagée entre les deux joueurs) : respecte la
-    // présélection admin "Prochaine partie" si elle contient des guides, plafonné à 50% de la
-    // capacité du niveau. Le guide est désormais compté DANS le quota du niveau, pas ajouté
-    // en plus — le total par joueur reste toujours exactement celui de la durée choisie.
+    // Décision "un guide peut-il apparaître ce niveau" — coin flip partagé entre les deux
+    // joueurs, mais il ne prendra une place QUE s'il en reste après les gages présélectionnés
+    // en admin (voir plus bas) : la présélection admin est toujours prioritaire.
     var _guideBudget = LVL_MAX[lvl]||5;
     var _guideChance = _guideBudget<=2 ? 0.4 : (_guideBudget===3 ? 0.65 : 1);
     var _maxGuides = Math.max(1, Math.floor(_guideBudget*0.5)); // jamais plus de 50% du niveau
@@ -6986,58 +7001,28 @@ function prepareGages() {
         }
         return true;
       }
-      // Détermine combien de guides ce joueur aura CE niveau (0 à _maxGuides), pour réserver
-      // leur place dans le quota avant de construire le pool de gages "normaux".
-      var _guidePicks = [];
-      if(_guidesOnThisLevel){
-        var guideSource = _curatedGuides.length ? _curatedGuides : allGages().filter(function(g){ return g.texte&&g.texte.slice(0,2)==='🎓'; });
-        var guidesAvail=shuffle(guideSource.filter(function(g){
-          return g.niveau===lvl&&gageOk(g,player,lvl)&&_usedGuideTxt.indexOf(g.texte)<0;
-        }));
-        if(!guidesAvail.length) guidesAvail=shuffle(guideSource.filter(function(g){
-          return g.niveau===lvl&&gageOk(g,player,lvl);
-        }));
-        var nGuides = Math.min(_curatedGuides.length ? _maxGuides : 1, guidesAvail.length, maxN);
-        _guidePicks = guidesAvail.slice(0, nGuides);
-        _guidePicks.forEach(function(g){ _usedGuideTxt.push(g.texte); });
-      }
-      var regularMaxN = maxN - _guidePicks.length;
-      // Pool "prochaine partie" préparé en admin pour cette durée : les gages curatés valides
-      // pour ce joueur sont garantis, et le reste du quota du niveau est complété depuis le
-      // pool général si la présélection ne suffit pas — le nombre total reste toujours celui
-      // demandé par la durée choisie, même si l'admin a plus/moins de gages pour un sexe que l'autre.
-      var ngCurated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){ return r && r.g.niveau===lvl; }).map(function(r){ return r.g; });
-      var curatedValid = ngCurated.length ? ngCurated.filter(_baseOk) : [];
       var cands = all.filter(_baseOk); // ensemble complet des gages éligibles pour ce joueur (sert aussi au pool de secours "Changer")
-      var norm;
-      if(curatedValid.length >= regularMaxN){
-        norm = buildVariedPool(curatedValid, regularMaxN, player);
-      } else if(curatedValid.length > 0){
-        var curatedTexts = curatedValid.map(function(g){ return g.texte; });
-        var remaining = regularMaxN - curatedValid.length;
-        var generalPad = cands.filter(function(g){ return curatedTexts.indexOf(g.texte)<0; });
-        norm = curatedValid.concat(buildVariedPool(generalPad, remaining, player));
-      } else {
-        norm = buildVariedPool(cands, regularMaxN, player);
-      }
-      norm.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
-      _guidePicks.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
-      // Max 1 kâmasûtra per party at niv4 (any mode)
+      var reserved=[]; // gages "spéciaux" (kâmasûtra / surprise pimentée / guide) — réservés DANS le quota, jamais en plus
+
+      // RÉSERVATION 1 (prioritaire) : Kâmasûtra niveau 4, si la pratique est cochée et qu'aucun
+      // Kâmasûtra n'est encore dans le pool ce niveau — 1 seul, toujours compté dans le quota.
       var kamaInPool = pool.filter(function(g){return g._kama;}).length;
-      if(lvl===4 && player.pratiques.indexOf('kamasutra')>=0 && kamaInPool<1) {
+      if(lvl===4 && player.pratiques.indexOf('kamasutra')>=0 && kamaInPool<1 && reserved.length<maxN) {
         var usedN=pool.filter(function(g){return g._kama;}).map(function(g){return g.name;});
         var kp=shuffle(_kamaPool().filter(function(k){return k.niveau===4&&usedN.indexOf(k.name)<0;})).slice(0,1);
-        kp.forEach(function(k){ pool.push(Object.assign({},k,{texte:'Kâmasûtra',niveau:4,genre:'Mixte',pratiques:['kamasutra'],accessoires:[],modes:[],solo:false,_p:player.prenom,_ch:false,_kama:true,_kamaLast:true})); });
+        kp.forEach(function(k){ var kg=Object.assign({},k,{texte:'Kâmasûtra',niveau:4,genre:'Mixte',pratiques:['kamasutra'],accessoires:[],modes:[],solo:false,_kama:true,_kamaLast:true}); levelUsedTexts[kg.texte]=true; reserved.push(kg); });
       }
-      if(G.mode==='pimente') {
-        // ── SURPRISE PIMENTÉE : 1 par joueur, alternance par niveau ──
+
+      // RÉSERVATION 2 : surprise Pimentée (1 par joueur, en alternance par niveau), toujours
+      // comptée dans le quota du niveau, jamais en plus.
+      if(G.mode==='pimente' && reserved.length<maxN) {
         var playerIdx = G.players.indexOf(player);
         var shouldGet = (playerIdx >= 0) ? ((lvl-1) % G.players.length === playerIdx) : false;
         if(shouldGet) {
-          var normTexts = norm.map(function(g){ return g.texte; });
+          var reservedTexts = reserved.map(function(g){ return g.texte; });
           var _cpFilter = function(g){
             if(g.solo || g._kama) return false;
-            if(g.niveau !== lvl || normTexts.indexOf(g.texte) >= 0 || levelUsedTexts[g.texte]) return false;
+            if(g.niveau !== lvl || reservedTexts.indexOf(g.texte) >= 0 || levelUsedTexts[g.texte]) return false;
             if(g.genre !== 'Mixte' && g.genre !== player.genre) return false;
             if(g.accessoires && g.accessoires.length > 0) {
               if(!g.accessoires.every(function(a){ return G.acc.indexOf(a) >= 0; })) return false;
@@ -7073,13 +7058,54 @@ function prepareGages() {
             return !g.pratiques||!g.pratiques.some(function(p){ return _allFavs.indexOf(p)>=0; });
           }));
           var cp = _cpFav.concat(_cpOther).slice(0, 1);
-          cp.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({}, g, {_p:player.prenom, _ch:false, _kama:false})); });
+          cp.forEach(function(g){ levelUsedTexts[g.texte]=true; reserved.push(g); });
         }
       }
-      var normT=new Set(norm.map(function(g){return g.texte;}));
+
+      // PRIORITÉ (après kâmasûtra/surprise) : les gages "Prochaine partie" présélectionnés en
+      // admin, valides pour ce joueur — garantis à 100% jusqu'à la capacité restante, AVANT le guide.
+      var afterSpecial = maxN - reserved.length;
+      var ngCurated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){ return r && r.g.niveau===lvl; }).map(function(r){ return r.g; });
+      var curatedValid = ngCurated.length ? ngCurated.filter(_baseOk) : [];
+      var curatedPicks = [];
+      if(curatedValid.length > 0 && afterSpecial > 0){
+        curatedPicks = buildVariedPool(curatedValid, Math.min(curatedValid.length, afterSpecial), player);
+        curatedPicks.forEach(function(g){ levelUsedTexts[g.texte]=true; reserved.push(g); });
+      }
+
+      // Le guide ne prend que ce qu'il reste de place après kâmasûtra/surprise/présélection admin.
+      var afterCurated = maxN - reserved.length;
+      var _guidePicks = [];
+      if(_guidesOnThisLevel && afterCurated > 0){
+        var guideSource = _curatedGuides.length ? _curatedGuides : allGages().filter(function(g){ return g.texte&&g.texte.slice(0,2)==='🎓'; });
+        var guidesAvail=shuffle(guideSource.filter(function(g){
+          return g.niveau===lvl&&gageOk(g,player,lvl)&&_usedGuideTxt.indexOf(g.texte)<0;
+        }));
+        if(!guidesAvail.length) guidesAvail=shuffle(guideSource.filter(function(g){
+          return g.niveau===lvl&&gageOk(g,player,lvl);
+        }));
+        var nGuides = Math.min(_curatedGuides.length ? _maxGuides : 1, guidesAvail.length, afterCurated);
+        _guidePicks = guidesAvail.slice(0, nGuides);
+        _guidePicks.forEach(function(g){ _usedGuideTxt.push(g.texte); levelUsedTexts[g.texte]=true; reserved.push(g); });
+      }
+
+      reserved.forEach(function(g){ pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:!!g._kama})); });
+
+      // Le pool général (favoris pris en compte par buildVariedPool) comble ce qu'il reste,
+      // pour que le total corresponde toujours exactement à la durée choisie.
+      var regularMaxN = maxN - reserved.length;
+      var norm = [];
+      if(regularMaxN > 0){
+        var curatedTexts = curatedPicks.map(function(g){ return g.texte; });
+        var generalPad = cands.filter(function(g){ return curatedTexts.indexOf(g.texte)<0; });
+        norm = buildVariedPool(generalPad, regularMaxN, player);
+      }
+      norm.forEach(function(g){ levelUsedTexts[g.texte]=true; pool.push(Object.assign({},g,{_p:player.prenom,_ch:false,_kama:false})); });
+
+      var allPlayerTexts=new Set(reserved.concat(norm).map(function(g){return g.texte;}));
       if(!G.changePool[lvl]) G.changePool[lvl]={};
       // Also exclude guides from change pool
-      G.changePool[lvl][player.prenom]=(function(arr){var f=arr.filter(function(g){return !G.playedTexts.has(g.texte);});var s=arr.filter(function(g){return G.playedTexts.has(g.texte);});return shuffle(f).concat(shuffle(s));})(cands.filter(function(g){return !normT.has(g.texte)&&!(g.texte&&g.texte.slice(0,2)==='🎓');}));
+      G.changePool[lvl][player.prenom]=(function(arr){var f=arr.filter(function(g){return !G.playedTexts.has(g.texte);});var s=arr.filter(function(g){return G.playedTexts.has(g.texte);});return shuffle(f).concat(shuffle(s));})(cands.filter(function(g){return !allPlayerTexts.has(g.texte)&&!(g.texte&&g.texte.slice(0,2)==='🎓');}));
     });
     // Inject orientation-specific shared gages (trio/quartet/gay/lesbian)
     var config=getCoupleConfig();
@@ -7196,30 +7222,6 @@ function prepareGages() {
     [1,2,3,4,5].forEach(function(lvl){
       if(G.gagesByLevel[lvl] && G.gagesByLevel[lvl].length>1) G.gagesByLevel[lvl]=interleave(G.gagesByLevel[lvl]);
     });
-  }
-
-  // ── BOOST DES GAGES "AIMÉS" (👍 donnés en fin de partie précédente) ──
-  // Ne s'applique jamais en mode Découverte/Brise-glace (pratiques pas encore choisies par le couple)
-  // et jamais aux gages 100% perso (déjà garantis via le mécanisme ci-dessus).
-  if(G.mode !== 'brise_glace' && G.mode !== 'decouverte'){
-    var likedTexts = Object.keys(gagePrefs).filter(function(t){ return gagePrefs[t]===1; });
-    if(likedTexts.length){
-      var likedSet = {}; likedTexts.forEach(function(t){ likedSet[t]=1; });
-      var likedPool = GAGES_BASE.concat(customGages).filter(function(g){
-        return likedSet[g.texte] && !g._perso100 && customGageCompatible(g);
-      });
-      [1,2,3,4,5].forEach(function(lv){
-        if(!G.gagesByLevel[lv]) return;
-        var arr = G.gagesByLevel[lv];
-        var already = {}; arr.forEach(function(g){ already[g.texte]=1; });
-        var cands = likedPool.filter(function(g){ return (g.niveau||1)===lv && !already[g.texte]; });
-        if(!cands.length) return;
-        var pick = cands[Math.floor(Math.random()*cands.length)];
-        var ap2 = G.players[Math.floor(Math.random()*G.players.length)] || G.players[0];
-        var pos2 = Math.floor(Math.random() * (arr.length + 1));
-        arr.splice(pos2, 0, Object.assign({}, pick, { _p: ap2 ? ap2.prenom : '', _ch:false, _kama:false, _liked:true }));
-      });
-    }
   }
 }
 
@@ -7375,21 +7377,6 @@ var _autoOnNarrationEnd = function(){}; // appelé par speakGageText quand la na
 loadDurConfig(); // charge la calibration sauvegardée (durées + mode auto), maintenant que tout est déclaré
 var _voiceFR = null;
 var VOICE_PREF_KEY = 'voice_id_v28';
-var VOICE_STYLE_KEY = 'voice_style_v28';
-var VOICE_STYLES = [
-  {id:'sensuelle', genre:'f', label:'💋 Sensuelle', desc:'Douce, lente, enveloppante', rate:0.78, pitch:0.90},
-  {id:'hot_f',      genre:'f', label:'🔥 Hot', desc:'Grave, très lente, suggestive', rate:0.72, pitch:0.84},
-  {id:'stricte',    genre:'f', label:'😈 Stricte / Dominatrice', desc:'Ferme, posée, autoritaire', rate:1.02, pitch:0.86},
-  {id:'douce',      genre:'f', label:'🌸 Douce / Tendre', desc:'Chaleureuse et rassurante', rate:0.92, pitch:1.05},
-  {id:'sensuel_h',  genre:'m', label:'💋 Sensuel', desc:'Grave et posé', rate:0.78, pitch:0.92},
-  {id:'hot_h',      genre:'m', label:'🔥 Hot', desc:'Très grave, lent, intense', rate:0.72, pitch:0.86},
-  {id:'strict_h',   genre:'m', label:'😈 Strict / Autoritaire', desc:'Ferme et direct', rate:1.04, pitch:0.90},
-  {id:'chaleureux_h',genre:'m', label:'☀️ Chaleureux', desc:'Convivial et rassurant', rate:0.94, pitch:1.02}
-];
-var voiceStyleId = (function(){ try{ return localStorage.getItem(VOICE_STYLE_KEY)||'sensuelle'; }catch(e){ return 'sensuelle'; } })();
-function _currentVoiceStyle(){
-  return VOICE_STYLES.find(function(s){return s.id===voiceStyleId;}) || VOICE_STYLES[0];
-}
 var _FEMALE_VOICE_NAMES = ['amelie','amélie','audrey','aurelie','aurélie','celine','céline','chantal','charline','marie','virginie','lea','léa','julie','hortense','denise','eloise','éloise','elise','élise','sandrine','manon','claire','camille','emma','lucie','justine','severine','séverine','nathalie','zosia','flo','ines','inès'];
 var _MALE_VOICE_NAMES = ['thomas','paul','henri','nicolas','antoine','daniel','pierre','jean','louis','maxime','guillaume','yannick','bruno','remi','rémi'];
 function _voiceGender(v){
@@ -7427,39 +7414,10 @@ function setVoicePref(id){
   renderVoiceSettings('dur-voice-settings-list');
   if('speechSynthesis' in window){
     speechSynthesis.cancel();
-    var st=_currentVoiceStyle();
     var utt=new SpeechSynthesisUtterance('Voici comment je vais te lire les gages, ce soir.');
     var freshVoice1 = _pickFrenchVoice();
     utt.lang='fr-FR'; if(freshVoice1) utt.voice=freshVoice1;
-    utt.rate=st.rate; utt.pitch=st.pitch;
-    speechSynthesis.speak(utt);
-  }
-}
-function setVoiceStyle(id){
-  voiceStyleId = id;
-  try{ localStorage.setItem(VOICE_STYLE_KEY, id); }catch(e){}
-  // Un style Homme/Femme doit aussi basculer vers une voix système du bon genre si
-  // l'appareil en propose une — sinon changer de style ne changeait que le rythme,
-  // pas le timbre, ce qui donnait l'impression qu'on ne pouvait jamais changer de genre.
-  var st = _currentVoiceStyle();
-  var fr = _frVoices();
-  var wantGender = st.genre; // 'f' ou 'm'
-  var curGender = _voiceFR ? _voiceGender(_voiceFR) : null;
-  if(fr.length && curGender!==wantGender){
-    var match = fr.find(function(v){ return _voiceGender(v)===wantGender; });
-    if(match){
-      _voiceFR = match;
-      _saveVoicePref(match.name+'|'+match.lang);
-    }
-  }
-  renderVoiceSettings();
-  renderVoiceSettings('dur-voice-settings-list');
-  if(voiceNarrationOn && 'speechSynthesis' in window){
-    speechSynthesis.cancel();
-    var utt=new SpeechSynthesisUtterance('Voilà le ton que j\'utiliserai pour te lire les gages.');
-    var freshVoice2 = _pickFrenchVoice();
-    utt.lang='fr-FR'; if(freshVoice2) utt.voice=freshVoice2;
-    utt.rate=st.rate; utt.pitch=st.pitch;
+    utt.rate=0.80; utt.pitch=0.90;
     speechSynthesis.speak(utt);
   }
 }
@@ -7472,14 +7430,7 @@ function renderVoiceSettings(containerId){
   }
   var fr = _frVoices();
   var html = '';
-  html += '<button type="button" class="btn ghost sm" style="width:100%;margin-bottom:10px" onclick="renderVoiceSettings(\''+(containerId||'voice-settings-list')+'\')">🔄 Rafraîchir la liste des voix</button>';
-  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Style de voix</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">';
-  html += VOICE_STYLES.map(function(s){
-    var sel = s.id===voiceStyleId;
-    return '<button type="button" class="btn '+(sel?'':'ghost')+' sm tip" title="'+s.desc+'" style="text-align:left;font-size:12px" onclick="setVoiceStyle(\''+s.id+'\')">'+s.label+(sel?' ✓':'')+'</button>';
-  }).join('');
-  html += '</div>';
+  html += '<p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.4">Si tu viens d\'installer une nouvelle voix dans les réglages de ton téléphone, ferme complètement l\'app (pas juste la mettre en arrière-plan) puis rouvre-la — c\'est la seule façon fiable de la faire apparaître ici.</p>';
   if(!fr.length){
     html += '<p style="font-size:12px;color:var(--muted)">Chargement des voix disponibles…</p>';
     box.innerHTML = html;
@@ -7490,7 +7441,7 @@ function renderVoiceSettings(containerId){
   var hasF = fr.some(function(v){return _voiceGender(v)==='f';});
   var hasM = fr.some(function(v){return _voiceGender(v)==='m';});
   if(!(hasF && hasM)){
-    html += '<p style="font-size:11px;color:var(--warn);margin-bottom:8px;line-height:1.4">⚠️ Ton appareil ne propose qu\'une seule voix française installée ('+fr.length+' au total) — impossible de basculer réellement entre une voix homme et femme ici, seuls le rythme et le ton du style changent. Pour avoir le choix, installe une voix française supplémentaire dans les réglages vocaux de ton téléphone.</p>';
+    html += '<p style="font-size:11px;color:var(--warn);margin-bottom:8px;line-height:1.4">⚠️ Ton appareil ne propose qu\'une seule voix française installée ('+fr.length+' au total) — impossible de basculer entre une voix homme et femme. Pour avoir le choix, installe une voix française supplémentaire dans les réglages vocaux de ton téléphone.</p>';
   }
   html += '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Voix de l\'appareil</div>';
   html += fr.map(function(v){
@@ -7547,9 +7498,8 @@ function speakGageText(gage, player, partner){
   utt.lang = 'fr-FR';
   var freshVoice = _pickFrenchVoice(); // re-résolu à chaque lecture, jamais depuis le cache
   if(freshVoice) utt.voice = freshVoice;
-  var _st = _currentVoiceStyle();
-  utt.rate = _st.rate;
-  utt.pitch = _st.pitch;
+  utt.rate = 0.80;
+  utt.pitch = 0.90;
   if(AUTO_PLAY_ON){
     utt.onend = function(){ _autoOnNarrationEnd(); };
   }
