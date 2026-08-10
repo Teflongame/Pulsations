@@ -9979,6 +9979,11 @@ function ngRenderList(){
     items.push({g:g, isBase:true, src:'base', key:_ngKey(g,true,i)});
   });
   if(!items.length){ div.innerHTML='<p style="text-align:center;color:var(--muted);padding:16px;font-size:12px">Aucun gage trouvé — affine ta recherche.</p>'; return; }
+  // Les gages déjà sélectionnés remontent toujours en haut de liste, pour être visibles
+  // immédiatement et ne jamais être coupés par la limite d'affichage ci-dessous.
+  var selectedItems = items.filter(function(it){ return ids.indexOf(it.key)>=0; });
+  var otherItems = items.filter(function(it){ return ids.indexOf(it.key)<0; });
+  items = selectedItems.concat(otherItems);
   if(items.length>150) items = items.slice(0,150); // évite un rendu trop lourd, affiner la recherche pour aller plus loin
   var SRC_BADGE = {
     base:'<span class="admin-mini-tag" style="color:var(--info)">base</span> ',
@@ -9986,6 +9991,7 @@ function ngRenderList(){
     kama:'<span class="admin-mini-tag" style="color:var(--gold)">🕉 kama</span> '
   };
   var GENRE_BADGE = {Homme:'👨', Femme:'👩', Mixte:'⚧'};
+  var nSelectedShown = items.filter(function(it){ return ids.indexOf(it.key)>=0; }).length;
   div.innerHTML = items.map(function(it,idx){
     var g=it.g;
     var checked = ids.indexOf(it.key)>=0;
@@ -10001,7 +10007,10 @@ function ngRenderList(){
       ? '<span id="'+domId+'_short" onclick="ngToggleText(event,\''+domId+'\')" style="cursor:pointer">'+txt2+' <span style="color:var(--gold);font-size:10px">▾ voir tout</span></span>'
         + '<span id="'+domId+'_full" class="hidden" onclick="ngToggleText(event,\''+domId+'\')" style="cursor:pointer;display:block;margin-top:4px">'+g.texte+' <span style="color:var(--gold);font-size:10px">▴ réduire</span></span>'
       : txt2;
-    return '<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
+    var sep = (idx===nSelectedShown && nSelectedShown>0)
+      ? '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px;padding-top:8px;border-top:1px solid var(--border)">Autres gages</div>'
+      : (idx===0 && nSelectedShown>0 ? '<div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px">✓ Déjà sélectionnés ('+nSelectedShown+')</div>' : '');
+    return sep + '<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
       + '<input type="checkbox" onchange="ngToggle(\''+it.key.replace(/'/g,"\\'")+'\')" '+(checked?'checked':'')+' style="width:18px;height:18px;flex:0 0 auto;margin-top:1px">'
       + '<span style="font-size:12.5px;line-height:1.4">'+lvlTag+genreBadge+badge+playedBadge+changedBadge+'<br>'+textBlock+'</span>'
       + '</label>';
