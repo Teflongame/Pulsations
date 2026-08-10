@@ -6579,6 +6579,15 @@ function pushFinale(player, picked, pool5) {
 function pickNonPenKamaGage(player, all5){
   if(!player) return null;
   var excluded = ['penetration_h','penetration_f','kamasutra'];
+  // Présélection admin "Prochaine partie" niveau 5, en priorité si elle contient un gage valide.
+  var curated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
+    return r && r.g.niveau===5 && !r.g._kama;
+  }).map(function(r){ return r.g; });
+  var curatedValid = shuffle(curated.filter(function(g){
+    return !g.solo && gageOk(g, player, 5) &&
+      !(g.pratiques && g.pratiques.some(function(p){ return excluded.indexOf(p)>=0; }));
+  }));
+  if(curatedValid.length) return curatedValid[0];
   var base = all5.filter(function(g){
     return !g.solo && !g._kama && gageOk(g, player, 5) &&
       !(g.pratiques && g.pratiques.some(function(p){ return excluded.indexOf(p)>=0; }));
@@ -6600,6 +6609,17 @@ function pickNonPenKamaGage(player, all5){
 function pickFinishGage(femmePlayer, all5){
   if(!femmePlayer) return null;
   var spermePrats = ['sperme_gout_1','sperme_gout_2','finish_corps'];
+  // Présélection admin "Prochaine partie" niveau 5, en priorité si elle contient un gage
+  // "finish" valide (la règle "finish toujours en dernier" reste respectée dans tous les cas).
+  var curated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
+    return r && r.g.niveau===5 && !r.g._kama;
+  }).map(function(r){ return r.g; });
+  var curatedFinish = shuffle(curated.filter(function(g){
+    return !g.solo && (g.genre==='Femme'||g.genre==='Mixte') &&
+      g.pratiques && g.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; }) &&
+      gageOk(g, femmePlayer, 5);
+  }));
+  if(curatedFinish.length) return curatedFinish[0];
   var cands = shuffle(all5.filter(function(g){
     return !g.solo && !g._kama && g.genre==='Femme' &&
       g.pratiques && g.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; }) &&
@@ -7181,8 +7201,13 @@ function prepareGages() {
       pushFinale(hommePlayer, picked5, pool5);
     } else {
       // CAS B2 — 2 gages, un par joueur, selon leurs pratiques sélectionnées (couvre aussi couples non hétéro / trans / trio)
+      // Ordre toujours Homme en premier, puis Femme, puis les autres joueurs (trio/quartet).
       var usedFinaleTexts = [];
-      G.players.forEach(function(player){
+      var orderedPlayers = G.players.slice().sort(function(a,b){
+        var rank = function(p){ return p.genre==='Homme' ? 0 : (p.genre==='Femme' ? 1 : 2); };
+        return rank(a) - rank(b);
+      });
+      orderedPlayers.forEach(function(player){
         var picked=pickFinale(player, G.usedKama, all5, usedFinaleTexts);
         if(picked && picked.type==='gage') usedFinaleTexts.push(picked.data.texte);
         pushFinale(player, picked, pool5);
@@ -7192,7 +7217,11 @@ function prepareGages() {
     // Filet de sécurité : le niveau 5 ne doit jamais rester vide
     if(!pool5.length){
       var usedFinaleTexts2 = [];
-      G.players.forEach(function(player){
+      var orderedPlayers2 = G.players.slice().sort(function(a,b){
+        var rank = function(p){ return p.genre==='Homme' ? 0 : (p.genre==='Femme' ? 1 : 2); };
+        return rank(a) - rank(b);
+      });
+      orderedPlayers2.forEach(function(player){
         var picked=pickFinale(player, G.usedKama, all5, usedFinaleTexts2);
         if(picked && picked.type==='gage') usedFinaleTexts2.push(picked.data.texte);
         pushFinale(player, picked, pool5);
