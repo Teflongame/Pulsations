@@ -5007,6 +5007,7 @@ function saveCustom(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch
 // ── NAVIGATION ──
 function goTo(pageId) {
   if(pageId!=='page-game' && 'speechSynthesis' in window) speechSynthesis.cancel();
+  if(pageId!=='page-game' && pageId!=='page-story-prologue' && typeof clearAppBackground==='function') clearAppBackground();
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
   var pg=document.getElementById(pageId);
   if(!pg){ console.warn('Page not found:',pageId); return; }
@@ -6250,6 +6251,27 @@ function confirmStorySetup(){
   renderStoryPrologue();
   goTo('page-story-prologue');
 }
+// Calque de fond plein écran : couvre tout l'écran, y compris les zones hors du conteneur
+// de page, tout en restant DERRIÈRE le contenu (les boutons et textes gardent leurs couleurs).
+function setAppBackground(bgValue){
+  var layer = document.getElementById('app-bg-layer');
+  if(!layer){
+    if(!bgValue) return;
+    layer = document.createElement('div');
+    layer.id = 'app-bg-layer';
+    layer.style.cssText = 'position:fixed;inset:0;z-index:-1;pointer-events:none;transition:background 1.2s ease,opacity 1.2s ease;opacity:0';
+    document.body.appendChild(layer);
+  }
+  if(bgValue){
+    layer.style.background = bgValue;
+    document.body.style.background = 'transparent';
+    requestAnimationFrame(function(){ layer.style.opacity = '1'; });
+  } else {
+    layer.style.opacity = '0';
+    document.body.style.background = '';
+  }
+}
+function clearAppBackground(){ setAppBackground(''); }
 function renderStoryPrologue(){
   var box = document.getElementById('story-prologue-content');
   if(!box) return;
@@ -6258,9 +6280,11 @@ function renderStoryPrologue(){
   var pH = getPH(), pF = getPF();
   var rH = getRoleData(duo.homme), rF = getRoleData(duo.femme);
   var customImg = getBgImage('stories', duo.id);
-  box.style.background = customImg
+  var _prologueBg = customImg
     ? 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+customImg+'\') center/cover no-repeat'
     : (duo.bg || 'radial-gradient(ellipse at center, rgba(120,70,150,.16) 0%, var(--bg) 70%)');
+  box.style.background = 'transparent';
+  setAppBackground(_prologueBg);
   box.innerHTML =
       '<div style="font-size:12px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;opacity:.85">Chapitre 1</div>'
     + '<div style="font-size:52px;margin-bottom:10px">'+duo.emoji+'</div>'
@@ -7555,22 +7579,19 @@ function displayGage() {
   if(pgEl){
     pgEl.classList.remove('mode-classique','mode-pimente','mode-competition','mode-brise_glace','mode-decouverte','mode-story','mode-solo','mode-live');
     pgEl.classList.add('mode-'+G.mode);
+    pgEl.style.background = ''; // le fond est porté par le calque plein écran ci-dessous
     var _modeImg = getBgImage('modes', G.mode);
+    var _bgValue = '';
     if(G.mode==='story' && G._storyDuo){
       var _storyImg = getBgImage('stories', G._storyDuo);
       var _storyDuoBg = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
-      if(_storyImg){
-        pgEl.style.background = 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+_storyImg+'\') center/cover no-repeat';
-      } else {
-        pgEl.style.background = _storyDuoBg ? _storyDuoBg.bg : '';
-      }
-      pgEl.style.transition = 'background 1.2s ease';
+      _bgValue = _storyImg
+        ? 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+_storyImg+'\') center/cover no-repeat'
+        : (_storyDuoBg ? _storyDuoBg.bg : '');
     } else if(_modeImg){
-      pgEl.style.background = 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+_modeImg+'\') center/cover no-repeat';
-      pgEl.style.transition = 'background 1.2s ease';
-    } else {
-      pgEl.style.background = '';
+      _bgValue = 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+_modeImg+'\') center/cover no-repeat';
     }
+    setAppBackground(_bgValue);
   }
   updateVoiceToggleBtn();
   updateAutoPlayBtn();
