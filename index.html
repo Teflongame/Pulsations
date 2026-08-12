@@ -120,6 +120,27 @@ select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
   background:linear-gradient(180deg, rgba(18,14,22,.72), rgba(10,8,12,.85));
   backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
 }
+/* ── Beats de trame (mode Histoire, jeu de rôle) ── */
+.story-beat-scene { font-style:italic; opacity:.9; line-height:1.65; margin-bottom:14px; }
+.story-beat-line {
+  font-size:1.08em; line-height:1.6; margin:14px 0;
+  padding:12px 14px; border-left:3px solid var(--gold);
+  background:rgba(216,166,87,.07); border-radius:0 10px 10px 0; text-align:left;
+}
+.story-beat-who { color:var(--gold); font-weight:700; margin-right:4px; }
+.story-beat-intentions {
+  font-size:.82em; line-height:1.55; margin-top:14px; padding-top:12px;
+  border-top:1px solid var(--border); color:var(--muted); text-align:left;
+}
+.story-beat-intentions b { color:var(--text); font-weight:600; }
+.story-beat-timer { margin-top:12px; font-size:.95em; color:var(--accent); font-weight:600; }
+.story-beat-choice {
+  margin-top:14px; padding:12px 14px; border-radius:10px;
+  background:rgba(var(--accent-rgb,232,67,122),.09);
+  border:1px solid rgba(var(--accent-rgb,232,67,122),.28); text-align:left;
+}
+.story-beat-choice-q { font-size:.9em; font-weight:700; color:var(--accent); margin-bottom:7px; }
+.story-beat-choice-o { font-size:.92em; line-height:1.5; opacity:.92; }
 
 #page-game.mode-competition .level-badge,
 #page-game.mode-competition .gage-counter,
@@ -706,11 +727,6 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
       <span class="icon">🧭</span><div class="label">Découverte</div><div class="sub">Pour une soirée pleine de sensations nouvelles</div>
       <span class="mode-badge premium">✦ Premium</span>
     </div>
-    <div class="mode-card mode-premium" id="mc-pimente" onclick="selectMode('pimente')" style="position:relative">
-      <span class="mode-lock" id="lock-pimente">🔒</span>
-      <span class="icon">🔥</span><div class="label">Pimenté</div><div class="sub">+surprises par niveau</div>
-      <span class="mode-badge premium">✦ Premium</span>
-    </div>
     <div class="mode-card mode-premium" id="mc-competition" onclick="selectMode('competition')" style="position:relative">
       <span class="mode-lock" id="lock-competition">🔒</span>
       <span class="icon">🏆</span><div class="label">Compétition</div><div class="sub">Plus de points = des bonus pour toi 😉</div>
@@ -724,11 +740,6 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <div class="mode-card" id="mc-kamasutra" onclick="selectMode('kamasutra')" style="position:relative">
       <span class="icon">🪷</span><div class="label">Kâmasûtra</div><div class="sub">Explorez les positions, sans pratiques à cocher</div>
       <span class="mode-badge free">✓ Gratuit</span>
-    </div>
-    <div class="mode-card mode-premium" id="mc-live" onclick="selectMode('live')" style="position:relative;opacity:.55;filter:grayscale(.4)">
-      <span class="mode-lock" id="lock-live">🚧</span>
-      <span class="icon">🔴</span><div class="label">Live Streamer</div><div class="sub">Jouez avec vos viewers</div>
-      <span class="mode-badge premium" style="background:rgba(255,180,60,.15);color:#f0c060">🚧 En travaux</span>
     </div>
   </div>
   <div class="btn-row">
@@ -774,6 +785,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 <!-- PAGE KÂMASÛTRA — grille de toutes les positions -->
 <div class="page" id="page-kama-manual">
   <div class="page-header"><h1>🪷 Toutes les positions</h1><p>Touchez une position pour la voir en détail</p></div>
+  <div id="kama-filter-bar"></div>
   <div id="kama-manual-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"></div>
   <div class="btn-row"><button class="btn ghost" onclick="goTo('page-kama-choice')">← Retour</button></div>
 </div>
@@ -808,17 +820,29 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   </div>
   <p style="font-size:10.5px;color:var(--muted);margin-bottom:18px;line-height:1.4">Si un site affiche une erreur (403 / accès refusé), c'est un blocage temporaire de leur côté (protection anti-robot), pas un souci de l'app — réessaie plus tard, ou pioche parmi les autres boutiques en attendant.</p>
 
-  <h3 style="font-size:14px;color:var(--gold);margin-bottom:8px">🎯 Accessoires utilisés dans le jeu</h3>
-  <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Retrouve directement sur Amazon les accessoires que tu peux cocher en début de partie.</p>
-  <div id="shop-acc-list"></div>
+  <h3 onclick="shopToggle('acc')" style="font-size:14px;color:var(--gold);margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">🎯 Accessoires utilisés dans le jeu <span id="shop-chev-acc" style="font-size:13px;color:var(--muted)">▾</span></h3>
+  <div id="shop-sec-acc">
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Retrouve directement sur Amazon les accessoires que tu peux cocher en début de partie.</p>
+    <div id="shop-acc-list"></div>
+  </div>
 
-  <h3 style="font-size:14px;color:var(--gold);margin:18px 0 8px">🎲 Jeux de société sur le même thème</h3>
-  <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">D'autres jeux coquins pour couple, à découvrir en dehors de l'app.</p>
-  <div id="shop-games-list"></div>
+  <h3 onclick="shopToggle('games')" style="font-size:14px;color:var(--gold);margin:18px 0 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">🎲 Jeux de société sur le même thème <span id="shop-chev-games" style="font-size:13px;color:var(--muted)">▾</span></h3>
+  <div id="shop-sec-games">
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">D'autres jeux coquins pour couple, à découvrir en dehors de l'app.</p>
+    <div id="shop-games-list"></div>
+  </div>
 
-  <h3 style="font-size:14px;color:var(--gold);margin:18px 0 8px">✨ Autres accessoires à découvrir</h3>
-  <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Pas encore dans le jeu, mais qui pourraient te plaire.</p>
-  <div id="shop-extra-list"></div>
+  <h3 onclick="shopToggle('tenues')" style="font-size:14px;color:var(--gold);margin:18px 0 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">🎭 Tenues du mode Histoire <span id="shop-chev-tenues" style="font-size:13px;color:var(--muted)">▾</span></h3>
+  <div id="shop-sec-tenues">
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">De quoi incarner vraiment les rôles de chaque scénario.</p>
+    <div id="shop-tenues-list"></div>
+  </div>
+
+  <h3 onclick="shopToggle('extra')" style="font-size:14px;color:var(--gold);margin:18px 0 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">✨ Autres accessoires à découvrir <span id="shop-chev-extra" style="font-size:13px;color:var(--muted)">▾</span></h3>
+  <div id="shop-sec-extra">
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Pas encore dans le jeu, mais qui pourraient te plaire.</p>
+    <div id="shop-extra-list"></div>
+  </div>
 
   <div class="btn-row" style="margin-top:16px"><button class="btn ghost" onclick="goTo('page-home')">← Retour à l'accueil</button></div>
 </div>
@@ -951,7 +975,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 
   <div class="btn-row" style="margin-top:14px">
     <button class="btn ghost" onclick="goTo('page-nb')">← Retour</button>
-    <button class="btn" onclick="goToAccFromDuration()">Suivant →</button>
+    <button class="btn" onclick="goToAmbiancePage()">Suivant →</button>
   </div>
 </div>
 
@@ -963,6 +987,16 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 </div>
 
 <!-- PAGE ACCESSOIRES -->
+<!-- PAGE AMBIANCE -->
+<div class="page" id="page-ambiance">
+  <div class="page-header"><h1>🎭 Ambiance de la soirée</h1><p>Comment voulez-vous jouer ce soir ?</p></div>
+  <div id="ambiance-content"></div>
+  <div class="btn-row">
+    <button class="btn ghost" onclick="ambianceBack()">← Retour</button>
+    <button class="btn ghost" onclick="selectAmbiance('')">Passer</button>
+  </div>
+</div>
+
 <div class="page" id="page-acc">
   <div class="page-header"><h1 data-i18n="page_acc_title">Accessoires</h1></div>
   <p style="text-align:center;color:var(--muted);margin-bottom:12px" data-i18n="acc_question">Quels accessoires avez-vous ?</p>
@@ -1099,8 +1133,9 @@ var ROLES = {
     {id:'h_detenu',   emoji:'🔒', label:'Détenu',            article:'le détenu',            ouverture:"vient d'être enfermé dans sa cellule, seul avec ses pensées",           action:["tire sur ses liens en fixant","ne quitte pas des yeux"],     accAffinite:['Menottes']},
     {id:'h_policier', emoji:'👮', label:'Policier',           article:'le policier',           ouverture:"referme la porte de la cellule d'un geste autoritaire",                action:["s'approche d'un pas assuré de","toise longuement"],    accAffinite:['Menottes']},
     {id:'h_patron',   emoji:'💼', label:'Patron',             article:'le patron',             ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:[]},
+    {id:'h_doctorant',emoji:'🎓', label:'Doctorant',          article:'le doctorant',          ouverture:"reste après la soutenance blanche, l'amphi vidé depuis longtemps",      action:["referme son mémoire et se tourne vers","s'approche du bureau de"],    accAffinite:[]},
     {id:'h_livreur',  emoji:'📦', label:'Livreur',            article:'le livreur',            ouverture:"sonne à la porte avec un paquet... et un sourire en coin",             action:["tend le paquet avant de glisser une main vers","s'attarde sur le pas de la porte, un sourire pour"], accAffinite:[]},
-    {id:'h_instructeur',emoji:'🚦', label:'Instructeur auto-école', article:"l'instructeur",   ouverture:"referme le dossier d'examen, l'agence vide depuis une heure",             action:["referme le dossier et se penche vers","pose une main sur le volant, juste à côté de"], accAffinite:[]},
+    {id:'h_client_club',emoji:'🥃', label:'Client du club', article:'le client',              ouverture:"s'installe dans le fauteuil du salon privé, le club vide depuis la fermeture", action:["s'enfonce dans le fauteuil face à","pose son verre sans quitter des yeux"], accAffinite:['Champagne']},
     {id:'h_medecin',  emoji:'🩺', label:'Médecin',            article:'le médecin',            ouverture:"invite sa patiente à s'allonger pour un examen approfondi",           action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Masque / Bandeau']},
     {id:'h_pompier',  emoji:'🚒', label:'Pompier',            article:'le pompier',            ouverture:"vient d'éteindre l'incendie et reprend son souffle, torse nu",         action:["soulève dans ses bras musclés","attire contre son torse encore essoufflé"],    accAffinite:[]},
     {id:'h_chef',     emoji:'👨‍🍳', label:'Chef cuisinier',   article:'le chef',               ouverture:"prépare un dernier plat, rien que pour elle, cuisine fermée",          action:["fait glisser un doigt gourmand sur","approche une bouchée des lèvres de"], accAffinite:['Chantilly','Nutella','Fraises']},
@@ -1122,7 +1157,8 @@ var ROLES = {
     {id:'f_policiere',emoji:'👮‍♀️', label:'Policière',        article:'la policière',          ouverture:"verrouille la porte de la cellule d'un geste autoritaire",             action:["s'approche d'un pas assuré de","toise longuement"],    accAffinite:['Menottes']},
     {id:'f_infirmiere',emoji:'💉', label:'Infirmière',        article:"l'infirmière",          ouverture:"vient prendre la température de son patient, un peu trop souvent",    action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Masque / Bandeau']},
     {id:'f_patronne', emoji:'💼', label:'Patronne',           article:'la patronne',           ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:[]},
-    {id:'f_candidate',emoji:'🚗', label:'Candidate au permis', article:'la candidate',          ouverture:"attend le verdict de son examen, seule dans l'agence fermée",          action:["referme le dossier et se penche vers","pose une main sur le volant, juste à côté de"], accAffinite:[]},
+    {id:'f_professeure',emoji:'👩‍🏫', label:"Professeure d'université", article:'la professeure', ouverture:"referme la salle de séminaire, le campus désert à cette heure",           action:["retire ses lunettes et fixe","fait claquer la règle sur le bureau devant"], accAffinite:['Cravache']},
+    {id:'f_danseuse',emoji:'💃', label:'Danseuse', article:'la danseuse',                      ouverture:"referme le rideau du salon privé, la musique tourne encore",            action:["se déhanche lentement devant","s'approche à quelques centimètres de"], accAffinite:['Musique','Lingerie / sous-vêtements sexy']},
     {id:'f_menage',   emoji:'🧹', label:'Femme de ménage',    article:'la femme de ménage',    ouverture:"fait le ménage quand son patron rentre plus tôt que prévu",           action:["laisse tomber le plumeau pour effleurer","s'arrête de ranger pour dévisager"], accAffinite:['Plume']},
     {id:'f_seductrice',emoji:'🖤', label:'Séductrice mystérieuse', article:'la séductrice',    ouverture:"apparaît dans la pénombre, masquée, sans un mot",                 action:["glisse un doigt ganté le long de","tourne lentement autour de"], accAffinite:['Masque / Bandeau']},
     {id:'f_instructrice',emoji:'🚦', label:'Instructrice auto-école', article:"l'instructrice", ouverture:"referme le dossier d'examen, l'agence vide depuis une heure",            action:["referme le dossier et se penche vers","pose une main sur le volant, juste à côté de"], accAffinite:[]},
@@ -1162,6 +1198,49 @@ var STORY_LEVEL_INTRO = {
 var STORY_DUOS = [
 { id:'detenu_policiere', homme:'h_detenu', femme:'f_policiere', emoji:'🔒👮‍♀️', title:'Garde à vue',
   bg:'radial-gradient(ellipse at top, #1a2438 0%, #0a0e18 70%)',
+  tenues:{H:"Débardeur blanc simple", F:"Chemise d'uniforme, ceinturon, cheveux attachés"},
+  // ── TRAME ORDONNÉE (nouveau format jeu de rôle) ──
+  // Beats joués dans l'ordre, chacun découlant du précédent. Chaque beat donne une SITUATION,
+  // une RÉPLIQUE à dire et une INTENTION de jeu — les joueurs improvisent le reste.
+  // `choix` = point de bascule : la réponse oriente la suite de l'histoire.
+  trame:[
+    {acte:1, scene:"La porte de la cellule vient de claquer. {H} est assis sur le banc, poignets encore rouges. {F} reste de l'autre côté des barreaux, dossier sous le bras, et ne s'en va pas.",
+      replique:{qui:'F', texte:"Tu sais ce qui t'attend si tu ne parles pas ?"},
+      intention:{H:"Ne réponds pas. Regarde-la, c'est tout.", F:"Attends. Laisse le silence s'installer, ne le remplis pas."}},
+    {acte:1, scene:"Le silence a duré trop longtemps pour être professionnel. {F} déverrouille, entre, et referme derrière elle. Elle s'arrête à moins d'un mètre — assez près pour qu'il sente son parfum sous l'uniforme.",
+      replique:{qui:'F', texte:"Lève-toi. Les mains contre le mur."},
+      intention:{H:"Obéis lentement, sans la quitter des yeux.", F:"Fouille-le. Prends bien plus de temps que nécessaire, et descends plus bas que tu ne devrais."},
+      duree:90,
+      choix:{question:"Que fait {F} quand elle sent qu'il durcit sous sa main ?", options:["Elle continue comme si de rien n'était","Elle s'arrête net et le retourne face à elle"]}},
+    {acte:2, scene:"Le premier baiser a tout emporté. Plus d'interrogatoire, plus de procédure — deux corps dans une cellule et une porte que personne n'ouvrira avant le matin.",
+      replique:{qui:'F', texte:"Un mot de ça à qui que ce soit et je te détruis."},
+      intention:{H:"Ouvre son uniforme. Embrasse-la dans le cou, la gorge, plus bas.", F:"Laisse-le faire quelques secondes — puis reprends le dessus."},
+      duree:120},
+    {acte:2, scene:"{F} le pousse sur le banc et s'agenouille entre ses jambes, uniforme encore boutonné jusqu'au col. Le contraste est délibéré.",
+      replique:{qui:'H', texte:"Vous allez trop loin…"},
+      intention:{H:"Dis-le sans y croire une seconde. Ne bouge pas les mains.", F:"Prends-le en bouche. Ne t'arrête pas quand il parle — surtout pas."},
+      duree:150},
+    {acte:3, scene:"Il l'attrape par le col et inverse tout : c'est elle qui se retrouve dos aux barreaux, souffle court, le pantalon d'uniforme aux chevilles.",
+      replique:{qui:'H', texte:"À votre tour d'arrêter de parler."},
+      intention:{H:"Descends entre ses cuisses. Prends ton temps, elle t'a fait attendre.", F:"Agrippe les barreaux. Retiens-toi de crier — le couloir est juste derrière."},
+      duree:150,
+      choix:{question:"{F} reprend-elle le dessus ?", options:["Oui — elle sort les menottes","Non — elle le laisse continuer jusqu'au bout"]}},
+    {acte:3, scene:"Les menottes se referment sur les poignets de {H}, accrochées au montant du lit de camp. Un cliquetis, puis plus rien à faire d'autre que sentir.",
+      replique:{qui:'F', texte:"Maintenant tu ne bouges plus. Et tu me regardes."},
+      intention:{H:"Tu ne contrôles plus rien. Subis, et fais-le savoir.", F:"Sers-toi de lui exactement comme tu en as envie. Bouche, mains, à ton rythme."},
+      accessoires:['Menottes'], duree:150},
+    {acte:4, scene:"Elle libère un poignet — un seul. Assez pour qu'il puisse la toucher, pas assez pour qu'il reprenne le pouvoir. Elle s'installe au-dessus de lui.",
+      replique:{qui:'F', texte:"Vas-y. Je te préviens quand j'en ai assez."},
+      intention:{H:"Elle vient de t'autoriser. Ne demande pas deux fois.", F:"Tu mènes tout. Impose ton rythme, change-le quand tu veux."},
+      duree:180},
+    {acte:4, scene:"Le lit de camp grince contre le mur. Le néon grésille toujours. Aucun des deux ne joue plus un rôle depuis longtemps.",
+      replique:{qui:'H', texte:"Retourne-toi."},
+      intention:{H:"Prends-la contre les barreaux, plus fort, sans retenue.", F:"Cède-lui — cette fois complètement."},
+      duree:180},
+    {acte:5, scene:"Plus de cellule, plus de procès-verbal, plus d'uniforme — rien que la peau, le souffle et le néon qui grésille au-dessus d'eux. C'est le moment que toute cette nuit préparait.",
+      replique:{qui:'F', texte:"Ne t'arrête pas. Surtout pas maintenant."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue, aussi fort qu'elle le demande. Position au choix, durée libre.", F:"Ne retiens plus rien — ni le bruit, ni le reste. Puis restez l'un contre l'autre, reprenez votre souffle et sortez du rôle ensemble."}}
+  ],
   premise:"Le néon de la cellule grésille depuis une heure. Le procès-verbal attend sur la table, à moitié rempli — mais l'interrogatoire a pris une tournure que le règlement n'a jamais prévue, et personne dans le couloir ne viendra vérifier avant le matin.",
   scenes:{
     1:[
@@ -1196,6 +1275,45 @@ var STORY_DUOS = [
 },
 { id:'medecin_infirmiere', homme:'h_medecin', femme:'f_infirmiere', emoji:'🩺💉', title:'Consultation tardive',
   bg:'radial-gradient(ellipse at center, #163030 0%, #0a1515 70%)',
+  tenues:{H:"Blouse blanche ouverte, stéthoscope", F:"Blouse d'infirmière courte, bas blancs"},
+  trame:[
+    {acte:1, scene:"Le dernier dossier de la journée est refermé depuis vingt minutes. {H} range ses instruments un par un, beaucoup trop lentement, en sachant parfaitement que {F} l'observe depuis le seuil du cabinet.",
+      replique:{qui:'F', texte:"Vous avez fini votre service, docteur."},
+      intention:{H:"Ne réponds pas tout de suite. Continue ce que tu fais, laisse le silence durer.", F:"Entre et ferme la porte derrière toi. À clé."}},
+    {acte:1, scene:"{F} s'approche par-derrière et dénoue la blouse de {H}, un lien après l'autre. Il ne l'arrête pas. Il ne se retourne même pas.",
+      replique:{qui:'H', texte:"Vous savez ce qu'on risque tous les deux ?"},
+      intention:{H:"Retourne-toi enfin. Embrasse-la comme tu t'en empêches depuis des mois.", F:"Assieds-toi sur la table d'examen et attire-le entre tes jambes."},
+      duree:90,
+      choix:{question:"Qui mène ce premier moment ?", options:["Lui — il la plaque sur la table","Elle — elle le fait attendre encore"]}},
+    {acte:2, scene:"{F} est allongée sur la table d'examen, le papier froissé sous elle. {H} écarte ses genoux avec la même autorité tranquille qu'il met à ausculter.",
+      replique:{qui:'H', texte:"Détendez-vous. Je vais prendre mon temps."},
+      intention:{H:"Descends entre ses cuisses. Prends-la avec la bouche, sans jamais accélérer.", F:"Agrippe le papier d'examen à deux mains. Ne te retiens pas."},
+      duree:150},
+    {acte:2, scene:"Elle le repousse, se redresse et le pousse à son tour contre le bureau. La blouse blanche tombe au sol, sa culotte avec.",
+      replique:{qui:'F', texte:"À mon tour de vous examiner."},
+      intention:{H:"Laisse-la faire complètement. Ne touche à rien.", F:"Agenouille-toi et prends-le en bouche, blouse encore boutonnée jusqu'au col."},
+      duree:150},
+    {acte:3, scene:"L'huile de massage traîne sur l'étagère depuis toujours. {H} en fait couler un filet chaud sur le ventre de {F}, remonte vers sa poitrine, redescend bien plus bas.",
+      replique:{qui:'H', texte:"Dites-moi exactement où ça fait de l'effet."},
+      intention:{H:"Fais-la parler. Suis ses indications à la lettre, avec les doigts.", F:"Dis-lui à voix haute ce que tu veux. Précisément."},
+      accessoires:['Huile de massage'], duree:150,
+      choix:{question:"Elle veut aller plus loin ?", options:["Elle lui demande de la prendre là, maintenant","Elle le fait patienter encore un peu"]}},
+    {acte:3, scene:"{F} noue le bandeau sur les yeux de {H} et le fait asseoir dans le fauteuil du cabinet. Il n'entend plus que le froissement de sa blouse et son souffle à elle.",
+      replique:{qui:'F', texte:"Vous n'avez plus besoin de voir. Sentez, c'est tout."},
+      intention:{H:"Tu ne contrôles plus rien. Devine ce qui vient.", F:"Sers-toi de lui exactement comme tu veux, à ton rythme."},
+      accessoires:['Masque / Bandeau'], duree:150},
+    {acte:4, scene:"Le bandeau tombe. {H} la soulève et la repose sur la table d'examen, écarte ses cuisses et entre en elle d'un coup.",
+      replique:{qui:'H', texte:"Plus personne ne viendra."},
+      intention:{H:"Impose ton rythme. Va plus profond à chaque poussée.", F:"Noue tes jambes autour de lui. Dis-lui de ne pas s'arrêter."},
+      duree:180},
+    {acte:4, scene:"Elle le fait basculer dans le fauteuil et s'empale sur lui, mains à plat sur son torse. Le stéthoscope se balance encore à son cou.",
+      replique:{qui:'F', texte:"Maintenant c'est moi qui décide du rythme."},
+      intention:{H:"Laisse-la mener. Regarde-la faire.", F:"Prends tout ce que tu veux, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"Le cabinet entier a disparu — plus de blouse, plus de badge, plus de protocole. Juste eux deux, et ce qu'ils repoussaient depuis des mois.",
+      replique:{qui:'H', texte:"Depuis le premier jour j'en avais envie."},
+      intention:{H:"Emmène-la jusqu'au bout, sans aucune retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Le cabinet est plongé dans la pénombre, seule la lampe du bureau reste allumée. Le dernier dossier de la journée traîne, oublié, quelque part sous des mains qui ne l'ouvriront plus ce soir.",
   scenes:{
     1:[
@@ -1230,6 +1348,45 @@ var STORY_DUOS = [
 },
 { id:'infirmiere_patient', homme:'h_patient', femme:'f_infirmiere', emoji:'💉🤒', title:'Chambre 204',
   bg:'radial-gradient(ellipse at center, #16281f 0%, #0a1510 70%)',
+  tenues:{H:"Torse nu sous un drap", F:"Blouse d'infirmière, badge, cheveux relevés"},
+  trame:[
+    {acte:1, scene:"Troisième passage de la soirée dans la chambre 204. {F} vérifie une tension qui n'a rien d'anormal. {H} la laisse faire sans un mot, mais son regard ne la lâche pas.",
+      replique:{qui:'F', texte:"Vous avez besoin d'autre chose ?"},
+      intention:{H:"Attrape son poignet quand elle veut partir. Ne le lâche pas.", F:"Ne te dégage pas. Laisse la question flotter."}},
+    {acte:1, scene:"{F} referme la porte de la chambre d'un coup de talon et revient s'asseoir au bord du lit — bien plus près qu'aucun protocole ne l'autorise.",
+      replique:{qui:'H', texte:"Le couloir est juste derrière cette porte."},
+      intention:{H:"Dis-le comme un avertissement, pas comme un refus.", F:"Embrasse-le pour toute réponse. Glisse la main sous le drap."},
+      duree:90,
+      choix:{question:"Jusqu'où va-t-elle ce soir ?", options:["Elle verrouille la porte","Elle prend le risque de la laisser entrouverte"]}},
+    {acte:2, scene:"{F} disparaît complètement sous les draps. Le moniteur cardiaque s'affole au-dessus du lit, et ce n'est plus la fièvre.",
+      replique:{qui:'H', texte:"Le moniteur… ils vont voir les chiffres."},
+      intention:{H:"Étouffe tes sons dans l'oreiller. Ne bouge pas trop.", F:"Prends-le en bouche et ne t'arrête pas, quoi qu'il dise."},
+      duree:150},
+    {acte:2, scene:"Il la tire sur le lit, remonte sa blouse d'infirmière au-dessus des hanches et la fait basculer sur le dos.",
+      replique:{qui:'F', texte:"Vous êtes censé être un patient fragile."},
+      intention:{H:"Descends entre ses cuisses. Prouve-lui le contraire.", F:"Mords ta main pour le bruit. Le couloir est à trois mètres."},
+      duree:150},
+    {acte:3, scene:"{F} noue le bandeau sur les yeux de {H}. Il ne sait plus si c'est sa bouche, sa main, ou autre chose qui le touche.",
+      replique:{qui:'F', texte:"Vous n'avez plus qu'à sentir. C'est tout."},
+      intention:{H:"Abandonne-toi complètement. Devine à chaque fois.", F:"Alterne. Fais-le douter. Prends ton temps."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Il reprend la main ?", options:["Oui — il arrache le bandeau et la retourne","Non — elle garde le contrôle jusqu'au bout"]}},
+    {acte:3, scene:"L'huile tiède destinée aux escarres finit sur tout autre chose. {H} en couvre le dos et les reins de {F}, penchée sur le rebord du lit médicalisé.",
+      replique:{qui:'H', texte:"Ne fais pas un bruit. Pas un seul."},
+      intention:{H:"Explore-la lentement, du bout des doigts, sans la faire crier.", F:"Tiens-toi au montant du lit. Tais-toi, coûte que coûte."},
+      accessoires:['Huile de massage'], duree:150},
+    {acte:4, scene:"Le lit médicalisé grince contre le mur. {H} entre en {F} par-derrière, une main sur sa bouche pour le bruit.",
+      replique:{qui:'F', texte:"Plus fort. Tant pis pour le couloir."},
+      intention:{H:"Accélère. Va au bout de ce qu'elle demande.", F:"Cesse de te retenir. Complètement."},
+      duree:180},
+    {acte:4, scene:"Elle le repousse sur le matelas et s'installe sur lui, blouse ouverte, cheveux défaits — plus rien de l'infirmière irréprochable du début de garde.",
+      replique:{qui:'F', texte:"Je finis ma garde comme je veux."},
+      intention:{H:"Laisse-la mener entièrement. Tiens ses hanches.", F:"Prends ton rythme, change-le, va jusqu'où tu veux."},
+      duree:180},
+    {acte:5, scene:"L'hôpital entier a disparu — le règlement, le badge, la garde de nuit. Il ne reste que la chambre 204 et ce qu'ils y font.",
+      replique:{qui:'H', texte:"Reste jusqu'au matin."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Le couloir de l'hôpital est silencieux à cette heure, les autres patients dorment déjà. Dans la chambre 204, le moniteur cardiaque s'est mis à s'affoler pour une toute autre raison que la fièvre.",
   scenes:{
     1:[
@@ -1262,76 +1419,177 @@ var STORY_DUOS = [
     ]
   }
 },
-{ id:'patron_employee', homme:'h_patron', femme:'f_patronne', emoji:'💼', title:'Heures supplémentaires',
-  bg:'radial-gradient(ellipse at bottom, #2a2015 0%, #0d0a08 70%)',
-  premise:"L'open space est vide depuis 20h, les néons du plafond se sont éteints un à un. Il ne reste qu'un bureau allumé, une porte fermée à clé, et un dossier « urgent » que personne n'ouvrira avant demain.",
+{ id:'doctorant_professeure', homme:'h_doctorant', femme:'f_professeure', emoji:'🎓👩‍🏫', title:'Soutenance privée',
+  bg:'radial-gradient(ellipse at top, #24201a 0%, #0c0a07 70%)',
+  tenues:{H:"Chemise et cravate desserrée", F:"Chemisier strict, jupe crayon, lunettes, chignon"},
+  trame:[
+    {acte:1, scene:"Trente-deux ans, doctorant en dernière année. La soutenance blanche est finie depuis une heure, le campus est désert. {F}, sa directrice de thèse, n'a toujours pas rendu son verdict.",
+      replique:{qui:'F', texte:"Votre travail est brillant. Votre discipline, en revanche, laisse à désirer."},
+      intention:{H:"Ne te justifie pas. Baisse les yeux.", F:"Retire tes lunettes lentement. Pose-les sur le bureau."}},
+    {acte:1, scene:"{F} contourne le bureau, une règle plate à la main, et s'arrête juste devant {H}. Elle la fait claquer une fois contre sa paume.",
+      replique:{qui:'F', texte:"Debout. Et enlevez cette veste."},
+      intention:{H:"Obéis sans un mot. Reste immobile ensuite.", F:"Fais glisser la règle sur son torse, lentement, sans jamais appuyer."},
+      duree:90,
+      choix:{question:"Que fait {F} ?", options:["Elle le pousse contre le bureau","Elle le fait s'agenouiller"]}},
+    {acte:2, scene:"{H} est penché sur le bureau de la salle de séminaire, mains à plat sur son propre mémoire. {F} compte à voix haute chaque coup de règle.",
+      replique:{qui:'F', texte:"Comptez avec moi. À voix haute."},
+      intention:{H:"Compte chaque coup. Ne bouge pas les mains du bureau.", F:"Dix coups, comptés ensemble. Alterne avec des caresses."},
+      duree:120},
+    {acte:2, scene:"Elle troque la règle contre la cravache, plus précise, plus mordante. Ses lunettes sont restées sur le bureau et elle n'a pas repris son ton professionnel.",
+      replique:{qui:'H', texte:"Je peux faire mieux. Laissez-moi vous le prouver."},
+      intention:{H:"Retourne-toi et déshabille-la, sans qu'elle te l'ait demandé.", F:"Laisse-le faire dix secondes — puis reprends le contrôle avec la cravache."},
+      accessoires:['Cravache'], duree:150},
+    {acte:3, scene:"{F} s'assoit sur le bord du bureau, remonte sa jupe stricte et pose un talon sur l'épaule de {H}, toujours à genoux devant elle.",
+      replique:{qui:'F', texte:"Puisque vous voulez faire vos preuves."},
+      intention:{H:"Prends ton temps entre ses cuisses. C'est ton examen.", F:"Note-le à voix haute. Sois exigeante."},
+      duree:150,
+      choix:{question:"Elle lui rend la pareille ?", options:["Oui — elle descend du bureau","Non — elle le fait encore attendre"]}},
+    {acte:3, scene:"Elle le tire par la chemise, le fait asseoir dans le fauteuil du bureau et s'agenouille à son tour. Les rôles s'inversent le temps d'un chapitre.",
+      replique:{qui:'H', texte:"Vous n'êtes plus très professorale, là."},
+      intention:{H:"Agrippe les accoudoirs. Ne dis plus rien.", F:"Prends-le en bouche, lunettes toujours posées sur le bureau."},
+      duree:150},
+    {acte:4, scene:"{H} la soulève, la rassoit sur le bureau au milieu des copies et entre en elle. Le mémoire glisse au sol, personne ne le ramasse.",
+      replique:{qui:'F', texte:"Plus fort. Le bâtiment est vide."},
+      intention:{H:"Accélère franchement, une main dans son dos.", F:"Cambre-toi sur le bureau. Fais du bruit."},
+      duree:180},
+    {acte:4, scene:"Elle reprend le dessus, le pousse dans le fauteuil et s'installe sur lui. Elle a remis ses lunettes, et rien d'autre.",
+      replique:{qui:'F', texte:"C'est moi qui évalue, jusqu'au bout."},
+      intention:{H:"Laisse-la mener entièrement. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"Le campus est toujours désert, la salle de séminaire fermée à clé, et le verdict n'a jamais été rendu.",
+      replique:{qui:'H', texte:"Alors, mon évaluation ?"},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
+  premise:"La soutenance blanche est finie depuis une heure. Le campus est désert, la salle de séminaire fermée à clé. Sa directrice de thèse n'a toujours pas rendu son verdict — et elle vient de poser une règle plate sur le bureau, entre eux deux.",
   scenes:{
     1:[
-      {texte:"{prenom} tourne la clé dans la serrure, s'adosse à la porte. « Vous avez vraiment cru qu'il s'agissait d'un dossier ? » {partenaire} n'y a jamais cru une seconde.",genre:'Homme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} s'assoit sur le bureau de {partenaire}, décroise puis recroise les jambes, très lentement, et attend. Elle sait exactement combien de temps il tiendra.",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} desserre sa cravate nœud après nœud, sans lâcher {partenaire} du regard, et la laisse tomber sur le clavier. Le message est clair.",genre:'Homme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} s'approche dans son dos pendant qu'il fait encore semblant de travailler et pose les mains sur ses épaules — bien trop longtemps pour un simple geste collégial.",genre:'Femme',pratiques:[],accessoires:[]}
+      {texte:"{prenom} retire ses lunettes et fixe {partenaire} sans un mot — **30 secondes**.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} reste immobile pendant que {partenaire} fait glisser une règle sur son torse — **45 secondes**.",genre:'Homme',pratiques:[],accessoires:[]}
     ],
     2:[
-      {texte:"{prenom} disparaît sous le bureau et défait la ceinture de {partenaire} pendant sa « réunion urgente » — **2 minutes** en silence, l'écran allumé au-dessus d'eux.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
-      {texte:"{prenom} balaie les dossiers d'un revers de bras, assoit {partenaire} sur le bureau, écarte ses genoux et descend — **90 secondes** où elle doit mordre sa propre main.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
-      {texte:"{prenom} caresse {partenaire} par-dessus le tissu, main invisible sous le bureau, pendant qu'un collègue pourrait encore traîner dans le couloir — **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
-      {texte:"{prenom} glisse la main de {partenaire} sous sa jupe et l'y maintient — **1 minute**, les yeux rivés à l'écran, pour la forme, la respiration qui la trahit.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
+      {texte:"{prenom} donne **10 coups de règle** à {partenaire}, comptés à voix haute ensemble.",genre:'Femme',pratiques:['fetish_actif_1'],accessoires:[]},
+      {texte:"{prenom} corrige {partenaire} à la cravache, puis l'embrasse — **90 secondes**.",genre:'Femme',pratiques:['domination_1'],accessoires:['Cravache']}
     ],
     3:[
-      {texte:"{prenom} attache les poignets de {partenaire} au dossier du fauteuil avec sa propre cravate. « Il est temps que vous appreniez la patience. »",genre:'Homme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} penche {partenaire} sur le bureau et lui donne **10 fessées** comptées à voix haute, juste assez fermes pour laisser une chaleur — puis l'embrasse comme si de rien n'était.",genre:'Femme',pratiques:['fetish_actif_1'],accessoires:[]},
-      {texte:"{prenom} l'allonge sur le tapis du bureau et s'aventure plus bas, du bout des doigts, généreusement lubrifiés — **1 minute** où {partenaire} oublie complètement où elle se trouve.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
-      {texte:"{prenom} pousse {partenaire} dans son propre fauteuil de direction et s'installe debout devant lui. À partir de maintenant, c'est elle qui donne les ordres — il obéit, amusé, puis beaucoup moins.",genre:'Femme',pratiques:[],accessoires:[]}
+      {texte:"{prenom} s'agenouille devant {partenaire}, assise sur le bureau — **2 minutes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} prend {partenaire} en bouche dans le fauteuil du bureau — **2 minutes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]}
     ],
     4:[
-      {texte:"{prenom} entre en {partenaire} sur le bureau vidé d'un geste, stylos et dossiers au sol — **2 minutes** d'un rythme qui s'intensifie, la porte heureusement verrouillée.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
-      {texte:"{prenom} s'empale sur {partenaire} dans son propre fauteuil de direction et décide de tout pendant **2 minutes** — la hiérarchie vient de s'inverser pour de bon.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
-      {texte:"{prenom} la prend par-derrière, penchée sur le bureau, une main entre ses omoplates — **2 minutes** d'un rythme qui s'approfondit à chaque poussée.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
-      {texte:"{prenom} lâche un ordre sec, sans hausser la voix. {partenaire} s'exécute immédiatement — **1 minute** où l'organigramme n'a jamais été aussi limpide.",genre:'Femme',pratiques:['domination_1'],accessoires:[]}
+      {texte:"{prenom} pénètre {partenaire} sur le bureau, les copies au sol — **2 minutes**.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} s'installe sur {partenaire} dans le fauteuil et mène tout — **2 minutes**.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]}
     ],
     5:[
-      {texte:"{prenom}, employée modèle jusqu'à la dernière minute, reprend {partenaire} en bouche et ne le lâche plus — durée libre, heures supplémentaires largement méritées.",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} et {partenaire} finissent sur le tapis du bureau, entre les dossiers éparpillés — pénétration, position au choix, durée libre, jusqu'au bout de la nuit.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+      {texte:"{prenom} et {partenaire} finissent dans la salle de séminaire — position au choix, durée libre.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
     ]
   }
 },
-{ id:'instructeur_candidate', homme:'h_instructeur', femme:'f_candidate', emoji:'🚦🚗', title:'Dernière leçon',
-  bg:'radial-gradient(ellipse at bottom, #2a2416 0%, #0c0a06 70%)',
-  premise:"L'agence a fermé ses portes il y a une heure. Sur le siège passager, la fiche d'examen est restée vierge — l'instructeur n'a rien coché, la candidate n'a pas redémarré, et aucun des deux n'a proposé de rentrer.",
+{ id:'client_danseuse', homme:'h_client_club', femme:'f_danseuse', emoji:'🥃💃', title:'Salon privé',
+  bg:'radial-gradient(ellipse at bottom, #2a0f22 0%, #0c0508 70%)',
+  tenues:{H:"Chemise ouverte, montre", F:"Lingerie fine, talons hauts, porte-jarretelles"},
+  trame:[
+    {acte:1, scene:"Le club a fermé, le rideau du salon privé est tiré. {H} est enfoncé dans le fauteuil, un verre à la main. La musique tourne encore pour eux deux.",
+      replique:{qui:'F', texte:"Vous connaissez la règle : on regarde, on ne touche pas."},
+      intention:{H:"Pose ton verre. Mains sur les accoudoirs, et n'en bouge plus.", F:"Commence à te déhancher devant lui, encore entièrement habillée."},
+      accessoires:['Musique'], duree:90},
+    {acte:1, scene:"{F} fait glisser sa robe centimètre par centimètre, au rythme du morceau. En dessous, la lingerie qu'elle a choisie exprès pour ce soir.",
+      replique:{qui:'H', texte:"Tu as mis ça pour moi ?"},
+      intention:{H:"Tu n'as toujours pas le droit de toucher. Regarde, c'est tout.", F:"Retire la robe entièrement. Garde tout le reste."},
+      accessoires:['Lingerie / sous-vêtements sexy'], duree:120,
+      choix:{question:"Elle enlève quoi ensuite ?", options:["Le haut, en gardant le bas","Rien — elle le fait attendre encore"]}},
+    {acte:2, scene:"{F} vient s'asseoir à califourchon sur {H}, toujours en lingerie, et ondule contre lui sans le laisser bouger les mains.",
+      replique:{qui:'F', texte:"Toujours pas le droit de toucher."},
+      intention:{H:"Garde les mains sur les accoudoirs. C'est un ordre.", F:"Frotte-toi contre lui, lentement, jusqu'à ce qu'il craque."},
+      duree:150},
+    {acte:2, scene:"Elle dégrafe son soutien-gorge et le laisse tomber sur ses genoux à lui. La règle du club commence sérieusement à vaciller.",
+      replique:{qui:'H', texte:"Je te paie double si je peux te toucher."},
+      intention:{H:"Tu peux enfin poser les mains sur elle. Uniquement là où elle t'y autorise.", F:"Guide ses mains, une par une, où tu veux qu'elles aillent."},
+      duree:150},
+    {acte:3, scene:"{F} finit de se déshabiller entièrement et s'agenouille entre les jambes de {H}, face au fauteuil.",
+      replique:{qui:'F', texte:"Ça, ce n'est plus dans le tarif."},
+      intention:{H:"Renverse la tête en arrière. Laisse-la faire à son rythme.", F:"Défais son pantalon et prends-le en bouche, sans te presser."},
+      duree:150,
+      choix:{question:"Qui mène la suite ?", options:["Elle garde le contrôle jusqu'au bout","Il la soulève et prend le dessus"]}},
+    {acte:3, scene:"Il l'attrape par la taille et la rassoit sur lui, cette fois sans plus aucune règle entre eux.",
+      replique:{qui:'H', texte:"Le club est fermé. Il n'y a plus de règles."},
+      intention:{H:"Descends sur elle, dans le fauteuil, où tu veux.", F:"Accroche-toi au dossier. Ne te retiens plus."},
+      duree:150},
+    {acte:4, scene:"{F} s'empale sur {H} dans le fauteuil du salon privé, la musique toujours en boucle derrière le rideau.",
+      replique:{qui:'F', texte:"Regarde-moi pendant que je le fais."},
+      intention:{H:"Ne détourne pas les yeux. Tiens ses hanches.", F:"Mène tout. Ton rythme, ton tempo."},
+      duree:180},
+    {acte:4, scene:"Il la retourne contre le miroir du salon, où ils se voient tous les deux. Il n'y a plus de spectateur, plus de danseuse.",
+      replique:{qui:'H', texte:"Regarde-toi."},
+      intention:{H:"Prends-la face au miroir, plus fort. Ne la laisse pas fermer les yeux.", F:"Regarde vos reflets. Fais du bruit."},
+      duree:180},
+    {acte:5, scene:"Le morceau tourne encore, le rideau est toujours tiré, et personne ne viendra frapper avant l'ouverture.",
+      replique:{qui:'F', texte:"Cette danse-là, tu es le seul à l'avoir eue."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
+  premise:"Le club a fermé ses portes il y a une heure. Dans le salon privé, le rideau est tiré, la musique tourne encore, et la danseuse n'a aucune intention de s'en tenir au tarif affiché.",
   scenes:{
     1:[
-      {texte:"{prenom} referme le dossier d'examen sans y inscrire la moindre note. « On va reprendre l'exercice depuis le début. » {partenaire} n'a pas touché à la clé de contact.",genre:'Homme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} garde les deux mains sur le volant, bien droite, alors que la voiture est à l'arrêt depuis dix minutes — et tourne enfin la tête vers {partenaire}.",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} se penche pour corriger la position de sa main sur le levier de vitesse, et l'y laisse posée bien après la correction.",genre:'Homme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} avoue à {partenaire} qu'elle a raté les trois dernières manœuvres exprès. « Sinon, il n'y avait plus de raison de revenir. »",genre:'Femme',pratiques:[],accessoires:[]}
+      {texte:"{prenom} se déhanche lentement devant {partenaire}, encore entièrement habillée — **1 minute**.",genre:'Femme',pratiques:[],accessoires:['Musique']},
+      {texte:"{prenom} garde les mains sur les accoudoirs, sans le droit de toucher {partenaire} — **45 secondes**.",genre:'Homme',pratiques:[],accessoires:[]}
     ],
     2:[
-      {texte:"{prenom} bascule son siège en arrière, se penche par-dessus le frein à main et prend {partenaire} en bouche — **2 minutes**, le parking désert derrière les vitres.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
-      {texte:"{prenom} incline le siège passager à l'horizontale, écarte les genoux de {partenaire} et descend entre ses cuisses — **90 secondes**, ses mains agrippant l'appui-tête.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
-      {texte:"{prenom} caresse {partenaire} par-dessus le pantalon, une main toujours sur le volant, comme s'ils étaient encore en leçon — **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]},
-      {texte:"{prenom} guide la main de {partenaire} sous sa jupe et l'y maintient — **1 minute**, l'habitacle qui s'embue lentement autour d'eux.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
+      {texte:"{prenom} vient s'asseoir à califourchon sur {partenaire} et ondule contre lui — **2 minutes**.",genre:'Femme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} guide les mains de {partenaire} où elle veut qu'elles aillent — **90 secondes**.",genre:'Femme',pratiques:['masturb_passif_f'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} noue le foulard de {partenaire} sur ses yeux. « Conduite à l'aveugle. Vous allez devoir me faire confiance. »",genre:'Homme',pratiques:[],accessoires:['Masque / Bandeau']},
-      {texte:"{prenom} passe sur la banquette arrière et attire {partenaire} avec elle, abandonnant définitivement les sièges avant.",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} la penche contre la portière et s'aventure plus bas, généreusement lubrifié, avec la même patience qu'il met à expliquer un créneau — **1 minute**.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
-      {texte:"{prenom} grimpe sur les genoux de {partenaire} à l'arrière et prend franchement le contrôle — l'examen vient de changer d'examinateur.",genre:'Femme',pratiques:[],accessoires:[]}
+      {texte:"{prenom} s'agenouille entre les jambes de {partenaire} et le prend en bouche — **2 minutes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} descend sur {partenaire} dans le fauteuil — **2 minutes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]}
     ],
     4:[
-      {texte:"{prenom} entre en {partenaire} sur la banquette arrière, les vitres complètement embuées — **2 minutes** d'un rythme qui monte, la voiture tanguant doucement.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
-      {texte:"{prenom} s'installe sur {partenaire} et mène tout pendant **2 minutes**, les mains à plat contre le plafond de l'habitacle.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
-      {texte:"{prenom} la prend par-derrière, penchée sur la banquette, un rythme profond qui s'installe sur **2 minutes**.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
-      {texte:"{prenom} donne une consigne nette, exactement du ton dont il annonce un stop. {partenaire} l'exécute au mot près — **1 minute**.",genre:'Homme',pratiques:['domination_1'],accessoires:[]}
+      {texte:"{prenom} s'empale sur {partenaire} dans le fauteuil et mène tout — **2 minutes**.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} la prend face au miroir du salon — **2 minutes**.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]}
     ],
     5:[
-      {texte:"{prenom} reprend {partenaire} en bouche et ne s'arrête plus — durée libre, la fiche d'examen toujours vierge sur le tableau de bord.",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} et {partenaire} terminent sur la banquette arrière — pénétration, position au choix, durée libre, le parking toujours aussi désert.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+      {texte:"{prenom} et {partenaire} finissent dans le fauteuil du salon privé — position au choix, durée libre.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
     ]
   }
 },
 { id:'masseur_cliente', homme:'h_masseur', femme:'f_cliente', emoji:'💆‍♂️🛍️', title:'Le dernier rendez-vous',
   bg:'radial-gradient(ellipse at center, #2e1f14 0%, #120b07 70%)',
+  tenues:{H:"T-shirt moulant, pantalon souple", F:"Serviette uniquement"},
+  trame:[
+    {acte:1, scene:"Le salon a fermé il y a une heure. {F} est à plat ventre sur la table, la serviette glissée bas sur ses reins. {H} fait chauffer l'huile entre ses paumes, sans se presser.",
+      replique:{qui:'F', texte:"Prenez tout votre temps. On n'est plus à une heure près."},
+      intention:{H:"Commence par les épaules. Descends lentement, vertèbre après vertèbre.", F:"Ferme les yeux. Laisse ton corps réagir sans le cacher."},
+      accessoires:['Huile de massage'], duree:120},
+    {acte:1, scene:"Les mains de {H} descendent sous la serviette, sur les reins, puis plus bas. Elle ne dit rien. Elle écarte juste un peu les jambes.",
+      replique:{qui:'H', texte:"Dites-moi si je vais trop loin."},
+      intention:{H:"Ne t'arrête pas tant qu'elle ne parle pas.", F:"Ne dis rien. Ou dis-lui d'aller plus loin encore."},
+      duree:90,
+      choix:{question:"Elle se retourne ?", options:["Oui — elle fait tomber la serviette","Non — elle le laisse continuer dans son dos"]}},
+    {acte:2, scene:"{F} se retourne sur la table, la serviette au sol. {H} reprend l'huile et lui couvre la poitrine, le ventre, l'intérieur des cuisses.",
+      replique:{qui:'F', texte:"Ne vous arrêtez surtout pas là."},
+      intention:{H:"Continue avec les doigts, exactement où elle t'indique.", F:"Guide sa main. Dis-lui précisément quoi faire."},
+      duree:150},
+    {acte:2, scene:"Il écarte ses genoux et s'installe au bout de la table. L'huile rend tout glissant, brûlant.",
+      replique:{qui:'H', texte:"C'est compris dans la prestation."},
+      intention:{H:"Descends entre ses cuisses. Prends ton temps, comme pour le reste.", F:"Agrippe les bords de la table. Ne te retiens pas."},
+      duree:150},
+    {acte:3, scene:"{F} se redresse d'un coup, le pousse sur la table à sa place et grimpe au-dessus de lui. La séance vient de changer de client.",
+      replique:{qui:'F', texte:"À mon tour de m'occuper de vous."},
+      intention:{H:"Laisse-la faire entièrement. Ne bouge pas.", F:"Prends-le en bouche, mains huilées, à ton rythme."},
+      duree:150,
+      choix:{question:"Elle lui rend tout de suite ?", options:["Elle le fait attendre encore","Elle lui donne tout, maintenant"]}},
+    {acte:3, scene:"Le bandeau glisse sur les yeux de {H}. Il ne sait plus si c'est l'huile, sa bouche ou ses mains — juste que ça ne s'arrête plus.",
+      replique:{qui:'F', texte:"Vous n'avez plus besoin de voir."},
+      intention:{H:"Abandonne-toi. Devine à chaque fois.", F:"Alterne. Fais-le douter le plus longtemps possible."},
+      accessoires:['Masque / Bandeau'], duree:150},
+    {acte:4, scene:"{H} arrache le bandeau, la retourne sur la table glissante et entre en elle. Ses mains dérapent sur ses hanches huilées.",
+      replique:{qui:'F', texte:"Plus fort. La table tiendra."},
+      intention:{H:"Va plus profond, plus vite. Tiens-la par les hanches.", F:"Cambre-toi. Dis-lui de continuer."},
+      duree:180},
+    {acte:4, scene:"Elle le fait basculer sur le dos et s'empale sur lui, paumes à plat sur son torse. La bougie vacille à chaque mouvement.",
+      replique:{qui:'F', texte:"Maintenant je décide de tout."},
+      intention:{H:"Laisse-la mener. Regarde-la faire.", F:"Ton rythme, aussi longtemps que tu veux."},
+      accessoires:['Bougie'], duree:180},
+    {acte:5, scene:"L'huile a tout recouvert, la table, le sol, leurs deux corps. Le salon est fermé depuis longtemps et personne ne viendra avant demain.",
+      replique:{qui:'H', texte:"Le dernier créneau, c'est vous. Toujours."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"La table de massage est chaude, l'huile de santal infuse déjà la pièce. Les mains savent depuis longtemps que cette dernière cliente de la journée n'est pas venue que pour dénouer des tensions musculaires.",
   scenes:{
     1:[
@@ -1366,6 +1624,45 @@ var STORY_DUOS = [
 },
 { id:'livreur_cliente', homme:'h_livreur', femme:'f_cliente', emoji:'📦🛍️', title:'Livraison surprise',
   bg:'radial-gradient(ellipse at top, #262220 0%, #0e0c0b 70%)',
+  tenues:{H:"Polo de livreur, casquette", F:"Peignoir mal fermé, rien en dessous"},
+  trame:[
+    {acte:1, scene:"La sonnette a retenti une seule fois. {F} ouvre en peignoir mal fermé, {H} tend le colis. Elle met un temps anormalement long à le prendre.",
+      replique:{qui:'F', texte:"Vous avez deux minutes ? Il faudrait vérifier que rien n'est cassé."},
+      intention:{H:"Entre. Referme la porte derrière toi d'un coup de talon.", F:"Pose le colis sans le regarder. Adosse-toi au mur de l'entrée."}},
+    {acte:1, scene:"Le peignoir glisse d'une épaule. {F} ne le remonte pas. {H} n'a pas fait un pas de plus, mais il n'est pas reparti non plus.",
+      replique:{qui:'H', texte:"J'ai encore une tournée à finir."},
+      intention:{H:"Dis-le sans y croire. Approche-toi.", F:"Défais la ceinture de ton peignoir. Laisse-le tomber."},
+      duree:90,
+      choix:{question:"Où ça se passe ?", options:["Contre la porte d'entrée, tout de suite","Elle l'entraîne plus loin dans l'appartement"]}},
+    {acte:2, scene:"{F} s'agenouille dans l'entrée, sans même envisager d'aller jusqu'au salon. L'uniforme est encore boutonné jusqu'en haut.",
+      replique:{qui:'H', texte:"Le camion tourne toujours en bas."},
+      intention:{H:"Adosse-toi à la porte. Laisse-la faire entièrement.", F:"Prends-le en bouche. La tournée attendra."},
+      duree:150},
+    {acte:2, scene:"Il la relève, la soulève contre le mur de l'entrée et noue ses jambes autour de sa taille.",
+      replique:{qui:'F', texte:"Vous livrez toujours aussi bien ?"},
+      intention:{H:"Descends entre ses cuisses, elle contre le mur.", F:"Accroche-toi à ses épaules. Ne te retiens pas."},
+      duree:150},
+    {acte:3, scene:"{H} arrache le ruban du colis et le noue sur les yeux de {F}. Elle rit — puis cesse complètement de rire.",
+      replique:{qui:'H', texte:"Surprise sur surprise."},
+      intention:{H:"Fais-la deviner. Alterne bouche, doigts, rien du tout.", F:"Tu ne vois plus rien. Réagis à chaque contact."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Elle reprend la main ?", options:["Oui — elle le plaque contre la porte","Non — elle se laisse guider jusqu'au bout"]}},
+    {acte:3, scene:"Le champagne resté au frais finit ouvert. {F} en verse un filet sur elle et laisse {H} venir le chercher.",
+      replique:{qui:'F', texte:"Il paraît que c'est meilleur comme ça."},
+      intention:{H:"Suis chaque goutte, lentement, jusqu'en bas.", F:"Ne bouge pas. Laisse-le finir."},
+      accessoires:['Champagne'], duree:120},
+    {acte:4, scene:"{H} la retourne face au mur de l'entrée et entre en elle. Ils n'ont toujours pas atteint une autre pièce.",
+      replique:{qui:'F', texte:"Plus fort. Les voisins s'en remettront."},
+      intention:{H:"Accélère franchement. Une main dans ses cheveux.", F:"Mains à plat contre le mur. Ne baisse pas la voix."},
+      duree:180},
+    {acte:4, scene:"Elle le fait glisser au sol du couloir et s'installe sur lui, colis toujours pas ouvert à côté d'eux.",
+      replique:{qui:'F', texte:"Vous signerez plus tard."},
+      intention:{H:"Laisse-la mener tout. Tiens ses hanches.", F:"Ton rythme, ton tempo, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"Le colis n'a toujours pas été ouvert. Le camion tourne encore en bas. Rien de tout ça n'a plus la moindre importance.",
+      replique:{qui:'H', texte:"Je repasse demain, même heure ?"},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"La sonnette a retenti une seule fois. Sur le pas de la porte, un carton, une tablette à signer — et une cliente en peignoir qui n'a manifestement pas fini de se préparer, ou qui n'en a jamais eu l'intention.",
   scenes:{
     1:[
@@ -1400,6 +1697,45 @@ var STORY_DUOS = [
 },
 { id:'inconnus_bar', homme:'h_inconnu', femme:'f_inconnue', emoji:'🍸', title:'Dernier verre',
   bg:'radial-gradient(ellipse at center, #2a1530 0%, #0e0812 70%)',
+  tenues:{H:"Chemise sombre, veste", F:"Robe courte, talons, rouge à lèvres marqué"},
+  trame:[
+    {acte:1, scene:"Le bar ferme dans vingt minutes. {H} fait glisser un verre devant {F} sans qu'elle ait rien commandé, puis détourne les yeux. Tout se joue maintenant.",
+      replique:{qui:'F', texte:"Je ne bois jamais ce qu'on m'offre."},
+      intention:{H:"Ne réponds pas. Attends.", F:"Bois quand même. Lentement, sans le lâcher du regard."}},
+    {acte:1, scene:"{F} décale son tabouret. Leurs genoux se touchent. Ni l'un ni l'autre ne recule.",
+      replique:{qui:'F', texte:"Je ne suis pas du genre à suivre des inconnus. Ce soir, si."},
+      intention:{H:"Pose la main sur sa cuisse, sous le bar. Vois si elle l'enlève.", F:"Ne l'enlève pas. Écarte légèrement les jambes."},
+      duree:90,
+      choix:{question:"Où finit la soirée ?", options:["Dans les toilettes du bar, tout de suite","Chez l'un des deux, sans savoir lequel"]}},
+    {acte:2, scene:"La porte des toilettes se verrouille. {F} s'agenouille avant même que le loquet ait fini de claquer. La musique cogne de l'autre côté du mur.",
+      replique:{qui:'H', texte:"On ne connaît même pas nos prénoms."},
+      intention:{H:"Adosse-toi au carrelage. Ne dis plus rien.", F:"Prends-le en bouche. Personne ne saura jamais qui tu es."},
+      duree:150},
+    {acte:2, scene:"Il la relève, la plaque contre le carrelage froid et remonte sa robe d'un geste.",
+      replique:{qui:'F', texte:"Continue. Ne t'arrête pas."},
+      intention:{H:"Descends entre ses cuisses, une main sur sa bouche pour le bruit.", F:"Mords sa main si tu dois crier."},
+      duree:150},
+    {acte:3, scene:"Dans le taxi, {H} noue son écharpe sur les yeux de {F}. Sa main remonte le long de sa cuisse. Le chauffeur ne dit rien.",
+      replique:{qui:'H', texte:"Tu ne sauras pas où on va."},
+      intention:{H:"Continue sous l'écharpe. Fais-la tenir en silence.", F:"Tu ne vois rien. Ne fais aucun bruit, quoi qu'il arrive."},
+      accessoires:['Masque / Bandeau'], duree:120,
+      choix:{question:"Elle garde l'anonymat ?", options:["Oui — elle refuse de retirer le bandeau","Non — elle veut le regarder en face"]}},
+    {acte:3, scene:"La porte de l'appartement à peine refermée, les manteaux tombent dans l'entrée. Aucun des deux n'a demandé le prénom de l'autre.",
+      replique:{qui:'F', texte:"Pas de nom. Ça gâcherait tout."},
+      intention:{H:"Déshabille-la debout, contre la porte, sans un mot.", F:"Fais pareil. Ne parle pas."},
+      duree:120},
+    {acte:4, scene:"{H} entre en {F} contre la porte encore verrouillée, sans qu'ils aient atteint la chambre.",
+      replique:{qui:'F', texte:"Plus fort. On ne se reverra jamais."},
+      intention:{H:"Va au bout de ce qu'elle demande, sans retenue.", F:"Dis-lui exactement ce que tu veux. Tu ne le reverras plus."},
+      duree:180},
+    {acte:4, scene:"Elle le pousse sur le lit et s'installe sur lui. Deux inconnus dans le noir, et plus rien d'autre.",
+      replique:{qui:'F', texte:"Regarde-moi maintenant."},
+      intention:{H:"Laisse-la mener entièrement. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"Le bar a fermé depuis des heures. Ils ne savent toujours pas comment l'autre s'appelle, et c'est exactement ce qu'ils voulaient.",
+      replique:{qui:'H', texte:"Ne me dis pas ton nom."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Le bar ferme dans vingt minutes, le barman range déjà les verres propres. Deux inconnus, deux tabourets rapprochés sans qu'on sache trop comment, et un silence qui en dit plus long que n'importe quelle phrase d'accroche.",
   scenes:{
     1:[
@@ -1434,6 +1770,45 @@ var STORY_DUOS = [
 },
 { id:'pompier_voisine', homme:'h_pompier', femme:'f_voisine', emoji:'🚒🏠', title:'Sauvetage',
   bg:'radial-gradient(ellipse at bottom, #331510 0%, #120705 70%)',
+  tenues:{H:"Pantalon d'uniforme, bretelles, torse nu", F:"Nuisette courte, pieds nus"},
+  trame:[
+    {acte:1, scene:"L'alarme s'est tue depuis dix minutes — une casserole oubliée, rien de plus. {H} fait un dernier tour de la cuisine, veste ouverte sur un torse luisant de sueur. {F} n'a pas refermé la porte.",
+      replique:{qui:'F', texte:"Vous êtes sûr qu'il n'y a plus de risque ?"},
+      intention:{H:"Réponds sans quitter la pièce. Ne repars pas.", F:"Reste en nuisette devant lui. Ne fais rien pour te couvrir."}},
+    {acte:1, scene:"{F} pose la main à plat sur le torse de {H} — « je vérifie que vous n'avez rien » — et l'y laisse bien trop longtemps.",
+      replique:{qui:'H', texte:"Ce n'est pas moi qu'il faut examiner."},
+      intention:{H:"Attrape son poignet. Attire-la contre toi.", F:"Ne résiste pas. Embrasse-le."},
+      duree:90,
+      choix:{question:"Qui prend l'initiative ?", options:["Lui — il la soulève sur le plan de travail","Elle — elle le pousse contre le frigo"]}},
+    {acte:2, scene:"{F} s'agenouille au milieu de la cuisine encore âcre de fumée et défait la ceinture de l'uniforme.",
+      replique:{qui:'H', texte:"Ma caserne va me chercher."},
+      intention:{H:"Qu'ils cherchent. Ne l'arrête pas.", F:"Prends-le en bouche, l'uniforme à moitié ouvert sur lui."},
+      duree:150},
+    {acte:2, scene:"Il la hisse sur le plan de travail en inox, écarte ses genoux d'une main et fait glisser sa nuisette.",
+      replique:{qui:'F', texte:"Le plan est glacé."},
+      intention:{H:"Réchauffe-la. Descends entre ses cuisses.", F:"Tes talons contre les placards. Ne te retiens pas."},
+      duree:150},
+    {acte:3, scene:"L'huile de massage sort du placard sous prétexte de brûlures parfaitement imaginaires. {H} en couvre son torse à elle, puis descend.",
+      replique:{qui:'H', texte:"Montrez-moi où ça chauffe encore."},
+      intention:{H:"Suis ses indications à la lettre, avec les doigts.", F:"Guide-le. Dis-lui exactement où et comment."},
+      accessoires:['Huile de massage'], duree:150,
+      choix:{question:"Elle passe au-dessus ?", options:["Oui — elle le plaque contre le frigo","Non — elle le laisse tout diriger"]}},
+    {acte:3, scene:"Le bandeau tombe sur les yeux de {H}. « Procédure d'évacuation », dit-elle. Il ne voit plus rien, elle a tout le contrôle.",
+      replique:{qui:'F', texte:"Vous ne bougez plus. C'est moi qui vous guide."},
+      intention:{H:"Tu ne contrôles plus rien. Devine à chaque fois.", F:"Alterne bouche et mains. Fais-le attendre."},
+      accessoires:['Masque / Bandeau'], duree:150},
+    {acte:4, scene:"{H} arrache le bandeau, la retourne contre le plan de travail et entre en elle. La vaisselle valdingue au sol.",
+      replique:{qui:'F', texte:"Ne t'occupe pas de la vaisselle."},
+      intention:{H:"Va plus fort, plus profond. Ne te retiens plus.", F:"Cambre-toi contre l'inox. Fais du bruit."},
+      duree:180},
+    {acte:4, scene:"Ils finissent par glisser sur le carrelage de la cuisine. Elle s'installe sur lui, torse contre torse encore brûlant.",
+      replique:{qui:'F', texte:"Maintenant c'est moi qui mène."},
+      intention:{H:"Laisse-la tout diriger. Tiens ses hanches.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"La casserole calcinée est toujours sur la cuisinière. Le camion est reparti sans lui depuis longtemps. Personne ne viendra les déranger.",
+      replique:{qui:'H', texte:"Je repasse vérifier demain."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"L'alarme incendie s'est tue depuis dix minutes — fausse alerte, une casserole oubliée sur le feu. Le pompier n'est toujours pas reparti. La voisine, en nuisette, n'a toujours pas refermé la porte.",
   scenes:{
     1:[
@@ -1468,6 +1843,45 @@ var STORY_DUOS = [
 },
 { id:'moniteur_eleve', homme:'h_moniteur', femme:'f_cliente', emoji:'⛷️', title:'Cours particulier',
   bg:'radial-gradient(ellipse at bottom, #2e1a10 0%, #0d1520 70%)',
+  tenues:{H:"Pull technique, pantalon de ski", F:"Combinaison ouverte sur un body"},
+  trame:[
+    {acte:1, scene:"Les pistes sont désertes, le dernier télésiège arrêté depuis une heure. Dans le chalet, {H} retire ses gants doigt par doigt devant {F}. La cheminée crépite, c'est le seul bruit.",
+      replique:{qui:'F', texte:"J'ai réservé cinq cours cette semaine. Je skiais déjà très bien avant d'arriver."},
+      intention:{H:"Ne réponds rien. Approche-toi du feu, et d'elle.", F:"Retire ta combinaison lentement, devant lui."}},
+    {acte:1, scene:"{H} se place derrière {F} pour « corriger sa posture ». Ses mains descendent des épaules aux hanches, puis plus bas, et n'ont plus rien de technique.",
+      replique:{qui:'H', texte:"Là, la position est parfaite."},
+      intention:{H:"Colle-toi contre son dos. Fais glisser tes mains sous son pull.", F:"Cambre-toi contre lui. Guide sa main où tu veux."},
+      duree:90,
+      choix:{question:"Où continue le cours ?", options:["Sur la peau de mouton devant le feu","Contre la baie vitrée, la neige derrière"]}},
+    {acte:2, scene:"{F} le pousse sur la peau de mouton devant la cheminée et s'agenouille entre ses jambes. Les flammes projettent leurs ombres au plafond.",
+      replique:{qui:'H', texte:"Ce n'est pas dans le forfait."},
+      intention:{H:"Renverse la tête en arrière. Laisse-la faire.", F:"Prends-le en bouche, le feu brûlant sur ton dos."},
+      duree:150},
+    {acte:2, scene:"Il la retourne sur la fourrure, ouvre sa combinaison jusqu'en bas et s'installe entre ses cuisses.",
+      replique:{qui:'F', texte:"J'ai froid d'un côté et je brûle de l'autre."},
+      intention:{H:"Descends. Prends ton temps, elle a attendu toute la semaine.", F:"Agrippe la fourrure à deux mains. Ne te retiens pas."},
+      duree:150},
+    {acte:3, scene:"{H} rabat son bonnet sur les yeux de {F}. « Exercice d'équilibre. » Elle ne voit plus rien, ne sait plus d'où viendra le prochain contact.",
+      replique:{qui:'H', texte:"Tu me diras si tu perds l'équilibre."},
+      intention:{H:"Alterne les mains, la bouche, le vide. Fais-la deviner.", F:"Tu ne vois rien. Dis à voix haute ce que tu ressens."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Elle prend le dessus ?", options:["Oui — elle arrache le bonnet et le chevauche","Non — elle le laisse la guider jusqu'au bout"]}},
+    {acte:3, scene:"L'huile chauffée près du feu finit sur les cuisses fatiguées de {F}. {H} remonte lentement, bien au-delà de ce qu'un massage sportif justifie.",
+      replique:{qui:'F', texte:"Plus haut. Beaucoup plus haut."},
+      intention:{H:"Obéis exactement. Ne va pas plus vite qu'elle ne demande.", F:"Guide-le centimètre par centimètre, à voix haute."},
+      accessoires:['Huile de massage'], duree:150},
+    {acte:4, scene:"{H} entre en {F} devant la cheminée, la peau brûlante d'un côté, glacée de l'autre. Dehors, la neige n'a pas cessé.",
+      replique:{qui:'F', texte:"Plus fort. Personne à des kilomètres."},
+      intention:{H:"Accélère franchement. Tiens-la par les hanches.", F:"Fais du bruit. Le chalet est isolé."},
+      duree:180},
+    {acte:4, scene:"Elle le renverse sur la fourrure et s'installe au-dessus de lui, les flammes dans son dos.",
+      replique:{qui:'F', texte:"Cinq cours pour en arriver là. Ça valait le coup."},
+      intention:{H:"Laisse-la mener entièrement. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"Les bûches ne sont plus que des braises. La neige tombe toujours derrière la vitre. Le premier télésiège ne repartira qu'à l'aube.",
+      replique:{qui:'H', texte:"Réserve pour demain aussi."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Les pistes sont désertes, le dernier télésiège a fini sa rotation il y a une heure. Dans le chalet du moniteur, la cheminée crépite — et la posture qu'il vient de corriger n'avait, en réalité, plus rien à voir avec le ski.",
   scenes:{
     1:[
@@ -1502,6 +1916,45 @@ var STORY_DUOS = [
 },
 { id:'tatoueur_cliente', homme:'h_tatoueur', femme:'f_cliente', emoji:'🎨🛍️', title:'Sous l\'aiguille',
   bg:'radial-gradient(ellipse at center, #2a1018 0%, #0a0508 70%)',
+  tenues:{H:"Débardeur noir, tablier, gants", F:"Brassière et short, hanche découverte"},
+  trame:[
+    {acte:1, scene:"Le bourdonnement du dermographe s'est arrêté. Le motif est terminé depuis vingt minutes, mais {F} n'a pas bougé du fauteuil et {H} n'a pas rangé son matériel.",
+      replique:{qui:'F', texte:"Il faut combien de séances encore ?"},
+      intention:{H:"Repose l'appareil. Relève les yeux vers elle et ne les baisse plus.", F:"Ne remets pas ton haut. Reste comme ça."}},
+    {acte:1, scene:"{H} étale le baume sur la peau fraîchement tatouée de {F}, sur la hanche. Ses doigts continuent bien au-delà de la zone concernée.",
+      replique:{qui:'H', texte:"Il faut bien soigner tout le contour."},
+      intention:{H:"Continue de descendre. Attends qu'elle t'arrête — elle ne le fera pas.", F:"Écarte les jambes sur le fauteuil. Laisse-le faire."},
+      duree:90,
+      choix:{question:"Elle le laisse mener ?", options:["Oui — elle bascule le fauteuil en arrière","Non — elle descend et le pousse à sa place"]}},
+    {acte:2, scene:"{F} bascule le fauteuil à l'horizontale et {H} s'installe entre ses cuisses, sous la lampe d'atelier braquée sur elle.",
+      replique:{qui:'F', texte:"Éteignez la lampe."},
+      intention:{H:"Ne l'éteins pas. Descends, elle sera entièrement visible.", F:"Cache ton visage dans ton bras. Ne cache rien d'autre."},
+      duree:150},
+    {acte:2, scene:"Elle descend du fauteuil, l'y pousse à sa place et s'agenouille. L'encre est encore luisante sur sa hanche à elle.",
+      replique:{qui:'H', texte:"Le salon est fermé, personne ne viendra."},
+      intention:{H:"Laisse-la faire entièrement. Agrippe les accoudoirs.", F:"Prends-le en bouche, sans le quitter des yeux."},
+      duree:150},
+    {acte:3, scene:"{H} noue un tissu du salon sur les yeux de {F} et la rassoit sur le fauteuil. « Pour ne pas voir le résultat avant la fin. »",
+      replique:{qui:'H', texte:"Tu me diras ce que tu sens. Précisément."},
+      intention:{H:"Alterne doigts, bouche, souffle. Fais-la décrire à voix haute.", F:"Décris tout ce que tu ressens, sans filtre."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Qui décide de la suite ?", options:["Elle arrache le bandeau et le chevauche","Il continue de tout contrôler"]}},
+    {acte:3, scene:"Il la retourne à genoux sur le fauteuil, mains agrippées au dossier, et s'occupe d'elle avec la même précision qu'il met dans ses tracés.",
+      replique:{qui:'F', texte:"Ne t'arrête surtout pas maintenant."},
+      intention:{H:"Continue exactement au même rythme, sans jamais dévier.", F:"Tiens-toi au dossier. Laisse monter."},
+      duree:150},
+    {acte:4, scene:"{H} entre en {F} sur le fauteuil inclinable, le film plastique du tatouage froissé entre eux.",
+      replique:{qui:'F', texte:"Attention au tatouage. Et pas au reste."},
+      intention:{H:"Évite la zone fraîche. Pour tout le reste, ne te retiens pas.", F:"Cambre-toi. Dis-lui d'aller plus fort."},
+      duree:180},
+    {acte:4, scene:"Elle s'installe sur lui dans le fauteuil, l'enseigne du salon toujours éteinte sur la rue déserte derrière la vitrine.",
+      replique:{qui:'F', texte:"Maintenant je signe, moi aussi."},
+      intention:{H:"Laisse-la tout mener. Tiens ses hanches.", F:"Ton rythme, ton tempo, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"L'encre est à peine sèche, le salon fermé depuis des heures, la rue vide derrière la vitrine. Il n'y a plus qu'eux et le fauteuil.",
+      replique:{qui:'H', texte:"La prochaine séance, c'est quand tu veux."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Le bourdonnement du dermographe s'est arrêté. Le motif est presque terminé, à quelques centimètres d'une peau que le tatoueur connaît maintenant par cœur — et la cliente n'a pas bougé, pas parce qu'elle a mal, mais parce qu'elle espère que ça continue.",
   scenes:{
     1:[
@@ -1536,6 +1989,45 @@ var STORY_DUOS = [
 },
 { id:'pilote_hotesse', homme:'h_pilote', femme:'f_hotesse', emoji:'✈️', title:'Escale imprévue',
   bg:'radial-gradient(ellipse at center, #16202e 0%, #080b10 70%)',
+  tenues:{H:"Chemise blanche, épaulettes, cravate", F:"Uniforme d'hôtesse, foulard, bas"},
+  trame:[
+    {acte:1, scene:"L'avion est cloué au sol pour la nuit. L'équipage est parti à l'hôtel. {H} referme la porte du cockpit, {F} n'a pas bougé de la cabine.",
+      replique:{qui:'F', texte:"J'ai échangé mon planning pour ce vol. Je savais qui serait aux commandes."},
+      intention:{H:"Desserre ta cravate. Avance vers elle dans l'allée.", F:"Dénoue ton foulard d'uniforme, lentement, en le regardant."}},
+    {acte:1, scene:"Ils se retrouvent dans l'allée de la classe affaires. Deux cents sièges vides, les veilleuses au sol pour seule lumière.",
+      replique:{qui:'H', texte:"Personne à bord avant six heures du matin."},
+      intention:{H:"Plaque-la contre un accoudoir. Ouvre son chemisier d'uniforme.", F:"Laisse-le faire. Défais sa ceinture en même temps."},
+      duree:90,
+      choix:{question:"Où va la nuit ?", options:["Dans le cockpit, sur le siège du commandant","Ici, sur les sièges inclinables"]}},
+    {acte:2, scene:"{F} s'agenouille entre les sièges de la classe affaires. Le silence de l'avion vide amplifie le moindre son.",
+      replique:{qui:'H', texte:"Le tarmac est éclairé, on nous verrait."},
+      intention:{H:"Renverse-toi dans le siège. Laisse-la faire.", F:"Prends-le en bouche. Personne ne regarde vers les hublots."},
+      duree:150},
+    {acte:2, scene:"Il incline le siège à l'horizontale, remonte sa jupe d'uniforme et s'installe entre ses jambes.",
+      replique:{qui:'F', texte:"Mon uniforme va être froissé."},
+      intention:{H:"Tant pis pour l'uniforme. Descends et prends ton temps.", F:"Agrippe l'accoudoir. Le foulard tombé au sol."},
+      duree:150},
+    {acte:3, scene:"{H} noue le foulard d'uniforme sur les yeux de {F} et l'installe dans le fauteuil du commandant, face aux instruments éteints.",
+      replique:{qui:'H', texte:"Vous ne verrez rien venir de toute la nuit."},
+      intention:{H:"Fais-la deviner. Alterne, arrête-toi, reprends.", F:"Tu ne vois rien. Réagis à chaque contact, à voix haute."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Elle reprend les commandes ?", options:["Oui — elle le fait asseoir et le chevauche","Non — il garde le contrôle jusqu'au bout"]}},
+    {acte:3, scene:"Le champagne de la classe affaires finit ouvert. {F} en verse sur elle et laisse {H} venir le chercher, dans le cockpit obscur.",
+      replique:{qui:'F', texte:"Service à bord, commandant."},
+      intention:{H:"Suis chaque goutte, sans rien laisser.", F:"Ne bouge pas. Laisse-le finir entièrement."},
+      accessoires:['Champagne'], duree:120},
+    {acte:4, scene:"{H} entre en {F} dans le cockpit, ses mains agrippant les instruments éteints, la pluie tambourinant sur le pare-brise.",
+      replique:{qui:'F', texte:"Plus fort. L'avion est vide."},
+      intention:{H:"Accélère. Va au bout de ce qu'elle demande.", F:"Fais du bruit. Il n'y a personne à des centaines de mètres."},
+      duree:180},
+    {acte:4, scene:"Elle le fait asseoir dans le fauteuil du pilote et s'installe sur lui, mains à plat sur le tableau de bord.",
+      replique:{qui:'F', texte:"C'est moi qui pilote maintenant."},
+      intention:{H:"Laisse-la mener entièrement. Tiens ses hanches.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"L'escale durera jusqu'au matin. L'avion est à eux, le tarmac désert, et personne ne montera à bord avant l'aube.",
+      replique:{qui:'H', texte:"On a toute la nuit."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"L'avion est cloué au sol pour la nuit, escale technique imprévue. L'équipage a déserté vers l'hôtel — sauf deux personnes, restées à bord, dans la pénombre de la cabine, sans vraiment chercher d'excuse pour y rester.",
   scenes:{
     1:[
@@ -1570,6 +2062,45 @@ var STORY_DUOS = [
 },
 { id:'musicien_fan', homme:'h_musicien', femme:'f_fan', emoji:'🎸🎤', title:'Backstage',
   bg:'radial-gradient(ellipse at top, #2a1230 0%, #0c0610 70%)',
+  tenues:{H:"T-shirt de scène, jean troué, bandana", F:"Top court, jupe, bottes"},
+  trame:[
+    {acte:1, scene:"Le concert vient de finir, la salle se vide. Dans les loges encombrées de housses de guitare, {F} — la trentaine, congés posés, quatre cents kilomètres — vient de passer la sécurité.",
+      replique:{qui:'F', texte:"J'ai fait quatre cents kilomètres. Pas vraiment pour la setlist."},
+      intention:{H:"Pose ta guitare. Verrouille la porte des loges.", F:"Approche. Ne t'arrête pas à distance polie."}},
+    {acte:1, scene:"{H} relance un morceau sur son téléphone, volume à fond dans la petite pièce, et attire {F} contre le mur tapissé d'affiches.",
+      replique:{qui:'H', texte:"Personne n'entrera. Ils savent."},
+      intention:{H:"Embrasse-la contre le mur. Fais glisser ses bretelles.", F:"Passe les mains sous son t-shirt trempé de sueur."},
+      accessoires:['Musique'], duree:90,
+      choix:{question:"Où ça se passe ?", options:["Contre le mur, tout de suite","Sur le canapé défoncé des loges"]}},
+    {acte:2, scene:"{F} s'agenouille entre les housses de guitare et les canettes tièdes. Les basses du morceau cognent encore dans les murs.",
+      replique:{qui:'H', texte:"Le groupe est juste derrière la porte."},
+      intention:{H:"Adosse-toi au mur. Ne les fais pas attendre trop longtemps.", F:"Prends-le en bouche. La musique couvre tout."},
+      duree:150},
+    {acte:2, scene:"Il balaie la table des loges, l'y assoit et remonte sa jupe. Ses talons cognent contre le métal à chaque mouvement.",
+      replique:{qui:'F', texte:"Ils vont entendre."},
+      intention:{H:"Monte le volume d'une main. Descends entre ses cuisses de l'autre.", F:"Laisse-toi aller, la musique couvre tout."},
+      duree:150},
+    {acte:3, scene:"{H} noue son bandana de scène sur les yeux de {F}. Elle n'entend plus que sa voix et la basse dans le sol.",
+      replique:{qui:'H', texte:"Écoute juste ma voix maintenant."},
+      intention:{H:"Guide-la uniquement à la voix. Dis-lui ce que tu vas faire avant de le faire.", F:"Obéis exactement à ce qu'il annonce."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Elle prend le pouvoir ?", options:["Oui — elle le pousse sur le canapé","Non — elle se laisse diriger entièrement"]}},
+    {acte:3, scene:"Elle lance un titre plus lent et impose à {H} le tempo exact du morceau. Chaque geste calé sur la basse.",
+      replique:{qui:'F', texte:"Tu bouges au rythme. Pas plus vite."},
+      intention:{H:"Tiens le tempo, même si c'est insoutenable.", F:"Ralentis encore. Fais-le tenir jusqu'au bout du morceau."},
+      accessoires:['Musique'], duree:150},
+    {acte:4, scene:"{H} entre en {F} sur le canapé des loges, la salle vide résonnant encore de l'autre côté du mur.",
+      replique:{qui:'F', texte:"Plus fort que la musique."},
+      intention:{H:"Accélère franchement. Ne te retiens plus.", F:"Crie si tu veux. La sono tourne encore."},
+      duree:180},
+    {acte:4, scene:"Elle le renverse sur le canapé et s'installe sur lui, le nom du groupe toujours affiché en lettres lumineuses dehors.",
+      replique:{qui:'F', texte:"C'est mon rappel à moi."},
+      intention:{H:"Laisse-la mener tout. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"La salle est complètement vide maintenant. Les techniciens démontent la scène quelque part au loin. Les loges sont à eux jusqu'au matin.",
+      replique:{qui:'H', texte:"Tu restes pour la prochaine date ?"},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Les derniers accords résonnent encore dans la salle qui se vide. Dans les loges, entre les housses de guitare et les canettes tièdes, une fan a réussi à passer le contrôle de sécurité — et n'a définitivement pas l'intention de repartir avec juste un autographe.",
   scenes:{
     1:[
@@ -1604,6 +2135,45 @@ var STORY_DUOS = [
 },
 { id:'photographe_modele', homme:'h_photographe', femme:'f_modele', emoji:'📷💃', title:'Dans l\'objectif',
   bg:'radial-gradient(ellipse at center, #232323 0%, #060606 70%)',
+  tenues:{H:"Chemise noire, appareil en bandoulière", F:"Peignoir de studio sur lingerie"},
+  trame:[
+    {acte:1, scene:"Le studio est silencieux, les flashs éteints. {H} fait défiler les derniers clichés sur son écran. {F} n'a pas quitté sa pose sur le fond blanc.",
+      replique:{qui:'F', texte:"J'ai validé une heure de rab. Les photos étaient bonnes depuis longtemps."},
+      intention:{H:"Pose l'appareil sur le trépied. Approche-toi d'elle.", F:"Ne bouge pas de ta pose. Attends qu'il arrive."}},
+    {acte:1, scene:"{H} rectifie sa position — l'épaule, la hanche, le menton. Ses mains s'attardent chaque fois un peu plus longtemps.",
+      replique:{qui:'H', texte:"Là. Ne bougez plus."},
+      intention:{H:"Continue de la « repositionner ». Déshabille-la geste par geste.", F:"Reste absolument immobile, quoi qu'il fasse."},
+      duree:90,
+      choix:{question:"L'appareil reste allumé ?", options:["Oui — il continue de déclencher","Non — il l'éteint et se consacre à elle"]}},
+    {acte:2, scene:"{F} est allongée sur le fond blanc, éclairée comme sur un plateau. Rien n'est caché, chaque réaction est parfaitement visible.",
+      replique:{qui:'H', texte:"Ne cachez pas votre visage. Je veux tout voir."},
+      intention:{H:"Descends entre ses cuisses, sous la lumière crue.", F:"Garde les yeux ouverts. Laisse tout se voir."},
+      duree:150},
+    {acte:2, scene:"Elle le tire au sol avec elle, ouvre son jean et s'agenouille sur le fond blanc.",
+      replique:{qui:'F', texte:"À mon tour de vous diriger."},
+      intention:{H:"Laisse-la faire. Ne donne plus aucune consigne.", F:"Prends-le en bouche, sans le quitter des yeux."},
+      duree:150},
+    {acte:3, scene:"{H} noue un foulard sur les yeux de {F}. « Pour capturer une autre expression. » L'appareil ne sortira plus de la soirée.",
+      replique:{qui:'H', texte:"Décrivez-moi ce que vous ressentez."},
+      intention:{H:"Fais-la parler en continu. Adapte-toi à ce qu'elle dit.", F:"Décris tout à voix haute, sans filtre, sans t'arrêter."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Qui passe de l'autre côté de l'objectif ?", options:["Elle prend l'appareil et le photographie","Il garde le contrôle total"]}},
+    {acte:3, scene:"Elle s'empare de l'appareil et le pousse sur le canapé du studio. Cette fois, c'est lui qui est dans le cadre.",
+      replique:{qui:'F', texte:"Ne bougez plus. Vous êtes très bien comme ça."},
+      intention:{H:"Laisse-toi regarder. Ne cache rien.", F:"Déclenche quelques photos, puis pose l'appareil et grimpe sur lui."},
+      accessoires:['Appareil photo'], duree:150},
+    {acte:4, scene:"{H} entre en {F} sur le canapé du studio, les projecteurs toujours braqués sur eux, sans le moindre angle mort.",
+      replique:{qui:'F', texte:"Laissez la lumière."},
+      intention:{H:"Accélère franchement. Tout est visible, tant mieux.", F:"Ne détourne pas le regard. Fais du bruit."},
+      duree:180},
+    {acte:4, scene:"Elle le renverse et s'installe sur lui, en plein sur le fond blanc immaculé.",
+      replique:{qui:'F', texte:"C'est ma séance maintenant."},
+      intention:{H:"Laisse-la mener tout. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"Les projecteurs sont encore chauds, le fond blanc froissé, l'appareil éteint sur son trépied. Aucune de ces images ne sera jamais archivée.",
+      replique:{qui:'H', texte:"Celle-là, je la garde pour moi."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Le studio est silencieux, les flashs éteints. Le photographe fait défiler les derniers clichés sur son écran, un sourcil levé — et le modèle, encore en pose, sent que la séance est loin d'être terminée.",
   scenes:{
     1:[
@@ -1638,6 +2208,45 @@ var STORY_DUOS = [
 },
 { id:'coach_cliente', homme:'h_coach', femme:'f_cliente', emoji:'🏋️', title:'Séance privée',
   bg:'radial-gradient(ellipse at bottom, #14202a 0%, #070a0d 70%)',
+  tenues:{H:"Short de sport, torse nu", F:"Brassière et legging moulant"},
+  trame:[
+    {acte:1, scene:"La salle a éteint ses néons, il ne reste qu'un halo au-dessus du tapis. {H} corrige la posture de {F} — une main sur ses hanches, l'autre entre ses omoplates. La série est finie depuis longtemps.",
+      replique:{qui:'F', texte:"J'ai renouvelé mon abonnement le mois dernier. Ce n'est pas pour les machines."},
+      intention:{H:"Ne retire pas tes mains. Descends-les.", F:"Cambre-toi sous sa main. Ne bouge pas d'un centimètre."}},
+    {acte:1, scene:"{H} retire son t-shirt trempé de sueur. Face aux miroirs, {F} s'étire lentement, parfaitement consciente qu'il a cessé de compter les répétitions.",
+      replique:{qui:'H', texte:"Encore une série. La dernière."},
+      intention:{H:"Colle-toi derrière elle. Fais glisser sa brassière.", F:"Regarde-le faire dans le miroir. Ne l'aide pas, ne l'empêche pas."},
+      duree:90,
+      choix:{question:"Où se termine la séance ?", options:["Sur le banc de musculation","Contre les miroirs, pour tout voir"]}},
+    {acte:2, scene:"{F} s'agenouille sur le tapis de sol, leur reflet renvoyé par les miroirs tout autour d'eux.",
+      replique:{qui:'H', texte:"Regarde dans le miroir."},
+      intention:{H:"Tiens-toi debout. Regarde vos reflets.", F:"Prends-le en bouche, en te regardant faire."},
+      duree:150},
+    {acte:2, scene:"Il l'allonge sur le banc de musculation, fait glisser son legging et s'installe entre ses cuisses. Ses mains agrippent la barre au-dessus d'elle.",
+      replique:{qui:'F', texte:"Je ne tiendrai pas la position longtemps."},
+      intention:{H:"Descends. Tiens ses cuisses ouvertes.", F:"Accroche-toi à la barre. Tiens le plus longtemps possible."},
+      duree:150},
+    {acte:3, scene:"{H} noue une serviette de sport sur les yeux de {F}. « Travail de proprioception. » Elle ne sait plus d'où viendra le prochain contact.",
+      replique:{qui:'H', texte:"Tu me dis quand tu ne tiens plus."},
+      intention:{H:"Alterne, arrête-toi, reprends. Fais-la craquer.", F:"Dis-lui quand tu ne tiens plus. Il ne s'arrêtera pas pour autant."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Elle reprend la main ?", options:["Oui — elle le plaque contre les miroirs","Non — elle le laisse la pousser à bout"]}},
+    {acte:3, scene:"L'huile finit sur les épaules encore chaudes de {F}, puis descend bien au-delà de la récupération sportive.",
+      replique:{qui:'F', texte:"Plus bas. C'est là que ça tire."},
+      intention:{H:"Obéis exactement. Suis chaque indication.", F:"Guide-le précisément, à voix haute."},
+      accessoires:['Huile de massage'], duree:150},
+    {acte:4, scene:"{H} entre en {F} sur le banc de musculation, la salle déserte renvoyant chaque souffle en écho.",
+      replique:{qui:'F', texte:"Plus fort. Il n'y a personne."},
+      intention:{H:"Accélère. Ne compte plus rien.", F:"Fais du bruit. Les miroirs renvoient tout."},
+      duree:180},
+    {acte:4, scene:"Elle le renverse sur le tapis et s'installe sur lui, leur reflet démultiplié dans tous les miroirs de la salle.",
+      replique:{qui:'F', texte:"C'est moi qui compte, maintenant."},
+      intention:{H:"Laisse-la mener entièrement. Regarde-la dans le miroir.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"La salle est à eux jusqu'à l'ouverture. Aucune de ces séries ne figurera dans le carnet d'entraînement.",
+      replique:{qui:'H', texte:"Même heure demain ?"},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"La salle de sport a éteint ses néons depuis longtemps, il ne reste qu'un halo au-dessus du tapis. La dernière répétition de la série n'a jamais été comptée — le coach a d'autres façons de faire monter le rythme cardiaque.",
   scenes:{
     1:[
@@ -1672,6 +2281,45 @@ var STORY_DUOS = [
 },
 { id:'ecrivain_muse', homme:'h_ecrivain', femme:'f_muse', emoji:'🖋️📖', title:'Chapitre inédit',
   bg:'radial-gradient(ellipse at center, #2e2010 0%, #100b05 70%)',
+  tenues:{H:"Chemise entrouverte, lunettes de lecture", F:"Robe légère, cheveux détachés"},
+  trame:[
+    {acte:1, scene:"La bougie a fondu aux trois quarts, la page reste blanche. {H} referme son carnet d'un geste sec — impossible d'écrire une ligne tant que {F} est dans la pièce.",
+      replique:{qui:'F', texte:"J'ai lu le chapitre en entier. Tu as tout écrit, sauf la fin."},
+      intention:{H:"Repose ton stylo. Regarde-la enfin franchement.", F:"Penche-toi par-dessus son épaule, ta poitrine contre son dos."}},
+    {acte:1, scene:"{H} balaie le bureau d'un revers de bras. Les feuillets s'envolent partout. Il l'assoit dessus, à la place de son manuscrit.",
+      replique:{qui:'H', texte:"Alors aide-moi à l'écrire."},
+      intention:{H:"Déshabille-la lentement, comme si tu décrivais chaque geste.", F:"Laisse-toi faire. Dicte-lui la suite à l'oreille."},
+      duree:90,
+      choix:{question:"Qui écrit la scène ?", options:["Elle dicte, il exécute","Il improvise, elle subit"]}},
+    {acte:2, scene:"{H} s'agenouille devant le bureau, entre ses cuisses, à la lueur de la bougie. L'encre est encore fraîche sur les pages froissées sous elle.",
+      replique:{qui:'F', texte:"Décris-moi ce que tu fais. À voix haute."},
+      intention:{H:"Décris chacun de tes gestes pendant que tu les fais.", F:"Écoute-le raconter. Réagis à ses mots autant qu'à sa bouche."},
+      duree:150},
+    {acte:2, scene:"Elle glisse du bureau, le pousse dans son fauteuil d'écrivain et s'agenouille à son tour.",
+      replique:{qui:'H', texte:"Je n'arriverai plus jamais à écrire à ce bureau."},
+      intention:{H:"Laisse-la faire. Agrippe les accoudoirs.", F:"Prends-le en bouche, sans le quitter des yeux."},
+      duree:150},
+    {acte:3, scene:"{H} noue un ruban de cuir sur les yeux de {F} et la rassoit sur le bureau, au milieu des pages éparpillées.",
+      replique:{qui:'H', texte:"Décris-moi ce que tu ressens. Je note tout."},
+      intention:{H:"Fais-la parler sans interruption. Adapte-toi à chaque mot.", F:"Ne t'arrête jamais de décrire, même quand c'est difficile."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Jusqu'où va la dictée ?", options:["Elle lui ordonne la suite, mot pour mot","Elle abandonne les mots complètement"]}},
+    {acte:3, scene:"Elle incline la bougie et laisse tomber quelques gouttes de cire tiède sur sa peau à lui, très haut sur la cuisse.",
+      replique:{qui:'F', texte:"Tiens-toi tranquille. Je choisis où."},
+      intention:{H:"Ne bouge pas. Encaisse chaque goutte.", F:"Choisis tes endroits. Alterne cire et bouche."},
+      accessoires:['Bougie'], duree:150},
+    {acte:4, scene:"{H} entre en {F} sur le bureau jonché de pages, la bougie menaçant de tomber à chaque poussée.",
+      replique:{qui:'F', texte:"C'est comme ça que ça se termine."},
+      intention:{H:"Accélère franchement. Tant pis pour le manuscrit.", F:"Cambre-toi. Les pages se déchirent sous toi."},
+      duree:180},
+    {acte:4, scene:"Elle le renverse dans le fauteuil et s'installe sur lui, leurs silhouettes projetées contre les murs de livres.",
+      replique:{qui:'F', texte:"Cette fois c'est moi qui écris."},
+      intention:{H:"Laisse-la mener tout. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"La bougie n'est plus qu'un fond de cire. Le manuscrit est en morceaux sur le sol. Le chapitre a enfin trouvé sa fin.",
+      replique:{qui:'H', texte:"Voilà. Je sais comment ça se termine."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"La bougie a fondu aux trois quarts, la page reste désespérément blanche depuis des heures. Puis une présence se penche par-dessus l'épaule, un souffle contre la nuque, et soudain les mots reviennent — pour un tout autre genre de chapitre.",
   scenes:{
     1:[
@@ -1706,6 +2354,45 @@ var STORY_DUOS = [
 },
 { id:'garde_celebrite', homme:'h_garde', femme:'f_celebrite', emoji:'🕶️💎', title:'Protection rapprochée',
   bg:'radial-gradient(ellipse at top, #241f10 0%, #0a0805 70%)',
+  tenues:{H:"Costume noir, oreillette, lunettes", F:"Robe de soirée fendue, talons, bijoux"},
+  trame:[
+    {acte:1, scene:"La suite est enfin silencieuse, la foule dispersée trente étages plus bas. {F} vient de congédier son attachée de presse et toute l'équipe. Il ne reste que {H}, et ce n'est pas un oubli.",
+      replique:{qui:'F', texte:"Il n'y a jamais eu de menace ce soir. J'avais juste besoin d'une raison de te garder ici."},
+      intention:{H:"Verrouille la porte. Retire ton oreillette et pose-la.", F:"Reste sur le canapé. Attends qu'il vienne."}},
+    {acte:1, scene:"{H} retire ses lunettes, les pose sur la console. Pour la première fois de la soirée, il n'est plus en service.",
+      replique:{qui:'H', texte:"Je ne suis plus payé pour être ici."},
+      intention:{H:"Approche-toi. Fais glisser les bretelles de sa robe de soirée.", F:"Ne l'aide pas. Laisse-le tout faire, lentement."},
+      duree:90,
+      choix:{question:"Qui prend le contrôle ce soir ?", options:["Elle — habituée à commander","Lui — pour une fois qu'il ne protège plus"]}},
+    {acte:2, scene:"{F} s'agenouille sur la moquette de la suite, robe de soirée remontée, talons toujours aux pieds. La ville scintille derrière la baie vitrée.",
+      replique:{qui:'H', texte:"On nous voit depuis les tours d'en face."},
+      intention:{H:"Reste debout. Laisse-la faire, à la vue de tout le monde.", F:"Prends-le en bouche. Qu'ils regardent."},
+      duree:150},
+    {acte:2, scene:"Il la soulève, la dépose sur le canapé et fait glisser sa robe entièrement. Les talons restent.",
+      replique:{qui:'F', texte:"Ne me laisse pas attendre."},
+      intention:{H:"Descends entre ses cuisses. Prends ton temps quand même.", F:"Accroche tes talons dans son dos. Ne te retiens pas."},
+      duree:150},
+    {acte:3, scene:"{H} noue un foulard de soie sur les yeux de {F}. Pour une fois, c'est elle qui ne voit rien venir — et qui s'en remet entièrement à quelqu'un.",
+      replique:{qui:'H', texte:"Ce soir, c'est moi qui décide de ce que tu sens."},
+      intention:{H:"Alterne. Fais-la deviner. Ne suis aucun ordre.", F:"Tu ne commandes plus rien. Laisse-toi surprendre."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Elle reprend son autorité ?", options:["Oui — elle arrache le foulard","Non — elle lui cède totalement la nuit"]}},
+    {acte:3, scene:"Le champagne de la réception traîne encore sur la table basse. Elle en verse sur elle et le laisse venir le chercher.",
+      replique:{qui:'F', texte:"Sers-toi."},
+      intention:{H:"Suis chaque goutte, sans rien laisser.", F:"Ne bouge pas. Laisse-le finir entièrement."},
+      accessoires:['Champagne'], duree:120},
+    {acte:4, scene:"{H} la plaque contre la baie vitrée et entre en elle, sa joue contre le verre froid, la ville immense en dessous.",
+      replique:{qui:'F', texte:"Plus fort. Personne ne peut monter."},
+      intention:{H:"Accélère franchement. Une main dans ses cheveux.", F:"Mains à plat contre la vitre. Fais du bruit."},
+      duree:180},
+    {acte:4, scene:"Elle le fait basculer sur le lit king size et s'installe sur lui. Ce soir, elle n'a plus rien d'une personne à protéger.",
+      replique:{qui:'F', texte:"Maintenant tu me regardes."},
+      intention:{H:"Laisse-la mener entièrement. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"La suite est à eux jusqu'au matin. Rien de tout ça ne figurera dans aucun rapport de sécurité.",
+      replique:{qui:'H', texte:"Ma mission finit à l'aube."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"La suite est enfin silencieuse, la foule dispersée, les caméras loin derrière la porte verrouillée. Le garde du corps devrait être en train de sécuriser le périmètre. Il n'a pas quitté la pièce.",
   scenes:{
     1:[
@@ -1740,6 +2427,45 @@ var STORY_DUOS = [
 },
 { id:'chauffeur_passagere', homme:'h_chauffeur', femme:'f_passagere', emoji:'🚗🌃', title:'Course de nuit',
   bg:'radial-gradient(ellipse at bottom, #241a10 0%, #0a0d16 70%)',
+  tenues:{H:"Costume sombre, cravate, gants", F:"Robe de soirée, manteau long"},
+  trame:[
+    {acte:1, scene:"Les lumières de la ville défilent derrière la vitre teintée. La course devait durer vingt minutes. {F} vient de demander un détour par les quais, sans donner de raison.",
+      replique:{qui:'F', texte:"Continuez de rouler. Prenez le plus long."},
+      intention:{H:"Croise son regard dans le rétroviseur. Ne dis rien.", F:"Penche-toi vers l'avant, les bras sur son dossier, tout près de sa nuque."}},
+    {acte:1, scene:"{H} gare la voiture dans une rue déserte des quais et coupe le moteur. Le silence tombe d'un coup dans l'habitacle.",
+      replique:{qui:'H', texte:"On est arrivés nulle part."},
+      intention:{H:"Retourne-toi entre les sièges. Embrasse-la.", F:"Attire-le à l'arrière avec toi."},
+      duree:90,
+      choix:{question:"Où continue la course ?", options:["À l'arrière, sur la banquette","À l'avant, sièges rabattus"]}},
+    {acte:2, scene:"{F} se penche par-dessus le frein à main et défait sa ceinture. Les phares d'une voiture balaient l'habitacle et repartent.",
+      replique:{qui:'H', texte:"Quelqu'un peut passer."},
+      intention:{H:"Renverse la tête contre l'appui-tête. Laisse-la faire.", F:"Prends-le en bouche. Que les phares passent."},
+      duree:150},
+    {acte:2, scene:"Il l'entraîne sur la banquette arrière, remonte sa robe et s'installe entre ses jambes dans l'espace étroit.",
+      replique:{qui:'F', texte:"Il n'y a pas la place."},
+      intention:{H:"On fera avec. Descends et prends ton temps.", F:"Un pied contre la vitre, l'autre contre le siège. Ne te retiens pas."},
+      duree:150},
+    {acte:3, scene:"{H} noue sa cravate sur les yeux de {F}, à l'arrière. Elle ne voit plus les lumières de la ville, seulement ce qu'il lui fait.",
+      replique:{qui:'H', texte:"Tu ne sauras pas ce qui vient."},
+      intention:{H:"Alterne, arrête-toi, reprends. Fais-la deviner à chaque fois.", F:"Tu ne vois rien. Dis à voix haute ce que tu ressens."},
+      accessoires:['Masque / Bandeau'], duree:150,
+      choix:{question:"Elle prend le volant ?", options:["Oui — elle le chevauche et mène tout","Non — elle le laisse la diriger"]}},
+    {acte:3, scene:"Les vitres sont complètement opaques de buée. {F} grimpe sur les genoux de {H}, tête contre le plafond bas.",
+      replique:{qui:'F', texte:"On ne voit plus rien de dehors. Ni eux ni nous."},
+      intention:{H:"Laisse-la s'installer. Tiens ses hanches.", F:"Frotte-toi contre lui, tout habillée, aussi longtemps que tu veux."},
+      duree:120},
+    {acte:4, scene:"{H} entre en {F} sur la banquette arrière. La voiture tangue doucement sur ses suspensions à chaque mouvement.",
+      replique:{qui:'F', texte:"Plus fort. La voiture tiendra."},
+      intention:{H:"Accélère franchement. Ne t'occupe plus de rien.", F:"Mains à plat contre la vitre embuée. Fais du bruit."},
+      duree:180},
+    {acte:4, scene:"Elle le renverse sur la banquette et s'installe au-dessus de lui, prenant appui sur l'appui-tête du siège avant.",
+      replique:{qui:'F', texte:"Le compteur tourne toujours ?"},
+      intention:{H:"Laisse-la mener entièrement. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"Le compteur tourne toujours, quelque part. Les quais sont déserts, la ville continue sans eux, et la course peut durer toute la nuit.",
+      replique:{qui:'H', texte:"Je ne suis pas pressé de vous déposer."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Les lumières de la ville défilent, floues, derrière la vitre teintée. La course devait durer vingt minutes — la passagère, à l'arrière, vient de demander au chauffeur de faire le tour par les quais, sans donner de raison.",
   scenes:{
     1:[
@@ -1774,6 +2500,45 @@ var STORY_DUOS = [
 },
 { id:'chef_critique', homme:'h_chef', femme:'f_critique', emoji:'👨\u200d🍳🍽️', title:'Coup de feu',
   bg:'radial-gradient(ellipse at center, #331d10 0%, #0d0704 70%)',
+  tenues:{H:"Veste de chef, tablier noué", F:"Chemisier, jupe, carnet et stylo"},
+  trame:[
+    {acte:1, scene:"Le service est fini depuis une heure, la cuisine encore chaude. {H} pose une dernière assiette devant {F} — un plat qu'il n'a jamais servi à personne. Son carnet de notes est resté fermé.",
+      replique:{qui:'F', texte:"Je ne noterai pas ce plat-là."},
+      intention:{H:"Reste debout près d'elle. Attends son verdict.", F:"Goûte du bout des lèvres. Repousse le carnet, lentement."}},
+    {acte:1, scene:"{H} s'essuie les mains sur son tablier et s'approche du plan de travail où {F} est adossée. Il ne dit plus un mot.",
+      replique:{qui:'H', texte:"Alors, votre verdict ?"},
+      intention:{H:"Pose les mains de chaque côté d'elle sur l'inox. Enferme-la.", F:"Ne cherche pas à sortir. Attire-le par le tablier."},
+      duree:90,
+      choix:{question:"Qui goûte quoi ?", options:["Il l'installe sur le plan de travail","Elle le pousse contre la chambre froide"]}},
+    {acte:2, scene:"{H} hisse {F} sur le plan de travail en inox, écarte ses genoux et s'agenouille. La cuisine sent encore le caramel et le beurre chaud.",
+      replique:{qui:'F', texte:"L'inox est glacé."},
+      intention:{H:"Elle ne le sentira plus dans dix secondes. Descends.", F:"Talons contre les placards. Renverse-toi en arrière."},
+      duree:150},
+    {acte:2, scene:"Elle glisse du plan, défait son tablier et s'agenouille devant lui, dos à la porte de la chambre froide entrouverte.",
+      replique:{qui:'H', texte:"La brigade revient à six heures."},
+      intention:{H:"Adosse-toi au passe. Laisse-la faire.", F:"Prends-le en bouche, la buée froide dans ton dos."},
+      duree:150},
+    {acte:3, scene:"{H} trempe deux doigts dans la chantilly et les fait glisser sur la peau de {F}, du cou jusqu'au ventre. Puis il vient tout récupérer, patiemment.",
+      replique:{qui:'H', texte:"Dites-moi si l'assaisonnement vous convient."},
+      intention:{H:"Suis chaque trace, lentement, sans en laisser.", F:"Ne bouge pas. Note-lui ça à voix haute."},
+      accessoires:['Chantilly'], duree:150,
+      choix:{question:"Elle prend la cuisine en main ?", options:["Oui — elle le penche sur le passe","Non — elle le laisse continuer son service"]}},
+    {acte:3, scene:"Elle le penche sur le passe, à sa place, et prend le contrôle. Dans cette cuisine, ce soir, c'est elle qui commande.",
+      replique:{qui:'F', texte:"Oui, chef. C'est ça qu'on dit ?"},
+      intention:{H:"Laisse-la faire ce qu'elle veut. Ne bouge pas.", F:"Sers-toi de lui exactement comme tu en as envie."},
+      duree:150},
+    {acte:4, scene:"{H} entre en {F} contre le plan de travail, la vaisselle propre valdinguant au sol dans un fracas que personne n'entend.",
+      replique:{qui:'F', texte:"Ne t'occupe pas de la vaisselle."},
+      intention:{H:"Accélère. Va plus profond à chaque poussée.", F:"Cambre-toi contre l'inox. Fais du bruit."},
+      duree:180},
+    {acte:4, scene:"Elle grimpe sur le passe et l'attire à elle, jambes autour de sa taille, la chaleur des fourneaux encore dans l'air.",
+      replique:{qui:'F', texte:"Trois étoiles."},
+      intention:{H:"Laisse-la mener le rythme. Tiens-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"La cuisine est sens dessus dessous, le carnet de notes toujours fermé sur la table. Le meilleur plat de la soirée n'était pas dans l'assiette.",
+      replique:{qui:'H', texte:"Vous revenez quand pour la critique ?"},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Le service est terminé depuis une heure, la cuisine encore chaude des derniers coups de feu. La critique gastronomique n'est pas repartie — son carnet de notes est resté fermé sur la table, et ses questions n'ont plus rien de professionnel.",
   scenes:{
     1:[
@@ -1808,6 +2573,45 @@ var STORY_DUOS = [
 },
 { id:'bibliothecaire_lectrice', homme:'h_bibliothecaire', femme:'f_lectrice', emoji:'📚📖', title:'Fermeture',
   bg:'radial-gradient(ellipse at top, #2a2412 0%, #0d0b06 70%)',
+  tenues:{H:"Chemise, gilet, lunettes", F:"Robe sage boutonnée, lunettes, chignon"},
+  trame:[
+    {acte:1, scene:"Les lumières s'éteignent une à une dans les rayonnages. Au fond de la salle, {F} n'a pas vu l'heure. {H} s'arrête devant elle et referme doucement son livre, un doigt glissé entre les pages.",
+      replique:{qui:'H', texte:"On ferme. Vous le saviez déjà, je crois."},
+      intention:{H:"Garde le livre. Ne recule pas.", F:"Lève les yeux vers lui. Ne te lève pas."}},
+    {acte:1, scene:"{F} se lève enfin, mais pour s'approcher au lieu de partir. Entre deux rayonnages, dans le silence total de la bibliothèque.",
+      replique:{qui:'F', texte:"Personne ne rentre après la fermeture ?"},
+      intention:{H:"Plaque-la doucement contre les étagères. Embrasse-la.", F:"Passe les mains sous sa chemise. Sans un bruit."},
+      duree:90,
+      choix:{question:"Où ça continue ?", options:["Sur la grande table de lecture","Contre les rayonnages, debout"]}},
+    {acte:2, scene:"{H} l'assoit sur la table de lecture, entre deux piles de livres oubliés, et fait glisser sa jupe.",
+      replique:{qui:'F', texte:"Il faut rester silencieux ici."},
+      intention:{H:"Descends entre ses cuisses. Le silence rendra tout plus intense.", F:"Mords ta main. Ne fais aucun bruit, quoi qu'il arrive."},
+      duree:150},
+    {acte:2, scene:"Elle descend de la table, le pousse dans le fauteuil du bureau et s'agenouille entre ses jambes. Un livre tombe. Personne ne le ramasse.",
+      replique:{qui:'H', texte:"Il ne reste que nous dans tout le bâtiment."},
+      intention:{H:"Agrippe les accoudoirs. Laisse-la faire.", F:"Prends-le en bouche, aussi silencieusement que possible."},
+      duree:150},
+    {acte:3, scene:"{H} lit à voix basse, tout près de son oreille, un passage qu'il connaît par cœur — pendant que ses doigts font tout autre chose.",
+      replique:{qui:'H', texte:"Écoute le texte. Rien que le texte."},
+      intention:{H:"Continue de lire sans t'interrompre, quoi qu'il arrive.", F:"Essaie d'écouter. Tu n'y arriveras pas."},
+      duree:150,
+      choix:{question:"Qui mène la fin du chapitre ?", options:["Elle lui arrache le livre","Il continue de lire jusqu'au bout"]}},
+    {acte:3, scene:"Elle le fait taire, le pousse contre les rayonnages les plus hauts et prend franchement le contrôle.",
+      replique:{qui:'F', texte:"Maintenant c'est moi la bibliothécaire."},
+      intention:{H:"Laisse-la faire entièrement. Ne dis plus un mot.", F:"Sers-toi de lui comme tu veux, contre les étagères."},
+      duree:150},
+    {acte:4, scene:"{H} entre en {F} sur la table de lecture, les livres repoussés d'un geste. Le silence de la salle amplifie le moindre souffle.",
+      replique:{qui:'F', texte:"Tant pis pour le silence."},
+      intention:{H:"Accélère. Ne t'occupe plus du bruit.", F:"Cesse de te retenir. Complètement."},
+      duree:180},
+    {acte:4, scene:"Elle le renverse sur la table et s'installe sur lui, entourés de rayonnages qui montent jusqu'au plafond.",
+      replique:{qui:'F', texte:"On rendra les livres demain."},
+      intention:{H:"Laisse-la mener tout. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
+      duree:180},
+    {acte:5, scene:"La bibliothèque entière est à eux jusqu'au matin. Les livres au sol, la table déplacée, et personne pour venir remettre de l'ordre.",
+      replique:{qui:'H', texte:"Reviens demain. Même heure."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+  ],
   premise:"Les lumières s'éteignent une à une dans les rayonnages. Au fond de la salle, une lectrice n'a pas vu l'heure passer — et le bibliothécaire, qui devrait la raccompagner vers la sortie, s'est arrêté net devant elle, sans un mot.",
   scenes:{
     1:[
@@ -2016,53 +2820,53 @@ function generateStoryEpilogue(playerA, playerB){
 ═══════════════════════════════════════════════════ */
 const KAMASUTRA = [
 
-{name:"Le Missionnaire",pose:"missionnaire",difficulty:1,niveau:4,
+{name:"Le Missionnaire",posture:'allonge',orientation:'face',pose:"missionnaire",difficulty:1,niveau:4,
  desc:"Elle est allongée sur le dos, lui au-dessus d'elle, face à face. La position la plus simple : on se regarde et on s'embrasse."},
-{name:"La Levrette",pose:"levrette",difficulty:1,niveau:4,
+{name:"La Levrette",posture:'genoux',orientation:'derriere',pose:"levrette",difficulty:1,niveau:4,
  desc:"Elle est à quatre pattes, lui à genoux derrière elle. Il la pénètre par-derrière et contrôle le rythme."},
-{name:"L'Andromaque",pose:"cavalier",difficulty:2,niveau:4,
+{name:"L'Andromaque",posture:'assis',orientation:'face',pose:"cavalier",difficulty:2,niveau:4,
  desc:"Lui allongé sur le dos, elle assise sur lui face à lui. C'est elle qui bouge et mène le rythme."},
-{name:"L'Andromaque inversé",pose:"amazone",difficulty:2,niveau:4,
+{name:"L'Andromaque inversé",posture:'assis',orientation:'derriere',pose:"amazone",difficulty:2,niveau:4,
  desc:"Lui allongé sur le dos, elle assise sur lui mais dos tourné. Elle contrôle, lui profite de la vue."},
-{name:"La Cuillère",pose:"cuillere",difficulty:1,niveau:4,
+{name:"La Cuillère",posture:'allonge',orientation:'derriere',pose:"cuillere",difficulty:1,niveau:4,
  desc:"Allongés sur le côté dans le même sens, lui collé derrière elle (comme deux cuillères). Tendre et reposant."},
-{name:"Le 69",pose:"sixtynine",difficulty:2,niveau:4,
+{name:"Le 69",posture:'allonge',orientation:'tete-beche',pose:"sixtynine",difficulty:2,niveau:4,
  desc:"Allongés tête-bêche : chacun a la bouche au niveau du sexe de l'autre. Plaisir oral en même temps."},
-{name:"Le Phénix",pose:"profond",difficulty:2,niveau:4,
+{name:"Le Phénix",posture:'allonge',orientation:'derriere',pose:"profond",difficulty:2,niveau:4,
  desc:"Elle allongée sur le ventre, lui allongé sur son dos. Pénétration serrée, corps collés."},
-{name:"L'Arc de Triomphe",pose:"arc",difficulty:4,niveau:5,
+{name:"L'Arc de Triomphe",posture:'acrobatique',orientation:'face',pose:"arc",difficulty:4,niveau:5,
  desc:"Position acrobatique : elle en pont (dos cambré, mains et pieds au sol), lui à genoux. Demande de la souplesse."},
-{name:"L'Équerre",pose:"equerre",difficulty:2,niveau:4,
+{name:"L'Équerre",posture:'allonge',orientation:'cote',pose:"equerre",difficulty:2,niveau:4,
  desc:"Elle allongée sur le dos, lui à genoux sur le côté, perpendiculaire à elle (le corps forme un T)."},
-{name:"Le Ciseaux",pose:"cotecote",difficulty:2,niveau:4,
+{name:"Le Ciseaux",posture:'allonge',orientation:'tete-beche',pose:"cotecote",difficulty:2,niveau:4,
  desc:"Allongés tête-bêche sur le côté, les jambes entremêlées comme des ciseaux."},
-{name:"La Chaise longue",prop:"coussin",pose:"missionnaire",difficulty:3,niveau:5,
+{name:"La Chaise longue",posture:'allonge',orientation:'face',prop:"coussin",pose:"missionnaire",difficulty:3,niveau:5,
  desc:"La femme est allongée sur le dos, un coussin sous les reins pour élever son bassin. L'homme s'agenouille entre ses jambes, qu'elle pose sur ses épaules."},
-{name:"Le Tigre pénétrant",pose:"levrette",difficulty:2,niveau:4,
+{name:"Le Tigre pénétrant",posture:'genoux',orientation:'derriere',pose:"levrette",difficulty:2,niveau:4,
  desc:"La femme est agenouillée, appuyée sur ses avant-bras, cambrée. L'homme peut tenir ses fesses ou ses hanches."},
-{name:"Les Chimpanzés",pose:"amazone",difficulty:4,niveau:5,
+{name:"Les Chimpanzés",posture:'acrobatique',orientation:'face',pose:"amazone",difficulty:4,niveau:5,
  desc:"L'homme roule sur le dos, jambes repliées sur la poitrine. Elle prend position sur ses fesses, pieds sous ses aisselles, pour un va-et-vient langoureux."},
-{name:"La Bête à deux têtes",pose:"debout",difficulty:5,niveau:5,
+{name:"La Bête à deux têtes",posture:'acrobatique',orientation:'face',pose:"debout",difficulty:5,niveau:5,
  desc:"L'homme est assis dans une posture virile. Elle vient s'empaler sur lui, jambes de part et d'autre de son cou, en équilibre instable d'une main."},
-{name:"La Berceuse",pose:"cavalier",difficulty:4,niveau:5,
+{name:"La Berceuse",posture:'assis',orientation:'face',pose:"cavalier",difficulty:4,niveau:5,
  desc:"Assis sur le lit, l'homme tend une jambe et plie l'autre sous ses fesses. Elle s'assoit sur sa jambe pliée, jambes ouvertes, pieds sur ses épaules ; il s'accroche à ses mollets."},
-{name:"La Grenouille à la nage",pose:"levrette",difficulty:3,niveau:4,
+{name:"La Grenouille à la nage",posture:'genoux',orientation:'derriere',pose:"levrette",difficulty:3,niveau:4,
  desc:"Partant de la position à quatre pattes, la femme baisse la poitrine sur le lit, mains croisées derrière la nuque. Il lui tient les mains pour marquer le rythme."},
-{name:"Le Néophyte",pose:"debout",difficulty:4,niveau:5,
+{name:"Le Néophyte",posture:'debout',orientation:'face',pose:"debout",difficulty:4,niveau:5,
  desc:"L'homme domine, il la soulève en la tenant par les hanches pour une pénétration très profonde. Elle contracte sa musculature pour maintenir ses hanches à hauteur."},
-{name:"Le Bateau ivre",pose:"profond",difficulty:3,niveau:4,
+{name:"Le Bateau ivre",posture:'allonge',orientation:'face',pose:"profond",difficulty:3,niveau:4,
  desc:"L'homme tient les chevilles de sa partenaire et soulève un peu ses hanches pour une pénétration plus profonde, en penchant ses jambes de droite à gauche."},
-{name:"Masturbation mutuelle",pose:"cotecote",difficulty:1,niveau:4,
+{name:"Masturbation mutuelle",posture:'assis',orientation:'face',pose:"cotecote",difficulty:1,niveau:4,
  desc:"Le couple est assis l'un en face de l'autre, ou allongé côte-à-côte."},
-{name:"Le Nœud coulant",pose:"lotus",difficulty:4,niveau:5,
+{name:"Le Nœud coulant",posture:'assis',orientation:'face',pose:"lotus",difficulty:4,niveau:5,
  desc:"Assis face à face, fesses au plus près, jambes relevées en mode lotus en apesanteur. Mains et pieds joints, va-et-vient extatiques."},
-{name:"La Cravate du notaire",pose:"cotecote",difficulty:3,niveau:5,
+{name:"La Cravate du notaire",posture:'allonge',orientation:'derriere',pose:"cotecote",difficulty:3,niveau:5,
  desc:"Elle est allongée, lui vient placer ses fesses entre son visage et ses seins, dos à son visage, et glisse son pénis entre ses seins. Elle presse ses seins pour le branler et peut l'embrasser ou lécher son postérieur."},
-{name:"Branlette espagnole",pose:"cavalier",difficulty:2,niveau:4,
+{name:"Branlette espagnole",posture:'allonge',orientation:'face',pose:"cavalier",difficulty:2,niveau:4,
  desc:"L'homme est sur le dos, elle s'agenouille sur lui pour prendre son sexe entre ses seins. Va-et-vient et pression jusqu'à ce que le gland découvre la peau des seins."},
-{name:"La Chaise",pose:"cavalier",difficulty:1,niveau:4,
+{name:"La Chaise",posture:'assis',orientation:'face',pose:"cavalier",difficulty:1,niveau:4,
  desc:"Monsieur s'assoit pour accueillir sa femme sur lui, à califourchon, afin de la pénétrer vaginalement."},
-{name:"L'Indolent",pose:"levrette",difficulty:2,niveau:4,
+{name:"L'Indolent",posture:'assis',orientation:'derriere',pose:"levrette",difficulty:2,niveau:4,
  desc:"Assis contre des coussins, jambes écartées, il présente son sexe en érection à sa compagne à quatre pattes devant lui, dos tourné. Elle vient s'empaler sur lui et impose son rythme."}
 ];
 // Fusionne KAMASUTRA (positions de base) avec les surcharges/ajouts admin (customKama, clé = nom).
@@ -2283,7 +3087,7 @@ var PRATIQUES_BASE = {
 }
 
 var ACCESSOIRES_BASE = {
-  "Ambiance":       ["Appareil photo","Bougie","Musique","Plume","Huile de massage","Lubrifiant"],
+  "Ambiance":       ["Appareil photo","Bougie","Musique","Plume","Huile de massage","Lubrifiant","Lingerie / sous-vêtements sexy"],
   "Boissons":       ["Champagne","Vin"],
   "Aliments":       ["Chantilly","Fraises","Glaçons","Nutella"],
   "Objets sexuels": ["Gode","Gode anal","Double gode","Gode ceinture","Anneau vibrant","Vibromasseur","Plug anal"],
@@ -5030,7 +5834,7 @@ function goTo(pageId) {
   var pb=document.getElementById('premium-badge');
   if(pb&&isPremium()) pb.style.display='block';
   // Update mode cards lock state
-  var premiumCards=['mc-decouverte','mc-pimente','mc-competition'];
+  var premiumCards=['mc-decouverte','mc-competition'];
   premiumCards.forEach(function(id){
     var card=document.getElementById(id);
     var lock=card&&card.querySelector('.mode-lock');
@@ -5058,6 +5862,13 @@ function goTo(pageId) {
 var _fbType = 'idee';
 var _fbRating = 0;
 function openFeedback(){ document.getElementById('feedback-overlay').style.display='flex'; }
+function shopToggle(sec){
+  var wrap = document.getElementById('shop-sec-'+sec);
+  var chev = document.getElementById('shop-chev-'+sec);
+  if(!wrap) return;
+  var replie = wrap.classList.toggle('hidden');
+  if(chev) chev.textContent = replie ? '▸' : '▾';
+}
 function goToBoutique(){ renderBoutique(); goTo('page-boutique'); }
 
 // ══════════════ BOUTIQUE ══════════════
@@ -5102,6 +5913,25 @@ function renderBoutique(){
     gamesBox.innerHTML = games.map(function(g){ return shopRow(g.name, g.name, g.sub); }).join('');
   }
   // Autres idées d'accessoires, pas encore présents dans le jeu
+  // Tenues des scénarios du mode Histoire — recherche Amazon ciblée par rôle
+  var tenuesBox = document.getElementById('shop-tenues-list');
+  if(tenuesBox){
+    var TENUES_SHOP = [
+      {label:'👮‍♀️ Uniforme de policière', q:'déguisement policière sexy femme adulte'},
+      {label:'👩‍⚕️ Blouse d\'infirmière', q:'déguisement infirmière sexy femme adulte'},
+      {label:'🥼 Blouse de médecin', q:'blouse médecin blanche déguisement adulte'},
+      {label:'👩‍🏫 Tenue stricte + lunettes', q:'chemisier jupe crayon lunettes secrétaire stricte'},
+      {label:'💃 Lingerie de danseuse', q:'lingerie porte-jarretelles talons femme'},
+      {label:'✈️ Uniforme d\'hôtesse de l\'air', q:'déguisement hôtesse de l\'air sexy adulte'},
+      {label:'🚒 Tenue de pompier', q:'déguisement pompier homme adulte'},
+      {label:'🕶️ Costume de garde du corps', q:'costume noir homme cravate oreillette'},
+      {label:'👨‍🍳 Veste de chef cuisinier', q:'veste chef cuisinier tablier noir'},
+      {label:'💆 Tenue de masseur / serviette spa', q:'peignoir serviette spa coton'},
+      {label:'🎤 Tenue rock de scène', q:'t-shirt rock bandana jean troué homme'},
+      {label:'📚 Tenue sage + lunettes', q:'robe boutonnée classique lunettes femme'}
+    ];
+    tenuesBox.innerHTML = TENUES_SHOP.map(function(t){ return shopRow(t.label, t.q); }).join('');
+  }
   var extraBox = document.getElementById('shop-extra-list');
   if(extraBox){
     var extras = [
@@ -5417,6 +6247,10 @@ function startStoryModeEntry(){
   selectMode('story');
 }
 function selectMode(m) {
+  // Nouvelle partie : on repart d'un choix d'histoire vierge (le duo est ensuite conservé
+  // jusqu'à la fin de la partie, car il porte le fond d'écran et les scènes).
+  G._storyDuo = null;
+  G._rolesChosen = false;
   // Mode Live Streamer temporairement désactivé (en travaux)
   if(m === 'live') {
     showWipOverlay();
@@ -5479,6 +6313,13 @@ var DURATION_PRESETS = {
 };
 
 function goToDurationPage() {
+  // Mode Histoire : la durée est déterminée par la trame de l'histoire (~30-40 min), pas
+  // par un réglage — on saute directement au choix du thème.
+  if(G.mode==='story'){
+    G_duration = 45;
+    goToAccFromDuration();
+    return;
+  }
   // Sync valeurs actuelles dans l'UI
   _syncLevelUI();
   // Sélection preset courante
@@ -6187,16 +7028,52 @@ function isHeteroCouple(){
 function getPH(){ return G.players.filter(function(p){return p.genre==='Homme';})[0]; }
 function getPF(){ return G.players.filter(function(p){return p.genre==='Femme';})[0]; }
 
+// ── Historique des histoires vécues ──
+var STORY_HIST_KEY = 'story_hist_v28';
+function loadStoryHist(){ try{ return JSON.parse(localStorage.getItem(STORY_HIST_KEY)||'{}'); }catch(e){ return {}; } }
+function saveStoryHist(h){ try{ localStorage.setItem(STORY_HIST_KEY, JSON.stringify(h)); }catch(e){} }
+function markStoryPlayed(duoId){
+  if(!duoId) return;
+  var h = loadStoryHist();
+  var prev = h[duoId] || {count:0};
+  h[duoId] = {count:(prev.count||0)+1, last:Date.now()};
+  saveStoryHist(h);
+}
+function _storyHistLabel(duoId){
+  var h = loadStoryHist()[duoId];
+  if(!h) return null;
+  var d = new Date(h.last);
+  var txt = d.toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'});
+  return h.count>1 ? (txt+' · '+h.count+' fois') : txt;
+}
 function renderStorySelectPage(){
   var box = document.getElementById('story-select-content');
   if(!box) return;
-  box.innerHTML = STORY_DUOS.map(function(d){
-    return '<div onclick="selectStoryDuo(\''+d.id+'\')" style="cursor:pointer;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start">'
+  var hist = loadStoryHist();
+  // Les histoires jamais vécues remontent en premier : c'est l'info la plus utile pour choisir.
+  var inedites = STORY_DUOS.filter(function(d){ return !hist[d.id]; });
+  var vecues  = STORY_DUOS.filter(function(d){ return !!hist[d.id]; })
+                          .sort(function(a,b){ return (hist[b.id].last||0)-(hist[a.id].last||0); });
+  function card(d){
+    var lbl = _storyHistLabel(d.id);
+    return '<div onclick="selectStoryDuo(\''+d.id+'\')" style="cursor:pointer;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;'+(lbl?'opacity:.72':'')+'">'
       + '<div style="font-size:28px;flex:0 0 auto">'+d.emoji+'</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px;color:var(--gold)">'+d.title+'</div>'
-      + '<div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4">'+d.premise+'</div></div>'
-      + '</div>';
-  }).join('');
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-weight:700;font-size:15px;color:var(--gold)">'+d.title+'</div>'
+      + (lbl ? '<div style="font-size:10.5px;color:var(--success);margin-top:2px">✓ Vécue le '+lbl+'</div>' : '')
+      + '<div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4">'+d.premise+'</div>'
+      + '</div></div>';
+  }
+  var html = '';
+  if(inedites.length){
+    html += '<div style="font-size:10.5px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">✨ Jamais vécues ('+inedites.length+')</div>';
+    html += inedites.map(card).join('');
+  }
+  if(vecues.length){
+    html += '<div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;padding-top:12px;border-top:1px solid var(--border)">Déjà vécues ('+vecues.length+')</div>';
+    html += vecues.map(card).join('');
+  }
+  box.innerHTML = html;
 }
 function selectStoryDuo(id){
   var duo = STORY_DUOS.filter(function(d){return d.id===id;})[0];
@@ -6239,6 +7116,23 @@ function renderStorySetupPage(){
     html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;font-size:13px;color:var(--muted)">Cette histoire ne nécessite aucun accessoire particulier.</div>';
   }
 
+  // Tenues suggérées — validation indépendante des accessoires
+  if(duo.tenues){
+    var pH = getPH(), pF = getPF();
+    var rH = getRoleData(duo.homme), rF = getRoleData(duo.femme);
+    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">👗 Tenues suggérées :</div>';
+    html += '<div style="font-size:13px;line-height:1.6;margin-bottom:12px">'
+      + '<div style="margin-bottom:6px"><b style="color:var(--blue)">'+(pH?pH.prenom:'Lui')+'</b> <span style="color:var(--muted)">('+rH.label+')</span><br>'+duo.tenues.H+'</div>'
+      + '<div><b style="color:var(--rose)">'+(pF?pF.prenom:'Elle')+'</b> <span style="color:var(--muted)">('+rF.label+')</span><br>'+duo.tenues.F+'</div>'
+      + '</div>';
+    html += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 12px">'
+      + '<input type="checkbox" id="story-use-tenues" checked style="width:18px;height:18px;flex:0 0 auto">'
+      + '<span style="font-size:13.5px">On joue en tenue</span></label>';
+    html += '<p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4">Décoche si vous préférez jouer sans : l\'histoire ne mentionnera plus les vêtements de rôle.</p>';
+    html += '</div>';
+  }
+
   html += '<p style="text-align:center;font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.5">Laissez-vous porter : l\'histoire choisit tout pour vous.<br>Un gage ne vous convient pas ? Le bouton 🔀 Changer reste disponible à tout moment.</p>';
   box.innerHTML = html;
 }
@@ -6246,7 +7140,10 @@ function confirmStorySetup(){
   var duo = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
   var accs = duo ? _duoAccessoires(duo) : [];
   var useAcc = document.getElementById('story-use-acc');
+  var useTen = document.getElementById('story-use-tenues');
   G.acc = (accs.length && (!useAcc || useAcc.checked)) ? accs.slice() : ['Aucun'];
+  // Tenues : validées indépendamment. Si refusées, le récit n'y fait plus référence.
+  G._storyTenues = !!(duo && duo.tenues && (!useTen || useTen.checked));
   G._rolesChosen = true;
   renderStoryPrologue();
   goTo('page-story-prologue');
@@ -6295,6 +7192,13 @@ function renderStoryPrologue(){
       + '<div style="align-self:center;color:var(--muted);font-size:18px">&amp;</div>'
       + '<div style="text-align:center"><div style="font-size:26px">'+rF.emoji+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+pF.prenom+'</div><div style="font-size:13px;font-weight:700;color:var(--rose)">'+rF.label+'</div></div>'
     + '</div>'
+    + (G._storyTenues && duo.tenues
+        ? '<div style="max-width:330px;margin:-14px 0 24px;padding:11px 14px;background:rgba(216,166,87,.08);border:1px solid rgba(216,166,87,.25);border-radius:12px;font-size:12px;line-height:1.55;color:var(--text)">'
+          + '<div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Costumes</div>'
+          + '<div><b style="color:var(--blue)">'+pH.prenom+'</b> — '+duo.tenues.H+'</div>'
+          + '<div style="margin-top:3px"><b style="color:var(--rose)">'+pF.prenom+'</b> — '+duo.tenues.F+'</div>'
+          + '<div style="margin-top:7px;font-size:10.5px;color:var(--muted);font-style:italic">Habillez-vous avant de commencer.</div></div>'
+        : '')
     + '<button class="btn" style="max-width:280px" onclick="startStoryFromPrologue()">▶ Commencer l\'histoire</button>';
   // Narration de la prémisse, si activée
   if(voiceNarrationOn && 'speechSynthesis' in window){
@@ -6310,6 +7214,7 @@ function renderStoryPrologue(){
 }
 function startStoryFromPrologue(){
   if('speechSynthesis' in window) speechSynthesis.cancel();
+  markStoryPlayed(G._storyDuo);
   proceedAfterPlayers();
 }
 function pickRandomDuo(excludeId){
@@ -6478,8 +7383,9 @@ function launchGame() {
   G.level=1; G.gageIdx=0; G.scores={}; G.usedKama=[]; G.playedTexts=new Set(); G.progressLog=[]; G._kamaShown=0; G._prevGages=[]; G._recentGages=[]; G._sessionSeenGages=[]; G._lastBonusTitle=null;
   G._statRealized=0; G._statChanged=0; G._changedThisSession=[];
   G._pendingBonusCard=null; G._pendingBonusWinner=null; G._bonusChoiceCtx=null;
-  G._rolesChosen=false;
-  G._storyDuo=null;
+  // NB : on ne réinitialise PAS G._rolesChosen / G._storyDuo ici — en mode Histoire ils viennent
+  // d'être choisis par le joueur (thème + rôles) et servent au fond d'écran comme aux scènes.
+  if(G.mode!=='story'){ G._rolesChosen=false; G._storyDuo=null; }
   G._startedAt=Date.now();
   curRolePlayer=1;
   _endRatings = {};
@@ -7177,6 +8083,75 @@ function buildDuoChangePool(duo, level, usedTexts, pH, pF){
   return alt;
 }
 
+// ── MOTEUR DE TRAME ORDONNÉE (mode Histoire) ──
+// Contrairement au pool de gages classique, les beats sont joués DANS L'ORDRE : chacun
+// découle du précédent. Chaque beat est une situation + une réplique + une intention de jeu.
+function _trameBeatToGage(beat, pH, pF, idx){
+  var who = function(tag){ return tag==='H' ? pH.prenom : pF.prenom; };
+  var fill = function(s){ return (s||'').replace(/\{H\}/g, pH.prenom).replace(/\{F\}/g, pF.prenom); };
+  var html = '<div class="story-beat-scene">'+fill(beat.scene)+'</div>';
+  if(beat.replique){
+    html += '<div class="story-beat-line"><span class="story-beat-who">'+who(beat.replique.qui)+' :</span> «&nbsp;'+fill(beat.replique.texte)+'&nbsp;»</div>';
+  }
+  if(beat.intention){
+    html += '<div class="story-beat-intentions">';
+    if(beat.intention.H) html += '<div><b>'+pH.prenom+'</b> — '+fill(beat.intention.H)+'</div>';
+    if(beat.intention.F) html += '<div><b>'+pF.prenom+'</b> — '+fill(beat.intention.F)+'</div>';
+    html += '</div>';
+  }
+  if(beat.duree){
+    var m = Math.floor(beat.duree/60), s = beat.duree%60;
+    var lbl = m ? (m+' min'+(s?' '+s:'')) : (s+' secondes');
+    html += '<div class="story-beat-timer">**'+lbl+'**</div>';
+  }
+  if(beat.choix){
+    html += '<div class="story-beat-choice"><div class="story-beat-choice-q">'+fill(beat.choix.question)+'</div>'
+      + beat.choix.options.map(function(o){ return '<div class="story-beat-choice-o">• '+fill(o)+'</div>'; }).join('')
+      + '</div>';
+  }
+  return {
+    texte: html,
+    niveau: beat.acte || 1,
+    genre: 'Mixte',
+    pratiques: [],
+    accessoires: beat.accessoires || [],
+    modes: ['story'],
+    solo: false,
+    _p: beat.replique ? who(beat.replique.qui) : pH.prenom,
+    _ch: false, _kama: false,
+    _trame: true, _beatIdx: idx
+  };
+}
+function _lcFirst(s){ return s ? s.charAt(0).toLowerCase()+s.slice(1) : ''; }
+function buildTrameGame(duo, pH, pF){
+  G.gagesByLevel = {}; G.changePool = {};
+  var beats = (duo.trame||[]).filter(function(b){
+    // Un beat qui exige un accessoire absent est écarté : l'histoire reste cohérente sans lui.
+    if(!b.accessoires || !b.accessoires.length) return true;
+    return b.accessoires.every(function(a){ return (G.acc||[]).indexOf(a)>=0; });
+  });
+  // Tenues validées : un beat d'ouverture ancre le jeu de rôle avant la première scène.
+  if(G._storyTenues && duo.tenues){
+    beats = [{acte:1,
+      scene:"Avant le premier mot, entrez dans le rôle. "+pH.prenom+" enfile "+_lcFirst(duo.tenues.H)+". "+pF.prenom+" enfile "+_lcFirst(duo.tenues.F)+".",
+      replique:{qui:'F', texte:"À partir de maintenant, on ne s'appelle plus par nos prénoms."},
+      intention:{H:"Habille-toi sans te presser. Regarde-la faire.", F:"Prends ton temps devant lui. Le costume fait déjà partie du jeu."}
+    }].concat(beats);
+  }
+  beats.forEach(function(b, i){
+    var lvl = b.acte || 1;
+    if(!G.gagesByLevel[lvl]) G.gagesByLevel[lvl] = [];
+    G.gagesByLevel[lvl].push(_trameBeatToGage(b, pH, pF, i));
+  });
+  // Les beats sont ordonnés : aucun pool de remplacement aléatoire (le bouton Changer
+  // avancerait sinon dans une scène sans rapport avec la trame en cours).
+  [1,2,3,4,5].forEach(function(lvl){
+    if(!G.gagesByLevel[lvl]) G.gagesByLevel[lvl] = [];
+    if(!G.changePool[lvl]) G.changePool[lvl] = {};
+    G.changePool[lvl][pH.prenom] = [];
+    G.changePool[lvl][pF.prenom] = [];
+  });
+}
 function buildStoryGame(){
   var pH = G.players.filter(function(p){return p.genre==='Homme';})[0] || G.players[0];
   var pF = G.players.filter(function(p){return p.genre==='Femme';})[0] || G.players[1] || G.players[0];
@@ -7184,6 +8159,12 @@ function buildStoryGame(){
   var duo = G._storyDuo ? STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0] : null;
 
   if(duo){
+    // Histoire dotée d'une trame ordonnée (nouveau format jeu de rôle) : beats joués dans
+    // l'ordre. Les autres histoires continuent d'utiliser le pool de scènes classique.
+    if(duo.trame && duo.trame.length){
+      buildTrameGame(duo, pH, pF);
+      return;
+    }
     // ── Histoire sur-mesure : on pioche exclusivement dans les scènes écrites pour ce duo précis ──
     var usedTextsAll = [];
     [1,2,3,4].forEach(function(lvl){
@@ -7299,10 +8280,94 @@ function buildStoryGame(){
   });
 }
 
+// ══════════════ MODE SOLO GUIDÉ (format trame) ══════════════
+// Même principe que le mode Histoire : une séance ordonnée qui monte crescendo, avec une
+// situation, une intention et des pauses — au lieu de gages tirés au hasard.
+var SOLO_TRAMES = {
+  Homme: [
+    {acte:1, scene:"Installe-toi confortablement, lumière basse. Ne touche rien encore. Pose juste une main à plat sur ton ventre et respire lentement.",
+      intention:"Laisse la chaleur monter d'elle-même. Ne cherche pas à provoquer quoi que ce soit.", duree:60},
+    {acte:1, scene:"Fais glisser ta main plus bas, par-dessus le tissu. Effleure seulement, sans jamais serrer.",
+      intention:"Reste par-dessus le vêtement. L'attente fait partie du travail.", duree:90},
+    {acte:2, scene:"Peau contre peau maintenant. Caresse-toi très lentement sur toute la longueur, de bas en haut.",
+      intention:"Un rythme régulier, lent. Repère ce qui te fait le plus réagir.", duree:120},
+    {acte:2, scene:"Concentre-toi uniquement sur le gland, en cercles lents avec le pouce.",
+      intention:"Change de pression, de vitesse. Trouve ce qui monte le plus vite.", duree:90},
+    {acte:3, scene:"Accélère franchement, jusqu'à sentir que ça devient sérieux. Puis arrête tout — main immobile.",
+      intention:"Ne bouge plus pendant la pause. Laisse redescendre à peine, puis reprends.", duree:60,
+      choix:"Tu peux répéter cette montée-arrêt une fois de plus si tu veux prolonger."},
+    {acte:3, scene:"Reprends beaucoup plus lentement qu'avant. Savoure ce moment où l'envie a doublé.",
+      intention:"Retiens-toi. C'est le passage le plus difficile, c'est voulu.", duree:120},
+    {acte:4, scene:"Monte jusqu'au bord — vraiment au bord — et stoppe net, sans rien lâcher.",
+      intention:"Tu décides quand repartir. Fais durer la pause autant que tu tiens.", duree:45},
+    {acte:4, scene:"Une dernière fois : accélère jusqu'à la limite, puis arrête-toi. Respire.",
+      intention:"C'est la dernière retenue. Après, tu ne t'arrêtes plus.", duree:45},
+    {acte:5, scene:"Cette fois, tu ne t'arrêtes plus. Accélère progressivement, sans aucune retenue, jusqu'au bout.",
+      intention:"Laisse-toi aller complètement. Durée libre. Puis reste allongé et reprends ton souffle."}
+  ],
+  Femme: [
+    {acte:1, scene:"Installe-toi confortablement, lumière basse. Ne touche rien encore. Pose juste une main à plat sur ton ventre et respire lentement.",
+      intention:"Laisse l'envie monter d'elle-même. Ne cherche pas à l'accélérer.", duree:60},
+    {acte:1, scene:"Fais glisser ta main plus bas, par-dessus le tissu. Effleure seulement, sans appuyer.",
+      intention:"Reste par-dessus le vêtement. L'attente fait partie du travail.", duree:90},
+    {acte:2, scene:"Peau contre peau maintenant. Caresse-toi très lentement, tout autour, sans aller directement au plus sensible.",
+      intention:"Explore les contours d'abord. Repère ce qui te fait le plus réagir.", duree:120},
+    {acte:2, scene:"Concentre-toi sur le clitoris, en petits cercles lents et réguliers.",
+      intention:"Change de pression, de vitesse. Trouve ce qui monte le plus vite.", duree:90},
+    {acte:3, scene:"Accélère franchement, jusqu'à sentir que ça devient sérieux. Puis arrête tout — main immobile.",
+      intention:"Ne bouge plus pendant la pause. Laisse redescendre à peine, puis reprends.", duree:60,
+      choix:"Tu peux répéter cette montée-arrêt une fois de plus si tu veux prolonger."},
+    {acte:3, scene:"Reprends beaucoup plus lentement qu'avant. Savoure ce moment où l'envie a doublé.",
+      intention:"Retiens-toi. C'est le passage le plus difficile, c'est voulu.", duree:120},
+    {acte:4, scene:"Monte jusqu'au bord — vraiment au bord — et stoppe net, sans rien lâcher.",
+      intention:"Tu décides quand repartir. Fais durer la pause autant que tu tiens.", duree:45},
+    {acte:4, scene:"Une dernière fois : accélère jusqu'à la limite, puis arrête-toi. Respire.",
+      intention:"C'est la dernière retenue. Après, tu ne t'arrêtes plus.", duree:45},
+    {acte:5, scene:"Cette fois, tu ne t'arrêtes plus. Accélère progressivement, sans aucune retenue, jusqu'au bout.",
+      intention:"Laisse-toi aller complètement. Durée libre. Puis reste allongée et reprends ton souffle."}
+  ]
+};
+SOLO_TRAMES.Trans = SOLO_TRAMES.Femme;
+function _soloBeatToGage(beat, player, idx){
+  var html = '<div class="story-beat-scene">'+beat.scene+'</div>';
+  if(beat.intention){
+    html += '<div class="story-beat-intentions"><div>'+beat.intention+'</div></div>';
+  }
+  if(beat.duree){
+    var m=Math.floor(beat.duree/60), s=beat.duree%60;
+    html += '<div class="story-beat-timer">**'+(m?(m+' min'+(s?' '+s:'')):(s+' secondes'))+'**</div>';
+  }
+  if(beat.choix){
+    html += '<div class="story-beat-choice"><div class="story-beat-choice-o">'+beat.choix+'</div></div>';
+  }
+  var pr = player.genre==='Femme' ? 'solo_f' : (player.genre==='Trans' ? 'solo_t' : 'solo_h');
+  return {texte:html, niveau:beat.acte||1, genre:player.genre, pratiques:[pr], accessoires:[],
+    modes:['solo'], solo:true, _p:player.prenom, _ch:false, _kama:false, _trame:true, _beatIdx:idx};
+}
+function buildSoloTrameGame(){
+  var player = G.players[0];
+  var trame = SOLO_TRAMES[player.genre] || SOLO_TRAMES.Homme;
+  G.gagesByLevel={}; G.changePool={};
+  trame.forEach(function(b,i){
+    var lvl=b.acte||1;
+    if(!G.gagesByLevel[lvl]) G.gagesByLevel[lvl]=[];
+    G.gagesByLevel[lvl].push(_soloBeatToGage(b, player, i));
+  });
+  [1,2,3,4,5].forEach(function(l){
+    if(!G.gagesByLevel[l]) G.gagesByLevel[l]=[];
+    if(!G.changePool[l]) G.changePool[l]={};
+    G.changePool[l][player.prenom]=[];
+  });
+}
 function prepareGages() {
   G.gagesByLevel={};G.changePool={};
   if(G.mode==='story' && !isSoloGame() && G.players.length>=2){
     buildStoryGame();
+    return;
+  }
+  // Mode Solo : séance guidée ordonnée (même format que le mode Histoire).
+  if(isSoloGame() && G.mode!=='brise_glace'){
+    buildSoloTrameGame();
     return;
   }
   var all=allGages();
@@ -7860,7 +8925,22 @@ function toggleVoiceNarration(){
 function speakGageText(gage, player, partner){
   if(!voiceNarrationOn || !('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
-  var raw = gageText(gage)
+  var src = gageText(gage);
+  // Beats de trame : on retire la réplique du texte narré — elle doit être prononcée par
+  // les joueurs eux-mêmes, c'est le cœur du jeu de rôle. Le reste (situation, intentions,
+  // point de bascule) est lu normalement.
+  if(gage && gage._trame){
+    src = src.replace(/<div class="story-beat-line">[\s\S]*?<\/div>/g, ' ');
+    src = src.replace(/<div class="story-beat-intentions">/g, '. ')
+             .replace(/<div class="story-beat-choice-q">/g, '. ')
+             .replace(/<div class="story-beat-choice-o">/g, '. ')
+             .replace(/<\/div>/g, ' ')
+             .replace(/<[^>]+>/g, ' ')
+             .replace(/•/g, ' ')
+             .replace(/&nbsp;/g, ' ')
+             .replace(/\s+/g, ' ');
+  }
+  var raw = src
     .replace(/\{prenom\}/g, player.prenom)
     .replace(/\{partenaire\}/g, partner.prenom)
     .replace(/\{role_h\}/g, '')
@@ -7907,7 +8987,7 @@ function renderGageCard(gage, player, partner) {
     .replace(/{role_h}/g, '<strong style="color:var(--blue)">'+roleHLabel+'</strong>')
     .replace(/{role_f}/g, '<strong style="color:var(--rose)">'+roleFLabel+'</strong>')
     .replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:var(--gold)">$1</strong>');
-  txt = formatGageBodyHTML(txt);
+  txt = gage._trame ? txt : formatGageBodyHTML(txt);
   var cls = 'gage-card';
   if(gage._ch) cls += ' challenge';
   else if(gage.texte && gage.texte.charAt(0)==='\u2753') cls += ' question';
@@ -8533,6 +9613,125 @@ var LVL_DESCS = [
 
 // Textes de transition "chapitre" pour le mode Histoire — donnent le rythme d'un film
 // (montée, rebondissement, dénouement) entre les niveaux, sans réécrire tout le contenu.
+// ══════════════ AMBIANCES DE SOIRÉE (modes hors Histoire) ══════════════
+// L'ambiance ne change pas le NOMBRE de gages (c'est le rôle de la durée) — elle donne
+// un arc à la soirée : une ouverture par niveau et une intention de jeu. Les gages restent
+// tirés selon les pratiques et accessoires cochés, donc la rejouabilité est intacte.
+var AMBIANCE_KEY = 'ambiance_v28';
+var AMBIANCES = [
+  {id:'sensuelle', emoji:'🕯️', nom:'Lente et sensuelle', sub:'On prend tout notre temps', dureeSuggeree:60,
+   niveaux:{
+     1:{titre:"Rien ne presse", texte:"Vous avez toute la soirée. Le premier contact ne doit surtout pas être pressé.", intention:"Faites durer chaque gage plus longtemps que nécessaire. Ne comptez pas."},
+     2:{titre:"La tension monte", texte:"Les premiers vêtements tombent, mais lentement. Ce qui compte, c'est ce qui vient avant.", intention:"Ralentissez encore. Laissez chaque geste finir vraiment avant le suivant."},
+     3:{titre:"Plus de retenue", texte:"L'envie a pris toute la place. Vous n'avez plus envie de faire durer, et pourtant.", intention:"Une pause entre chaque gage. Regardez-vous. Respirez."},
+     4:{titre:"Tout donner", texte:"Il n'y a plus de raison de se retenir, sauf celle de faire durer encore un peu.", intention:"Le rythme monte, mais restez dans la lenteur qui vous a menés jusqu'ici."},
+     5:{titre:"La fin", texte:"Tout ce que vous avez retenu depuis le début va enfin se libérer.", intention:"Ne comptez plus rien. Prenez le temps qu'il faut."}
+   }},
+  {id:'directe', emoji:'🔥', nom:'Directe et intense', sub:'On ne perd pas de temps', dureeSuggeree:30,
+   niveaux:{
+     1:{titre:"Tout de suite", texte:"Pas de préliminaires interminables ce soir. Vous savez déjà tous les deux où ça va.", intention:"Enchaînez vite. Ne vous attardez pas."},
+     2:{titre:"Ça s'accélère", texte:"Les vêtements ne durent pas. L'envie non plus n'attend pas.", intention:"Ne laissez pas retomber entre deux gages. Enchaînez."},
+     3:{titre:"Sans filtre", texte:"Plus de retenue, plus de mise en scène. Juste ce que vous voulez.", intention:"Demandez directement ce que vous voulez. Sans détour."},
+     4:{titre:"À fond", texte:"Rien ne vous freine plus. Allez chercher exactement ce dont vous avez envie.", intention:"Intensité maximale. Ne ralentissez pas."},
+     5:{titre:"Le final", texte:"Tout ce qui a monté depuis le début arrive maintenant.", intention:"Sans aucune retenue, jusqu'au bout."}
+   }},
+  {id:'joueuse', emoji:'😈', nom:'Joueuse et taquine', sub:'On se provoque, on se fait attendre', dureeSuggeree:45,
+   niveaux:{
+     1:{titre:"Le jeu commence", texte:"Ce soir, celui qui craque le premier a perdu. Vous le savez tous les deux.", intention:"Provoquez sans céder. Faites durer le suspense."},
+     2:{titre:"Qui craquera ?", texte:"Chacun essaie de faire craquer l'autre. Personne ne veut être le premier.", intention:"Arrêtez-vous juste avant. À chaque fois."},
+     3:{titre:"Ça devient sérieux", texte:"Le jeu tient encore, mais de moins en moins. L'un des deux va lâcher.", intention:"Un dernier round de provocation avant de céder."},
+     4:{titre:"Reddition", texte:"Quelqu'un a craqué. Peu importe qui — maintenant tout est permis.", intention:"Le perdant obéit au gagnant sur ce niveau."},
+     5:{titre:"La victoire", texte:"Le jeu est fini. Il ne reste que ce que vous vouliez tous les deux depuis le début.", intention:"Plus de règles. Allez-y."}
+   }},
+  {id:'tendre', emoji:'🌸', nom:'Tendre et complice', sub:'Beaucoup de douceur', dureeSuggeree:45,
+   niveaux:{
+     1:{titre:"Se retrouver", texte:"Ce soir, il s'agit surtout d'être ensemble. Le reste viendra.", intention:"Beaucoup de contact, de regards. Parlez-vous."},
+     2:{titre:"Se redécouvrir", texte:"Vous vous connaissez par cœur, et pourtant il reste toujours quelque chose à découvrir.", intention:"Dites à voix haute ce que vous aimez chez l'autre."},
+     3:{titre:"Se laisser aller", texte:"La tendresse n'exclut rien. Elle change juste la façon d'y aller.", intention:"Gardez le contact visuel autant que possible."},
+     4:{titre:"Ensemble", texte:"Ce n'est plus chacun pour l'autre, c'est vous deux en même temps.", intention:"Cherchez ce qui vous fait plaisir aux deux, en même temps."},
+     5:{titre:"Jusqu'au bout", texte:"Finissez comme vous avez commencé : ensemble.", intention:"Restez l'un contre l'autre après. Ne partez pas tout de suite."}
+   }},
+  {id:'dominante', emoji:'⛓️', nom:'Un mène, l\'autre suit', sub:'Rapport de force assumé', dureeSuggeree:45,
+   niveaux:{
+     1:{titre:"Établir les rôles", texte:"Décidez maintenant qui mène ce soir. L'autre obéit, sans discuter.", intention:"Celui qui mène donne les ordres. L'autre exécute."},
+     2:{titre:"L'autorité s'installe", texte:"Le rôle est pris. Il ne se discute plus jusqu'à la fin de la soirée.", intention:"Celui qui suit ne prend aucune initiative. Il attend."},
+     3:{titre:"Obéissance", texte:"Plus aucune hésitation. L'ordre est donné, il est exécuté.", intention:"Celui qui mène peut faire attendre autant qu'il veut."},
+     4:{titre:"Récompense", texte:"L'obéissance mérite ce qui suit. Ou pas encore, c'est lui qui décide.", intention:"Celui qui mène choisit quand l'autre a le droit."},
+     5:{titre:"La permission", texte:"Le dernier mot appartient à celui qui a mené toute la soirée.", intention:"Il donne la permission. Puis sortez du rôle ensemble."}
+   }},
+  {id:'aveugle', emoji:'🖤', nom:'Les yeux bandés', sub:'L\'un ne voit rien de la soirée', dureeSuggeree:45,
+   niveaux:{
+     1:{titre:"Le bandeau", texte:"Décidez qui porte le bandeau ce soir. Il ne le retirera pas avant la fin.", intention:"Celui qui voit décrit tout à voix haute. L'autre se laisse guider."},
+     2:{titre:"Deviner", texte:"Sans la vue, chaque contact devient une surprise. Impossible d'anticiper.", intention:"Celui qui voit annonce ce qu'il va faire — ou ment sur ce qu'il va faire."},
+     3:{titre:"Se fier", texte:"Il n'y a plus que la confiance. Et l'attente entre deux gestes.", intention:"Faites des pauses volontairement longues. L'attente fait tout le travail."},
+     4:{titre:"Inverser", texte:"Le bandeau change de tête. À l'autre de découvrir ce que ça fait.", intention:"Échangez le bandeau maintenant. Rendez-lui exactement ce qu'il vous a fait."},
+     5:{titre:"Enfin voir", texte:"Le bandeau tombe pour le final. Vous vous regardez enfin.", intention:"Retirez le bandeau et finissez en vous regardant."}
+   }},
+  {id:'edging', emoji:'🥵', nom:'Au bord, encore', sub:'Interdiction de jouir avant la fin', dureeSuggeree:60,
+   niveaux:{
+     1:{titre:"La règle", texte:"Ce soir, personne n'a le droit de jouir avant le dernier niveau. Vous vous y engagez tous les deux, maintenant.", intention:"Dites-le à voix haute. À partir de maintenant, c'est un pacte."},
+     2:{titre:"Première montée", texte:"Le corps commence à réclamer ce que la règle interdit. C'est exactement le but.", intention:"Prévenez l'autre quand vous approchez. Il doit s'arrêter net."},
+     3:{titre:"Tenir", texte:"Chaque arrêt rend le suivant plus difficile. Vous en êtes déjà à compter les secondes.", intention:"Au moins deux arrêts complets sur ce niveau. Mains en l'air pendant la pause."},
+     4:{titre:"Supplier", texte:"À ce stade, l'un des deux est prêt à demander. La règle tient toujours.", intention:"Vous avez le droit de supplier. L'autre a le droit de refuser."},
+     5:{titre:"Enfin", texte:"La règle tombe. Tout ce que vous avez retenu depuis le début peut enfin sortir.", intention:"Plus aucune retenue. Allez au bout, aussi longtemps qu'il le faut."}
+   }},
+  {id:'servir', emoji:'💋', nom:'Chacun son tour', sub:'L\'un reçoit, l\'autre donne — puis on inverse', dureeSuggeree:60,
+   niveaux:{
+     1:{titre:"Qui reçoit ?", texte:"Décidez qui reçoit en premier. L'autre ne recevra rien avant l'inversion — il donne, c'est tout.", intention:"Celui qui reçoit ne fait rien, absolument rien. Il se laisse faire."},
+     2:{titre:"Se laisser faire", texte:"Recevoir sans rien rendre est plus difficile qu'il n'y paraît. Tenez le rôle.", intention:"Celui qui donne cherche uniquement le plaisir de l'autre. Aucune réciprocité."},
+     3:{titre:"Jusqu'où", texte:"Celui qui donne connaît maintenant exactement ce qui marche. Il en profite.", intention:"Celui qui reçoit dit à voix haute ce qu'il veut. L'autre obéit."},
+     4:{titre:"L'inversion", texte:"Les rôles s'échangent maintenant. À l'autre de tout recevoir à son tour.", intention:"Inversez complètement. Rendez-lui exactement ce qu'il vous a donné."},
+     5:{titre:"Ensemble", texte:"Plus de rôles, plus de tour de garde. Vous prenez tous les deux en même temps.", intention:"Cherchez à finir ensemble. Durée libre."}
+   }},
+  {id:'mots', emoji:'🗣️', nom:'Tout dire à voix haute', sub:'On raconte, on demande, on ne se tait pas', dureeSuggeree:45,
+   niveaux:{
+     1:{titre:"Oser le dire", texte:"Ce soir, tout se dit. Ce que vous aimez, ce que vous voulez, ce que vous n'avez jamais osé demander.", intention:"Avant chaque gage, dites ce que vous espérez qu'il vous fasse."},
+     2:{titre:"Décrire", texte:"Les mots font autant que les gestes, parfois plus.", intention:"Décrivez ce que vous faites pendant que vous le faites."},
+     3:{titre:"Demander", texte:"Il ne s'agit plus de suggérer. Demandez précisément ce que vous voulez.", intention:"Formulez une demande explicite à chaque gage. L'autre répond oui ou non."},
+     4:{titre:"Le fantasme", texte:"Racontez à voix haute quelque chose que vous n'avez jamais dit à l'autre.", intention:"Pendant que l'un raconte, l'autre continue sans s'arrêter."},
+     5:{titre:"Ne plus se taire", texte:"Tout a été dit. Il ne reste qu'à le faire.", intention:"Continuez de parler jusqu'au bout. Ne retenez ni les mots ni le reste."}
+   }},
+  {id:'silencieuse', emoji:'🤫', nom:'En silence', sub:'Sans un mot, ou presque', dureeSuggeree:45,
+   niveaux:{
+     1:{titre:"Le silence", texte:"Ce soir, aucun mot. Tout passe par les gestes et les regards.", intention:"Interdiction de parler. Communiquez autrement."},
+     2:{titre:"Se comprendre", texte:"Sans les mots, il faut vraiment regarder l'autre pour savoir ce qu'il veut.", intention:"Guidez avec les mains, pas avec la voix."},
+     3:{titre:"Tenir", texte:"Le silence rend chaque son involontaire beaucoup plus fort.", intention:"Retenez vos sons le plus longtemps possible."},
+     4:{titre:"Ça déborde", texte:"Le silence devient impossible à tenir, et c'est exactement l'idée.", intention:"Le premier qui fait un bruit a perdu. Provoquez l'autre."},
+     5:{titre:"Enfin", texte:"Le silence est rompu. Ne le tenez plus.", intention:"Ne retenez plus rien, ni les sons ni le reste."}
+   }}
+];
+var G_ambiance = (function(){ try{ return localStorage.getItem(AMBIANCE_KEY)||''; }catch(e){ return ''; } })();
+function getAmbiance(){ return AMBIANCES.filter(function(a){return a.id===G_ambiance;})[0] || null; }
+function selectAmbiance(id){
+  G_ambiance = id;
+  try{ localStorage.setItem(AMBIANCE_KEY, id); }catch(e){}
+  var a = getAmbiance();
+  if(a && a.dureeSuggeree && !G._dureeChoisie) G_duration = a.dureeSuggeree;
+  goToAccFromDuration();
+}
+function ambianceBack(){
+  goToDurationPage();
+}
+function goToAmbiancePage(){
+  G._dureeChoisie = true; // la durée vient d'être validée manuellement : l'ambiance ne l'écrasera pas
+  // Les ambiances sont réservées au mode Découverte : le mode Classique garde son tirage pur.
+  if(G.mode!=='brise_glace' && G.mode!=='decouverte'){ G_ambiance=''; goToAccFromDuration(); return; }
+  renderAmbiancePage();
+  goTo('page-ambiance');
+}
+function renderAmbiancePage(){
+  var box = document.getElementById('ambiance-content');
+  if(!box) return;
+  box.innerHTML = AMBIANCES.map(function(a){
+    var sel = a.id===G_ambiance;
+    return '<div onclick="selectAmbiance(\''+a.id+'\')" style="cursor:pointer;background:var(--card);border:1.5px solid '+(sel?'var(--gold)':'var(--border)')+';border-radius:14px;padding:13px 14px;margin-bottom:9px;display:flex;gap:12px;align-items:center">'
+      + '<div style="font-size:26px;flex:0 0 auto">'+a.emoji+'</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-weight:700;font-size:14.5px;color:var(--gold)">'+a.nom+'</div>'
+      + '<div style="font-size:12px;color:var(--muted);margin-top:2px">'+a.sub+'</div>'
+      + '</div></div>';
+  }).join('');
+}
 var STORY_CHAPTER_TEXTS = {
   2: [
     "Ce qui n'était qu'un jeu commence à devenir sérieux. Ni {prenom} ni {partenaire} ne veulent être les premiers à l'admettre.",
@@ -8610,6 +9809,23 @@ function _showLevelTransitionOverlay(fromLvl, toLvl) {
         var fvCh=_pickFrenchVoice(); if(fvCh) uttCh.voice=fvCh;
         uttCh.rate=0.80; uttCh.pitch=0.90;
         speechSynthesis.speak(uttCh);
+      }catch(e){}
+    }
+  }
+  // Ambiance choisie (modes hors Histoire) : ouverture narrative du niveau qui arrive.
+  var _amb = (G.mode==='brise_glace' || G.mode==='decouverte') ? getAmbiance() : null;
+  if(_amb && _amb.niveaux[toLvl]){
+    var n = _amb.niveaux[toLvl];
+    document.getElementById('lvl-tr-title').textContent = _amb.emoji+' '+n.titre;
+    subText = n.texte + (n.intention ? '\\n\\n→ ' + n.intention : '');
+    if(voiceNarrationOn && 'speechSynthesis' in window){
+      try{
+        speechSynthesis.cancel();
+        var uttA = new SpeechSynthesisUtterance(n.texte+'. '+(n.intention||''));
+        uttA.lang='fr-FR';
+        var fvA=_pickFrenchVoice(); if(fvA) uttA.voice=fvA;
+        uttA.rate=0.80; uttA.pitch=0.90;
+        speechSynthesis.speak(uttA);
       }catch(e){}
     }
   }
@@ -10732,20 +11948,77 @@ function kamaStartManual(){
   goTo('page-kama-manual');
   renderKamaManualGrid();
 }
+var _kamaFilter = {posture:'', orientation:'', diff:''};
+var KAMA_POSTURES = [
+  {id:'allonge', label:'🛏️ Allongé'},
+  {id:'assis', label:'🪑 Assis'},
+  {id:'genoux', label:'🧎 À genoux'},
+  {id:'debout', label:'🧍 Debout / porté'},
+  {id:'acrobatique', label:'🤸 Acrobatique'}
+];
+var KAMA_ORIENTATIONS = [
+  {id:'face', label:'👀 Face à face'},
+  {id:'derriere', label:'🔄 Par derrière'},
+  {id:'cote', label:'↔️ Sur le côté'},
+  {id:'tete-beche', label:'🔀 Tête-bêche'}
+];
+function _kamaFiltered(){
+  var f=_kamaFilter;
+  return getKamaDataSorted().filter(function(k){
+    if(f.posture && k.posture!==f.posture) return false;
+    if(f.orientation && k.orientation!==f.orientation) return false;
+    if(f.diff==='facile' && (k.difficulty||1)>2) return false;
+    if(f.diff==='moyen' && (k.difficulty||1)!==3) return false;
+    if(f.diff==='expert' && (k.difficulty||1)<4) return false;
+    return true;
+  });
+}
+function kamaSetFilter(champ, val){
+  _kamaFilter[champ] = (_kamaFilter[champ]===val) ? '' : val;
+  renderKamaManualGrid();
+}
+function kamaResetFilters(){ _kamaFilter={posture:'',orientation:'',diff:''}; renderKamaManualGrid(); }
+function _kamaFilterBar(){
+  function chip(champ,val,label){
+    var on=_kamaFilter[champ]===val;
+    return '<button type="button" onclick="kamaSetFilter(\''+champ+'\',\''+val+'\')" style="border:1px solid '+(on?'var(--gold)':'var(--border)')+';background:'+(on?'rgba(216,166,87,.16)':'var(--card)')+';color:'+(on?'var(--gold)':'var(--text)')+';border-radius:16px;padding:5px 11px;font-size:11.5px;cursor:pointer;margin:0 5px 5px 0;font-family:inherit">'+label+'</button>';
+  }
+  var h='<div style="margin-bottom:10px">';
+  h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Posture</div><div>';
+  h+=KAMA_POSTURES.map(function(p){return chip('posture',p.id,p.label);}).join('')+'</div>';
+  h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 5px">Orientation</div><div>';
+  h+=KAMA_ORIENTATIONS.map(function(o){return chip('orientation',o.id,o.label);}).join('')+'</div>';
+  h+='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 5px">Difficulté</div><div>';
+  h+=chip('diff','facile','🟢 Facile')+chip('diff','moyen','🟡 Moyenne')+chip('diff','expert','🔴 Experte')+'</div>';
+  var actifs=(_kamaFilter.posture?1:0)+(_kamaFilter.orientation?1:0)+(_kamaFilter.diff?1:0);
+  if(actifs) h+='<button type="button" onclick="kamaResetFilters()" style="margin-top:8px;background:none;border:none;color:var(--accent);font-size:11.5px;cursor:pointer;font-family:inherit;padding:0">✕ Effacer les filtres</button>';
+  return h+'</div>';
+}
 function renderKamaManualGrid(){
+  var bar = document.getElementById('kama-filter-bar');
+  if(bar) bar.innerHTML = _kamaFilterBar();
   var grid = document.getElementById('kama-manual-grid');
   if(!grid) return;
-  var all = getKamaDataSorted();
-  if(!all.length){ grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px">Aucune position disponible.</p>'; return; }
+  var all = _kamaFiltered();
+  if(!all.length){ grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:16px 0">Aucune position ne correspond à ces filtres.</p>'; return; }
   grid.innerHTML = all.map(function(k,i){
     var thumb = k.image
       ? '<img src="'+k.image+'" style="width:100%;height:108px;object-fit:cover;border-radius:10px 10px 0 0;display:block">'
       : '<div style="width:100%;height:108px;border-radius:10px 10px 0 0;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center">'+kamaPoseSVG(k.pose,k.prop)+'</div>';
-    return '<div onclick="kamaShowDetail('+i+')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+    return '<div onclick="kamaShowDetailByKey(\''+(k._key||k.name).replace(/'/g,"\\\\'")+'\')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'
       + thumb
       + '<div style="padding:8px 10px"><div style="font-size:12.5px;font-weight:700;line-height:1.3">'+k.name+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Niv.'+k.niveau+' · difficulté '+(k.difficulty||1)+'/5</div></div>'
       + '</div>';
   }).join('');
+}
+// Ouverture par clé stable : l'index de la grille change quand un filtre est actif.
+function kamaShowDetailByKey(key){
+  var k = getKamaDataSorted().filter(function(x){ return (x._key||x.name)===key; })[0];
+  if(!k) return;
+  var nameEl = document.getElementById('kama-detail-name');
+  if(nameEl) nameEl.textContent = k.name;
+  renderKamaModeCard('kama-detail-content', k);
+  goTo('page-kama-detail');
 }
 function kamaShowDetail(i){
   var all = getKamaDataSorted();
@@ -10868,10 +12141,10 @@ function goToSettings() {
     goTo('page-settings');
     return;
   }
-  // Mode brise-glace = 2 joueurs par défaut, skip page-nb
-  if(G.mode==='brise_glace') {
+  // Découverte / brise-glace = 2 joueurs par défaut, skip page-nb mais garde le choix de durée
+  if(G.mode==='brise_glace' || G.mode==='decouverte') {
     if(G.nb < 2) G.nb = 2;
-    goTo('page-settings');
+    goToDurationPage();
     return;
   }
   goTo('page-nb');
@@ -10879,8 +12152,8 @@ function goToSettings() {
 
 function saveSettings() {
   try{localStorage.setItem("jdc_settings_v28",JSON.stringify({lvl:{1:LVL_MAX[1],2:LVL_MAX[2],3:LVL_MAX[3],4:LVL_MAX[4]}}));}catch(e){}
-  // Solo et brise-glace passent directement à la config joueurs
-  if(G.mode==='solo'||G.mode==='brise_glace') {
+  // Solo passe directement à la config joueurs
+  if(G.mode==='solo') {
     startPlayerSetup();
     return;
   }
@@ -12137,7 +13410,6 @@ function applyLang() {
   // Update mode labels if mode page is visible
   var modeLabels = {
     'mc-classique': {l:'mode_classique', s:'mode_classique_sub'},
-    'mc-pimente':   {l:'mode_pimente',   s:'mode_pimente_sub'},
     'mc-brise-glace':{l:'mode_brise_glace',s:'mode_brise_glace_sub'},
     'mc-competition':{l:'mode_competition',s:'mode_competition_sub'}
   };
@@ -12262,7 +13534,7 @@ function adminTap(){
       // Affiche le badge premium
       var pb=document.getElementById('premium-badge'); if(pb) pb.style.display='block';
       // Débloque visuellement toutes les cartes premium
-      ['mc-decouverte','mc-pimente','mc-competition'].forEach(function(id){
+      ['mc-decouverte','mc-competition'].forEach(function(id){
         var card=document.getElementById(id);
         if(card){ card.classList.add('unlocked'); var lock=card.querySelector('.mode-lock'); if(lock) lock.style.display='none'; }
       });
