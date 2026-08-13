@@ -1069,6 +1069,9 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   <div id="btn-edit-players" style="display:none;text-align:center;margin-bottom:6px">
     <button class="btn ghost sm" onclick="goBackToPlayers()" style="font-size:12px;padding:6px 14px">← Modifier les joueurs / pratiques</button>
   </div>
+  <div id="btn-back-stories" style="display:none;text-align:center;margin-bottom:6px">
+    <button class="btn ghost sm" onclick="backToStoryChoice()" style="font-size:12px;padding:6px 14px">← Changer d'histoire</button>
+  </div>
   <div id="g-card"></div>
   <div class="fav-toast" id="fav-toast"></div>
   <div id="g-timer" class="timer-box hidden">
@@ -1109,6 +1112,8 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <button class="admin-tab" id="atab-kama-nav" onclick="adminTab('kama',this)">🪷 Kâmasûtra</button>
     <button class="admin-tab" id="atab-nextgame-nav" onclick="adminTab('nextgame',this)">🎯 Prochaine partie</button>
     <button class="admin-tab" id="atab-bgimages-nav" onclick="adminTab('bgimages',this)">🖼️ Fonds d'écran</button>
+    <button class="admin-tab" id="atab-stories-nav" onclick="adminTab('stories',this)">🎬 Histoires</button>
+    <button class="admin-tab" id="atab-media-nav" onclick="adminTab('media',this)">📁 Médiathèque</button>
     <button class="admin-tab" id="atab-data-nav" onclick="adminTab('data',this)">💾 Données</button>
   </div>
   <div id="admin-content"></div>
@@ -1137,6 +1142,7 @@ var ROLES = {
     {id:'h_livreur',  emoji:'📦', label:'Livreur',            article:'le livreur',            ouverture:"sonne à la porte avec un paquet... et un sourire en coin",             action:["tend le paquet avant de glisser une main vers","s'attarde sur le pas de la porte, un sourire pour"], accAffinite:[]},
     {id:'h_client_club',emoji:'🥃', label:'Client du club', article:'le client',              ouverture:"s'installe dans le fauteuil du salon privé, le club vide depuis la fermeture", action:["s'enfonce dans le fauteuil face à","pose son verre sans quitter des yeux"], accAffinite:['Champagne']},
     {id:'h_medecin',  emoji:'🩺', label:'Médecin',            article:'le médecin',            ouverture:"invite sa patiente à s'allonger pour un examen approfondi",           action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Masque / Bandeau']},
+    {id:'h_chevalier',emoji:'🗡️', label:'Chevalier',          article:'le chevalier',          ouverture:"retire son heaume dans la chambre haute de la tour, la porte verrouillée", action:["met un genou à terre devant","dégrafe lentement son armure devant"], accAffinite:['Ruban / foulard de soie']},
     {id:'h_pompier',  emoji:'🚒', label:'Pompier',            article:'le pompier',            ouverture:"vient d'éteindre l'incendie et reprend son souffle, torse nu",         action:["soulève dans ses bras musclés","attire contre son torse encore essoufflé"],    accAffinite:[]},
     {id:'h_chef',     emoji:'👨‍🍳', label:'Chef cuisinier',   article:'le chef',               ouverture:"prépare un dernier plat, rien que pour elle, cuisine fermée",          action:["fait glisser un doigt gourmand sur","approche une bouchée des lèvres de"], accAffinite:['Chantilly','Nutella','Fraises']},
     {id:'h_inconnu',  emoji:'🍸', label:'Inconnu au bar',     article:"l'inconnu du bar",      ouverture:"s'installe au bar et lui offre un verre sans un mot",                  action:["pose sa main sur la hanche de","se penche à l'oreille de"],    accAffinite:['Champagne','Vin']},
@@ -1156,6 +1162,7 @@ var ROLES = {
   Femme: [
     {id:'f_policiere',emoji:'👮‍♀️', label:'Policière',        article:'la policière',          ouverture:"verrouille la porte de la cellule d'un geste autoritaire",             action:["s'approche d'un pas assuré de","toise longuement"],    accAffinite:['Menottes']},
     {id:'f_infirmiere',emoji:'💉', label:'Infirmière',        article:"l'infirmière",          ouverture:"vient prendre la température de son patient, un peu trop souvent",    action:["passe une main experte le long de","ausculte lentement, un peu trop lentement,"], accAffinite:['Masque / Bandeau']},
+    {id:'f_princesse',emoji:'👑', label:'Princesse',          article:'la princesse',          ouverture:"congédie ses suivantes et referme elle-même la porte de ses appartements", action:["tend la main à","laisse tomber sa robe de cour devant"], accAffinite:[]},
     {id:'f_patronne', emoji:'💼', label:'Patronne',           article:'la patronne',           ouverture:"convoque dans son bureau après la fermeture",                          action:["pose fermement les mains sur","s'installe juste derrière"],     accAffinite:[]},
     {id:'f_professeure',emoji:'👩‍🏫', label:"Professeure d'université", article:'la professeure', ouverture:"referme la salle de séminaire, le campus désert à cette heure",           action:["retire ses lunettes et fixe","fait claquer la règle sur le bureau devant"], accAffinite:['Cravache']},
     {id:'f_danseuse',emoji:'💃', label:'Danseuse', article:'la danseuse',                      ouverture:"referme le rideau du salon privé, la musique tourne encore",            action:["se déhanche lentement devant","s'approche à quelques centimètres de"], accAffinite:['Musique','Lingerie / sous-vêtements sexy']},
@@ -1195,8 +1202,9 @@ var STORY_LEVEL_INTRO = {
    cochées par au moins un des deux joueurs (union du couple) — comme pour les gages perso.
    Compatibilité accessoires : idem, seulement si listé et non vide.
 ═══════════════════════════════════════════════════ */
-var STORY_DUOS = [
+var STORY_DUOS_BASE = [
 { id:'detenu_policiere', homme:'h_detenu', femme:'f_policiere', emoji:'🔒👮‍♀️', title:'Garde à vue',
+  epilogue:"Au matin, le procès-verbal est resté à moitié rempli sur la table. Personne ne lui demandera jamais pourquoi.",
   bg:'radial-gradient(ellipse at top, #1a2438 0%, #0a0e18 70%)',
   tenues:{H:"Débardeur blanc simple", F:"Chemise d'uniforme, ceinturon, cheveux attachés"},
   // ── TRAME ORDONNÉE (nouveau format jeu de rôle) ──
@@ -1224,11 +1232,19 @@ var STORY_DUOS = [
       replique:{qui:'H', texte:"À votre tour d'arrêter de parler."},
       intention:{H:"Descends entre ses cuisses. Prends ton temps, elle t'a fait attendre.", F:"Agrippe les barreaux. Retiens-toi de crier — le couloir est juste derrière."},
       duree:150,
-      choix:{question:"{F} reprend-elle le dessus ?", options:["Oui — elle sort les menottes","Non — elle le laisse continuer jusqu'au bout"]}},
-    {acte:3, scene:"Les menottes se referment sur les poignets de {H}, accrochées au montant du lit de camp. Un cliquetis, puis plus rien à faire d'autre que sentir.",
+      choix:{cle:'domin', question:"{F} reprend-elle le dessus ?", options:["Oui — elle le remet à sa place, mains bloquées","Non — elle le laisse continuer jusqu'au bout"], valeurs:['elle','lui']}},
+    {acte:3, si:{domin:'elle'}, scene:"Les menottes se referment sur les poignets de {H}, accrochées au montant du lit de camp. Un cliquetis, puis plus rien à faire d'autre que sentir.",
       replique:{qui:'F', texte:"Maintenant tu ne bouges plus. Et tu me regardes."},
       intention:{H:"Tu ne contrôles plus rien. Subis, et fais-le savoir.", F:"Sers-toi de lui exactement comme tu en as envie. Bouche, mains, à ton rythme."},
       accessoires:['Menottes'], duree:150},
+    {acte:3, scene:"{F} décroche la matraque de son ceinturon, la fait rouler entre ses paumes — puis la repose et prend autre chose, plus adapté, dans la poche de son uniforme.",
+      replique:{qui:'F', texte:"Fouille au corps. Complète, cette fois."},
+      intention:{H:"Mains contre le mur, jambes écartées. Ne bouge plus.", F:"Prends ton temps, généreusement lubrifiée. C'est toi qui fouilles."},
+      accessoires:['Gode anal'], pratiques:['anal_passif_1'], duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne reprend pas le dessus. {H} la maintient contre les barreaux, une main refermée sur ses deux poignets — il n'a besoin d'aucune menotte pour ça.",
+      replique:{qui:'H', texte:"Ce soir, c'est moi qui décide quand ça s'arrête."},
+      intention:{H:"Garde-lui les poignets bloqués. Prends tout ton temps de l'autre main.", F:"Tu as cédé le contrôle. Assume-le jusqu'au bout."},
+      duree:150},
     {acte:4, scene:"Elle libère un poignet — un seul. Assez pour qu'il puisse la toucher, pas assez pour qu'il reprenne le pouvoir. Elle s'installe au-dessus de lui.",
       replique:{qui:'F', texte:"Vas-y. Je te préviens quand j'en ai assez."},
       intention:{H:"Elle vient de t'autoriser. Ne demande pas deux fois.", F:"Tu mènes tout. Impose ton rythme, change-le quand tu veux."},
@@ -1273,80 +1289,77 @@ var STORY_DUOS = [
     ]
   }
 },
-{ id:'medecin_infirmiere', homme:'h_medecin', femme:'f_infirmiere', emoji:'🩺💉', title:'Consultation tardive',
-  bg:'radial-gradient(ellipse at center, #163030 0%, #0a1515 70%)',
-  tenues:{H:"Blouse blanche ouverte, stéthoscope", F:"Blouse d'infirmière courte, bas blancs"},
+{ id:'chevalier_princesse', homme:'h_chevalier', femme:'f_princesse', emoji:'🗡️👑', title:'La tour du donjon',
+  epilogue:"L'aube pointe sur les remparts. La garde n'a rien vu, la cour ne saura rien — et la princesse a déjà décidé qu'il y aurait une prochaine nuit.",
+  bg:'radial-gradient(ellipse at top, #2a2216 0%, #0d0a06 70%)',
+  tenues:{H:"Chemise de lin ouverte, ceinturon de cuir", F:"Robe longue à lacets, cheveux détachés, couronne"},
   trame:[
-    {acte:1, scene:"Le dernier dossier de la journée est refermé depuis vingt minutes. {H} range ses instruments un par un, beaucoup trop lentement, en sachant parfaitement que {F} l'observe depuis le seuil du cabinet.",
-      replique:{qui:'F', texte:"Vous avez fini votre service, docteur."},
-      intention:{H:"Ne réponds pas tout de suite. Continue ce que tu fais, laisse le silence durer.", F:"Entre et ferme la porte derrière toi. À clé."}},
-    {acte:1, scene:"{F} s'approche par-derrière et dénoue la blouse de {H}, un lien après l'autre. Il ne l'arrête pas. Il ne se retourne même pas.",
-      replique:{qui:'H', texte:"Vous savez ce qu'on risque tous les deux ?"},
-      intention:{H:"Retourne-toi enfin. Embrasse-la comme tu t'en empêches depuis des mois.", F:"Assieds-toi sur la table d'examen et attire-le entre tes jambes."},
+    {acte:1, scene:"Le siège est levé, la cour endormie. Dans la chambre haute de la tour, {F} congédie ses suivantes et referme elle-même le lourd verrou. {H} n'a pas retiré son ceinturon.",
+      replique:{qui:'F', texte:"Vous m'avez sauvée. Il paraît qu'on vous doit une récompense."},
+      intention:{H:"Mets un genou à terre. Ne relève les yeux que lorsqu'elle te l'ordonne.", F:"Fais-le attendre à genoux. Tourne autour de lui."}},
+    {acte:1, scene:"{F} dénoue un à un les lacets de sa robe de cour, sans se presser, pendant que {H} reste agenouillé devant elle.",
+      replique:{qui:'H', texte:"Un chevalier ne touche pas sa souveraine sans permission."},
+      intention:{H:"Ne bouge pas d'un pouce, quoi qu'elle fasse.", F:"Laisse la robe tomber. Puis autorise-le, d'un seul mot."},
       duree:90,
-      choix:{question:"Qui mène ce premier moment ?", options:["Lui — il la plaque sur la table","Elle — elle le fait attendre encore"]}},
-    {acte:2, scene:"{F} est allongée sur la table d'examen, le papier froissé sous elle. {H} écarte ses genoux avec la même autorité tranquille qu'il met à ausculter.",
-      replique:{qui:'H', texte:"Détendez-vous. Je vais prendre mon temps."},
-      intention:{H:"Descends entre ses cuisses. Prends-la avec la bouche, sans jamais accélérer.", F:"Agrippe le papier d'examen à deux mains. Ne te retiens pas."},
+      choix:{question:"Que fait {F} de son chevalier ?", options:["Elle lui ordonne de se relever","Elle le garde à genoux plus longtemps"]}},
+    {acte:2, scene:"Elle l'autorise enfin. {H} se relève, la soulève et l'assoit sur la table de chêne, entre les chandelles.",
+      replique:{qui:'F', texte:"Faites vos preuves, chevalier."},
+      intention:{H:"Écarte ses genoux et descends. Elle t'a fait attendre, prends ton temps.", F:"Agrippe le bord de la table. Ne retiens pas ta voix, la tour est vide."},
+      accessoires:['Bougie'], duree:150},
+    {acte:2, scene:"{F} descend de la table, le pousse contre le montant du lit à baldaquin et défait sa chemise de lin.",
+      replique:{qui:'H', texte:"Ma dame…"},
+      intention:{H:"Adosse-toi au bois. Laisse-la faire entièrement.", F:"Prends-le en bouche. C'est toi qui décides du rythme, comme de tout ici."},
       duree:150},
-    {acte:2, scene:"Elle le repousse, se redresse et le pousse à son tour contre le bureau. La blouse blanche tombe au sol, sa culotte avec.",
-      replique:{qui:'F', texte:"À mon tour de vous examiner."},
-      intention:{H:"Laisse-la faire complètement. Ne touche à rien.", F:"Agenouille-toi et prends-le en bouche, blouse encore boutonnée jusqu'au col."},
+    {acte:3, scene:"{H} attrape les rubans de la robe abandonnée et lie les poignets de {F} au montant du baldaquin. Pour la première fois, la souveraine n'a plus la main.",
+      replique:{qui:'H', texte:"Vous m'avez donné la permission. Je la prends entière."},
+      intention:{H:"Elle ne peut plus rien diriger. Fais-la attendre à ton tour.", F:"Tire sur tes liens. Ordonne-lui de continuer — vois s'il obéit encore."},
+      accessoires:['Ruban / foulard de soie'], duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Qui commande vraiment maintenant ?", options:["Elle reprend son autorité","Elle lui cède tout jusqu'au bout"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Il la libère et la retourne face aux draps brodés, une main entre ses omoplates.",
+      replique:{qui:'F', texte:"Continuez. C'est un ordre."},
+      intention:{H:"Obéis à l'ordre, exactement comme elle le demande.", F:"Donne tes ordres à voix haute. Il les exécutera tous."},
       duree:150},
-    {acte:3, scene:"L'huile de massage traîne sur l'étagère depuis toujours. {H} en fait couler un filet chaud sur le ventre de {F}, remonte vers sa poitrine, redescend bien plus bas.",
-      replique:{qui:'H', texte:"Dites-moi exactement où ça fait de l'effet."},
-      intention:{H:"Fais-la parler. Suis ses indications à la lettre, avec les doigts.", F:"Dis-lui à voix haute ce que tu veux. Précisément."},
-      accessoires:['Huile de massage'], duree:150,
-      choix:{question:"Elle veut aller plus loin ?", options:["Elle lui demande de la prendre là, maintenant","Elle le fait patienter encore un peu"]}},
-    {acte:3, scene:"{F} noue le bandeau sur les yeux de {H} et le fait asseoir dans le fauteuil du cabinet. Il n'entend plus que le froissement de sa blouse et son souffle à elle.",
-      replique:{qui:'F', texte:"Vous n'avez plus besoin de voir. Sentez, c'est tout."},
-      intention:{H:"Tu ne contrôles plus rien. Devine ce qui vient.", F:"Sers-toi de lui exactement comme tu veux, à ton rythme."},
-      accessoires:['Masque / Bandeau'], duree:150},
-    {acte:4, scene:"Le bandeau tombe. {H} la soulève et la repose sur la table d'examen, écarte ses cuisses et entre en elle d'un coup.",
-      replique:{qui:'H', texte:"Plus personne ne viendra."},
-      intention:{H:"Impose ton rythme. Va plus profond à chaque poussée.", F:"Noue tes jambes autour de lui. Dis-lui de ne pas s'arrêter."},
+    {acte:3, si:{domin:'lui'}, scene:"{F} ne reprend pas la main. {H} resserre les rubans, la maintient contre le montant du baldaquin et prend tout son temps. La souveraine n'ordonne plus rien.",
+      replique:{qui:'H', texte:"Vous m'avez donné votre parole. Je la garde jusqu'à l'aube."},
+      intention:{H:"Garde-la immobilisée. Fais-la attendre autant que tu veux.", F:"Tu as cédé l'autorité. Subis-la jusqu'au bout."},
+      duree:150},
+    {acte:4, scene:"{H} entre en {F} sur le lit à baldaquin, les tentures tirées autour d'eux, les chandelles vacillant à chaque mouvement.",
+      replique:{qui:'F', texte:"Plus fort. Personne ne monte jusqu'ici."},
+      intention:{H:"Accélère franchement. Ne te retiens plus.", F:"Accroche-toi aux draps. Fais du bruit, la tour est à vous."},
       duree:180},
-    {acte:4, scene:"Elle le fait basculer dans le fauteuil et s'empale sur lui, mains à plat sur son torse. Le stéthoscope se balance encore à son cou.",
-      replique:{qui:'F', texte:"Maintenant c'est moi qui décide du rythme."},
-      intention:{H:"Laisse-la mener. Regarde-la faire.", F:"Prends tout ce que tu veux, aussi longtemps que tu veux."},
+    {acte:4, scene:"Elle le renverse sur les fourrures et s'installe au-dessus de lui, la couronne encore dans ses cheveux défaits.",
+      replique:{qui:'F', texte:"N'oubliez jamais qui règne ici."},
+      intention:{H:"Laisse-la mener entièrement. Regarde-la.", F:"Ton rythme, aussi longtemps que tu veux."},
       duree:180},
-    {acte:5, scene:"Le cabinet entier a disparu — plus de blouse, plus de badge, plus de protocole. Juste eux deux, et ce qu'ils repoussaient depuis des mois.",
-      replique:{qui:'H', texte:"Depuis le premier jour j'en avais envie."},
-      intention:{H:"Emmène-la jusqu'au bout, sans aucune retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
+    {acte:5, scene:"Les chandelles ne sont plus que des flaques de cire. Dehors, la garde fait sa ronde au pied de la tour, sans se douter de rien.",
+      replique:{qui:'H', texte:"Je resterai jusqu'à l'aube, ma dame."},
+      intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
   ],
-  premise:"Le cabinet est plongé dans la pénombre, seule la lampe du bureau reste allumée. Le dernier dossier de la journée traîne, oublié, quelque part sous des mains qui ne l'ouvriront plus ce soir.",
+  premise:"Le siège est levé, la cour dort enfin. Dans la chambre haute de la tour, la princesse vient de congédier ses suivantes et de tirer elle-même le verrou — et le chevalier qui l'a sauvée n'a toujours pas retiré son ceinturon.",
   scenes:{
     1:[
-      {texte:"{prenom} range ses instruments un par un, beaucoup trop lentement pour que ce soit innocent. Il sait que {partenaire} le regarde depuis le seuil, et il prend son temps exprès.",genre:'Homme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} s'approche sans un bruit et dénoue la blouse de {partenaire}, un lien après l'autre. « Vous avez fini votre service, docteur. »",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} s'assoit sur la table d'examen, attire {partenaire} entre ses jambes et l'embrasse enfin — ce qu'il s'interdit de faire depuis des mois de gardes partagées.",genre:'Homme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} souffle contre l'oreille de {partenaire} qu'elle a compté chacun de ses regards aujourd'hui. Il ouvre la bouche pour répondre ; elle l'embrasse avant qu'un seul mot ne sorte.",genre:'Femme',pratiques:[],accessoires:[]}
+      {texte:"{prenom} met un genou à terre devant {partenaire} et attend sa permission — **30 secondes**.",genre:'Homme',pratiques:[],accessoires:[]},
+      {texte:"{prenom} dénoue les lacets de sa robe devant {partenaire}, sans se presser — **1 minute**.",genre:'Femme',pratiques:[],accessoires:[]}
     ],
     2:[
-      {texte:"{prenom} allonge {partenaire} sur la table d'examen, écarte doucement ses genoux et procède à un dernier contrôle — la langue là où aucun protocole ne l'autorise, **2 minutes**, jusqu'à ce qu'elle agrippe le papier d'examen à deux mains.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
-      {texte:"{prenom} s'agenouille entre les jambes de {partenaire}, blouse encore boutonnée jusqu'au col, et le prend en bouche sans le quitter des yeux — **90 secondes** d'un dévouement très personnel.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]},
-      {texte:"{prenom} fait glisser sa main sous la blouse de {partenaire}, ausculte de plus en plus bas, deux doigts qui savent exactement où appuyer — **1 minute**, jusqu'à ce que son souffle change.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]},
-      {texte:"{prenom} referme la main de {partenaire} autour de lui et impose son propre rythme, en professionnelle qui connaît parfaitement l'anatomie — **1 minute**.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]}
+      {texte:"{prenom} assoit {partenaire} sur la table de chêne et descend entre ses cuisses — **2 minutes**.",genre:'Homme',pratiques:['oral_actif'],accessoires:[]},
+      {texte:"{prenom} pousse {partenaire} contre le baldaquin et le prend en bouche — **2 minutes**.",genre:'Femme',pratiques:['oral_actif'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} bande les yeux de {partenaire} — « pour tester vos réflexes, docteur » — puis descend beaucoup plus bas que ne l'exige n'importe quel examen neurologique.",genre:'Femme',pratiques:[],accessoires:['Masque / Bandeau']},
-      {texte:"{prenom} fait couler l'huile chaude sur le ventre de {partenaire}, prétexte quelques muscles noués, puis laisse ses mains descendre bien en dessous de la zone concernée.",genre:'Homme',pratiques:[],accessoires:['Huile de massage']},
-      {texte:"{prenom} s'aventure plus bas encore, doigts généreusement lubrifiés, guettant chaque réaction de {partenaire} comme un vrai diagnostic — **1 minute** d'attention clinique absolue.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
-      {texte:"{prenom} inverse les rôles : c'est elle qui l'allonge, elle qui l'ausculte, main ferme et regard sûr, jusqu'à ce que {partenaire} perde définitivement tout sérieux professionnel.",genre:'Femme',pratiques:['masturb_actif'],accessoires:[]}
+      {texte:"{prenom} lie les poignets de {partenaire} au montant du lit avec les rubans de sa robe.",genre:'Homme',pratiques:[],accessoires:['Ruban / foulard de soie']},
+      {texte:"{prenom} retourne {partenaire} face aux draps brodés — **2 minutes**.",genre:'Homme',pratiques:[],accessoires:[]}
     ],
     4:[
-      {texte:"{prenom} entre en {partenaire} sur la table d'examen, lentement d'abord, puis de plus en plus profond — **2 minutes**, le papier froissé sous elle, la porte du cabinet verrouillée depuis longtemps.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
-      {texte:"{prenom} pousse {partenaire} sur la chaise du bureau, s'empale sur lui et décide seule de tout — **2 minutes** où le docteur n'a plus rien à prescrire.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
-      {texte:"{prenom} la prend par-derrière, penchée sur la table d'examen, avec toute la patience d'un protocole bien mené — **2 minutes** d'un rythme qui s'approfondit.",genre:'Homme',pratiques:['anal_actif_2'],accessoires:[]},
-      {texte:"{prenom} plaque une main sur le torse de {partenaire} et lui ordonne de ne plus bouger d'un centimètre. « Ordre du médecin. » Il obéit, **1 minute** entière.",genre:'Femme',pratiques:['domination_1'],accessoires:[]}
+      {texte:"{prenom} pénètre {partenaire} sur le lit à baldaquin — **2 minutes**.",genre:'Homme',pratiques:['penetration_h','penetration_f'],accessoires:[]},
+      {texte:"{prenom} s'installe sur {partenaire}, couronne dans les cheveux — **2 minutes**.",genre:'Femme',pratiques:['penetration_h','penetration_f'],accessoires:[]}
     ],
     5:[
-      {texte:"{prenom}, infirmière dévouée jusqu'au dernier geste, prend {partenaire} en bouche et ne s'arrête plus — durée libre, jusqu'à ce qu'il n'ait plus aucun contrôle.",genre:'Femme',pratiques:[],accessoires:[]},
-      {texte:"{prenom} et {partenaire} finissent ce qu'ils repoussaient depuis des mois — pénétration, position au choix, durée libre, blouse et badge oubliés au sol.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
+      {texte:"{prenom} et {partenaire} finissent dans la chambre haute — position au choix, durée libre.",genre:'Mixte',pratiques:['penetration_h','penetration_f'],accessoires:[]}
     ]
   }
 },
 { id:'infirmiere_patient', homme:'h_patient', femme:'f_infirmiere', emoji:'💉🤒', title:'Chambre 204',
+  epilogue:"Le moniteur affiche à nouveau un rythme normal. Sur le dossier, à la ligne « observations », elle n'écrira rien du tout.",
   bg:'radial-gradient(ellipse at center, #16281f 0%, #0a1510 70%)',
   tenues:{H:"Torse nu sous un drap", F:"Blouse d'infirmière, badge, cheveux relevés"},
   trame:[
@@ -1366,15 +1379,27 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Vous êtes censé être un patient fragile."},
       intention:{H:"Descends entre ses cuisses. Prouve-lui le contraire.", F:"Mords ta main pour le bruit. Le couloir est à trois mètres."},
       duree:150},
-    {acte:3, scene:"{F} noue le bandeau sur les yeux de {H}. Il ne sait plus si c'est sa bouche, sa main, ou autre chose qui le touche.",
-      replique:{qui:'F', texte:"Vous n'avez plus qu'à sentir. C'est tout."},
-      intention:{H:"Abandonne-toi complètement. Devine à chaque fois.", F:"Alterne. Fais-le douter. Prends ton temps."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Il reprend la main ?", options:["Oui — il arrache le bandeau et la retourne","Non — elle garde le contrôle jusqu'au bout"]}},
-    {acte:3, scene:"L'huile tiède destinée aux escarres finit sur tout autre chose. {H} en couvre le dos et les reins de {F}, penchée sur le rebord du lit médicalisé.",
+    {acte:3, scene:"{F} enfile un gant, l'enduit généreusement de lubrifiant et le retourne sur le flanc. « Contrôle de routine », dit-elle — sans rien qui ressemble à un instrument.",
+      replique:{qui:'F', texte:"Détendez-vous. Ça ira mieux si vous ne serrez pas."},
+      intention:{H:"Abandonne-toi. Laisse-la faire à son rythme.", F:"Du bout des doigts, lentement, généreusement lubrifiée. Guette chacune de ses réactions."},
+      pratiques:['anal_passif_1'], duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Il reprend la main ?", options:["Oui — il arrache le bandeau et la retourne","Non — elle garde le contrôle jusqu'au bout"]}},
+    {acte:3, si:{domin:'elle'}, scene:"{H} fait basculer le lit médicalisé d'un cran, penche {F} sur le rebord relevé et prend tout son temps derrière elle.",
       replique:{qui:'H', texte:"Ne fais pas un bruit. Pas un seul."},
       intention:{H:"Explore-la lentement, du bout des doigts, sans la faire crier.", F:"Tiens-toi au montant du lit. Tais-toi, coûte que coûte."},
-      accessoires:['Huile de massage'], duree:150},
+       duree:150},
+    {acte:3, scene:"{F} referme le rideau du box et sort du chariot un instrument long et lisse. Elle l'enduit de gel devant lui, avec le sérieux d'une prise de température.",
+      replique:{qui:'F', texte:"Prise de température. La méthode la plus fiable, vous le savez."},
+      intention:{H:"Sur le flanc, genoux remontés. Tu n'as plus rien à décider.", F:"Introduis-le lentement, généreusement lubrifié. Annonce le relevé à voix haute."},
+      accessoires:['Plug anal'], pratiques:['anal_passif_1'], variante:'thermometre', duree:150},
+    {acte:3, scene:"{F} referme le rideau du box et choisit dans le chariot le plus long des instruments. Elle l'enduit de gel devant lui, sans se presser.",
+      replique:{qui:'F', texte:"Prise de température. Ne bougez plus."},
+      intention:{H:"Sur le flanc, genoux remontés. Laisse-la faire entièrement.", F:"Introduis-le lentement, généreusement lubrifié. Fais durer le relevé."},
+      accessoires:['Gode anal'], pratiques:['anal_passif_1'], variante:'thermometre', duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"{H} ne reprend rien du tout. {F} le remet sur le dos d'une main ferme et poursuit son examen exactement comme elle l'entend.",
+      replique:{qui:'F', texte:"Vous êtes mon patient. Vous ne décidez de rien."},
+      intention:{H:"Reste allongé. Tu n'as plus aucune initiative.", F:"Continue ton examen, à ton rythme, sans lui demander son avis."},
+      duree:150},
     {acte:4, scene:"Le lit médicalisé grince contre le mur. {H} entre en {F} par-derrière, une main sur sa bouche pour le bruit.",
       replique:{qui:'F', texte:"Plus fort. Tant pis pour le couloir."},
       intention:{H:"Accélère. Va au bout de ce qu'elle demande.", F:"Cesse de te retenir. Complètement."},
@@ -1420,6 +1445,7 @@ var STORY_DUOS = [
   }
 },
 { id:'doctorant_professeure', homme:'h_doctorant', femme:'f_professeure', emoji:'🎓👩‍🏫', title:'Soutenance privée',
+  epilogue:"La fiche d'évaluation est restée vierge. Il soutiendra dans trois semaines — et aucun des deux ne repensera à autre chose d'ici là.",
   bg:'radial-gradient(ellipse at top, #24201a 0%, #0c0a07 70%)',
   tenues:{H:"Chemise et cravate desserrée", F:"Chemisier strict, jupe crayon, lunettes, chignon"},
   trame:[
@@ -1443,10 +1469,18 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Puisque vous voulez faire vos preuves."},
       intention:{H:"Prends ton temps entre ses cuisses. C'est ton examen.", F:"Note-le à voix haute. Sois exigeante."},
       duree:150,
-      choix:{question:"Elle lui rend la pareille ?", options:["Oui — elle descend du bureau","Non — elle le fait encore attendre"]}},
-    {acte:3, scene:"Elle le tire par la chemise, le fait asseoir dans le fauteuil du bureau et s'agenouille à son tour. Les rôles s'inversent le temps d'un chapitre.",
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle lui rend la pareille ?", options:["Oui — elle descend du bureau","Non — elle le fait encore attendre"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Elle le tire par la chemise, le fait asseoir dans le fauteuil du bureau et s'agenouille à son tour. Les rôles s'inversent le temps d'un chapitre.",
       replique:{qui:'H', texte:"Vous n'êtes plus très professorale, là."},
       intention:{H:"Agrippe les accoudoirs. Ne dis plus rien.", F:"Prends-le en bouche, lunettes toujours posées sur le bureau."},
+      duree:150},
+    {acte:3, scene:"{F} pose la règle et ouvre le tiroir de son bureau. Elle en sort quelque chose qui n'a rien à voir avec la correction de copies.",
+      replique:{qui:'F', texte:"Votre évaluation pratique commence maintenant."},
+      intention:{H:"Penche-toi sur le bureau. Ne discute pas la note.", F:"Sers-t'en lentement, généreusement lubrifiée, en commentant à voix haute."},
+      accessoires:['Gode ceinture'], pratiques:['anal_passif_2'], duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne lui rend rien. {F} le laisse au bord, se rassoit à son bureau et croise les jambes. « On continue quand j'aurai fini d'évaluer. »",
+      replique:{qui:'F', texte:"Patientez. Je note."},
+      intention:{H:"Tu attends, littéralement. Ne bouge pas de ta position.", F:"Fais-le attendre pour de vrai. Reprends quand tu veux."},
       duree:150},
     {acte:4, scene:"{H} la soulève, la rassoit sur le bureau au milieu des copies et entre en elle. Le mémoire glisse au sol, personne ne le ramasse.",
       replique:{qui:'F', texte:"Plus fort. Le bâtiment est vide."},
@@ -1484,13 +1518,14 @@ var STORY_DUOS = [
   }
 },
 { id:'client_danseuse', homme:'h_client_club', femme:'f_danseuse', emoji:'🥃💃', title:'Salon privé',
+  epilogue:"Le morceau tourne encore dans le salon vide. Il ne reviendra pas pour la danse.",
   bg:'radial-gradient(ellipse at bottom, #2a0f22 0%, #0c0508 70%)',
   tenues:{H:"Chemise ouverte, montre", F:"Lingerie fine, talons hauts, porte-jarretelles"},
   trame:[
     {acte:1, scene:"Le club a fermé, le rideau du salon privé est tiré. {H} est enfoncé dans le fauteuil, un verre à la main. La musique tourne encore pour eux deux.",
       replique:{qui:'F', texte:"Vous connaissez la règle : on regarde, on ne touche pas."},
       intention:{H:"Pose ton verre. Mains sur les accoudoirs, et n'en bouge plus.", F:"Commence à te déhancher devant lui, encore entièrement habillée."},
-      accessoires:['Musique'], duree:90},
+       duree:90},
     {acte:1, scene:"{F} fait glisser sa robe centimètre par centimètre, au rythme du morceau. En dessous, la lingerie qu'elle a choisie exprès pour ce soir.",
       replique:{qui:'H', texte:"Tu as mis ça pour moi ?"},
       intention:{H:"Tu n'as toujours pas le droit de toucher. Regarde, c'est tout.", F:"Retire la robe entièrement. Garde tout le reste."},
@@ -1508,10 +1543,14 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Ça, ce n'est plus dans le tarif."},
       intention:{H:"Renverse la tête en arrière. Laisse-la faire à son rythme.", F:"Défais son pantalon et prends-le en bouche, sans te presser."},
       duree:150,
-      choix:{question:"Qui mène la suite ?", options:["Elle garde le contrôle jusqu'au bout","Il la soulève et prend le dessus"]}},
-    {acte:3, scene:"Il l'attrape par la taille et la rassoit sur lui, cette fois sans plus aucune règle entre eux.",
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Qui mène la suite ?", options:["Elle garde le contrôle jusqu'au bout","Il la soulève et prend le dessus"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Il l'attrape par la taille et la rassoit sur lui, cette fois sans plus aucune règle entre eux.",
       replique:{qui:'H', texte:"Le club est fermé. Il n'y a plus de règles."},
       intention:{H:"Descends sur elle, dans le fauteuil, où tu veux.", F:"Accroche-toi au dossier. Ne te retiens plus."},
+      duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"{H} ne prend pas le dessus. {F} continue de tout mener depuis le fauteuil, ses mains à lui bloquées sur les accoudoirs.",
+      replique:{qui:'F', texte:"Le client ne touche pas. C'est la règle, jusqu'au bout."},
+      intention:{H:"Mains sur les accoudoirs. Tu regardes, c'est tout.", F:"Tu gardes le contrôle total jusqu'à la fin de la danse."},
       duree:150},
     {acte:4, scene:"{F} s'empale sur {H} dans le fauteuil du salon privé, la musique toujours en boucle derrière le rideau.",
       replique:{qui:'F', texte:"Regarde-moi pendant que je le fais."},
@@ -1549,6 +1588,7 @@ var STORY_DUOS = [
   }
 },
 { id:'masseur_cliente', homme:'h_masseur', femme:'f_cliente', emoji:'💆‍♂️🛍️', title:'Le dernier rendez-vous',
+  epilogue:"La table est trempée d'huile, la bougie noyée. Elle reprend rendez-vous à la même heure, la semaine prochaine.",
   bg:'radial-gradient(ellipse at center, #2e1f14 0%, #120b07 70%)',
   tenues:{H:"T-shirt moulant, pantalon souple", F:"Serviette uniquement"},
   trame:[
@@ -1573,11 +1613,15 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"À mon tour de m'occuper de vous."},
       intention:{H:"Laisse-la faire entièrement. Ne bouge pas.", F:"Prends-le en bouche, mains huilées, à ton rythme."},
       duree:150,
-      choix:{question:"Elle lui rend tout de suite ?", options:["Elle le fait attendre encore","Elle lui donne tout, maintenant"]}},
-    {acte:3, scene:"Le bandeau glisse sur les yeux de {H}. Il ne sait plus si c'est l'huile, sa bouche ou ses mains — juste que ça ne s'arrête plus.",
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle lui rend tout de suite ?", options:["Elle le fait attendre encore","Elle lui donne tout, maintenant"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Le bandeau glisse sur les yeux de {H}. Il ne sait plus si c'est l'huile, sa bouche ou ses mains — juste que ça ne s'arrête plus.",
       replique:{qui:'F', texte:"Vous n'avez plus besoin de voir."},
       intention:{H:"Abandonne-toi. Devine à chaque fois.", F:"Alterne. Fais-le douter le plus longtemps possible."},
       accessoires:['Masque / Bandeau'], duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne lui rend rien tout de suite. {F} le laisse au bord de la table, encore huilé, et prend le temps de le regarder attendre.",
+      replique:{qui:'F', texte:"Vous, vous attendez votre tour."},
+      intention:{H:"Ne bouge pas de la table. Laisse monter.", F:"Fais-le patienter. Reprends seulement quand tu l'as décidé."},
+      duree:150},
     {acte:4, scene:"{H} arrache le bandeau, la retourne sur la table glissante et entre en elle. Ses mains dérapent sur ses hanches huilées.",
       replique:{qui:'F', texte:"Plus fort. La table tiendra."},
       intention:{H:"Va plus profond, plus vite. Tiens-la par les hanches.", F:"Cambre-toi. Dis-lui de continuer."},
@@ -1585,7 +1629,7 @@ var STORY_DUOS = [
     {acte:4, scene:"Elle le fait basculer sur le dos et s'empale sur lui, paumes à plat sur son torse. La bougie vacille à chaque mouvement.",
       replique:{qui:'F', texte:"Maintenant je décide de tout."},
       intention:{H:"Laisse-la mener. Regarde-la faire.", F:"Ton rythme, aussi longtemps que tu veux."},
-      accessoires:['Bougie'], duree:180},
+       duree:180},
     {acte:5, scene:"L'huile a tout recouvert, la table, le sol, leurs deux corps. Le salon est fermé depuis longtemps et personne ne viendra avant demain.",
       replique:{qui:'H', texte:"Le dernier créneau, c'est vous. Toujours."},
       intention:{H:"Emmène-la jusqu'au bout, sans retenue. Position au choix, durée libre.", F:"Ne retiens plus rien. Puis restez l'un contre l'autre et sortez du rôle ensemble."}}
@@ -1623,6 +1667,7 @@ var STORY_DUOS = [
   }
 },
 { id:'livreur_cliente', homme:'h_livreur', femme:'f_cliente', emoji:'📦🛍️', title:'Livraison surprise',
+  epilogue:"Le camion est reparti avec deux heures de retard. Sur le carnet de tournée, cette adresse est désormais entourée.",
   bg:'radial-gradient(ellipse at top, #262220 0%, #0e0c0b 70%)',
   tenues:{H:"Polo de livreur, casquette", F:"Peignoir mal fermé, rien en dessous"},
   trame:[
@@ -1645,12 +1690,16 @@ var STORY_DUOS = [
     {acte:3, scene:"{H} arrache le ruban du colis et le noue sur les yeux de {F}. Elle rit — puis cesse complètement de rire.",
       replique:{qui:'H', texte:"Surprise sur surprise."},
       intention:{H:"Fais-la deviner. Alterne bouche, doigts, rien du tout.", F:"Tu ne vois plus rien. Réagis à chaque contact."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Elle reprend la main ?", options:["Oui — elle le plaque contre la porte","Non — elle se laisse guider jusqu'au bout"]}},
-    {acte:3, scene:"Le champagne resté au frais finit ouvert. {F} en verse un filet sur elle et laisse {H} venir le chercher.",
+      duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle reprend la main ?", options:["Oui — elle le plaque contre la porte","Non — elle se laisse guider jusqu'au bout"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Le champagne resté au frais finit ouvert. {F} en verse un filet sur elle et laisse {H} venir le chercher.",
       replique:{qui:'F', texte:"Il paraît que c'est meilleur comme ça."},
       intention:{H:"Suis chaque goutte, lentement, jusqu'en bas.", F:"Ne bouge pas. Laisse-le finir."},
-      accessoires:['Champagne'], duree:120},
+      accessoires:['Fraises'], duree:120},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne reprend pas la main. {H} la maintient contre le mur de l'entrée et poursuit exactement comme il l'entend.",
+      replique:{qui:'H', texte:"La livraison n'est pas terminée."},
+      intention:{H:"Garde-la plaquée. Va à ton rythme.", F:"Tu ne diriges plus rien. Accroche-toi à lui."},
+      duree:150},
     {acte:4, scene:"{H} la retourne face au mur de l'entrée et entre en elle. Ils n'ont toujours pas atteint une autre pièce.",
       replique:{qui:'F', texte:"Plus fort. Les voisins s'en remettront."},
       intention:{H:"Accélère franchement. Une main dans ses cheveux.", F:"Mains à plat contre le mur. Ne baisse pas la voix."},
@@ -1696,6 +1745,7 @@ var STORY_DUOS = [
   }
 },
 { id:'inconnus_bar', homme:'h_inconnu', femme:'f_inconnue', emoji:'🍸', title:'Dernier verre',
+  epilogue:"Ils ne se sont jamais dit leurs prénoms. C'est exactement ce qu'ils voulaient — et c'est ce qui rendra le souvenir insupportable.",
   bg:'radial-gradient(ellipse at center, #2a1530 0%, #0e0812 70%)',
   tenues:{H:"Chemise sombre, veste", F:"Robe courte, talons, rouge à lèvres marqué"},
   trame:[
@@ -1715,15 +1765,19 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Continue. Ne t'arrête pas."},
       intention:{H:"Descends entre ses cuisses, une main sur sa bouche pour le bruit.", F:"Mords sa main si tu dois crier."},
       duree:150},
-    {acte:3, scene:"Dans le taxi, {H} noue son écharpe sur les yeux de {F}. Sa main remonte le long de sa cuisse. Le chauffeur ne dit rien.",
-      replique:{qui:'H', texte:"Tu ne sauras pas où on va."},
+    {acte:3, scene:"Ils emportent la bouteille de champagne du bar. Dans le taxi, {H} en fait couler quelques gouttes sur la clavicule de {F} et vient les récupérer. Le chauffeur ne dit rien.",
+      replique:{qui:'H', texte:"On n'attend même pas d'être arrivés."},
       intention:{H:"Continue sous l'écharpe. Fais-la tenir en silence.", F:"Tu ne vois rien. Ne fais aucun bruit, quoi qu'il arrive."},
-      accessoires:['Masque / Bandeau'], duree:120,
-      choix:{question:"Elle garde l'anonymat ?", options:["Oui — elle refuse de retirer le bandeau","Non — elle veut le regarder en face"]}},
-    {acte:3, scene:"La porte de l'appartement à peine refermée, les manteaux tombent dans l'entrée. Aucun des deux n'a demandé le prénom de l'autre.",
+      accessoires:['Champagne'], duree:120,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle garde l'anonymat ?", options:["Oui — elle refuse de retirer le bandeau","Non — elle veut le regarder en face"]}},
+    {acte:3, si:{domin:'elle'}, scene:"La porte de l'appartement à peine refermée, les manteaux tombent dans l'entrée. Aucun des deux n'a demandé le prénom de l'autre.",
       replique:{qui:'F', texte:"Pas de nom. Ça gâcherait tout."},
       intention:{H:"Déshabille-la debout, contre la porte, sans un mot.", F:"Fais pareil. Ne parle pas."},
       duree:120},
+    {acte:3, si:{domin:'lui'}, scene:"Elle retire le bandeau elle-même. {F} veut le regarder en face — et découvre enfin le visage de celui à qui elle se donne.",
+      replique:{qui:'F', texte:"Je veux te voir. Maintenant."},
+      intention:{H:"Laisse-toi regarder. Ne détourne pas les yeux.", F:"Regarde-le vraiment, pour la première fois de la nuit."},
+      duree:150},
     {acte:4, scene:"{H} entre en {F} contre la porte encore verrouillée, sans qu'ils aient atteint la chambre.",
       replique:{qui:'F', texte:"Plus fort. On ne se reverra jamais."},
       intention:{H:"Va au bout de ce qu'elle demande, sans retenue.", F:"Dis-lui exactement ce que tu veux. Tu ne le reverras plus."},
@@ -1769,6 +1823,7 @@ var STORY_DUOS = [
   }
 },
 { id:'pompier_voisine', homme:'h_pompier', femme:'f_voisine', emoji:'🚒🏠', title:'Sauvetage',
+  epilogue:"La casserole est toujours calcinée sur la cuisinière. Il repassera vérifier l'installation, a-t-il dit.",
   bg:'radial-gradient(ellipse at bottom, #331510 0%, #120705 70%)',
   tenues:{H:"Pantalon d'uniforme, bretelles, torse nu", F:"Nuisette courte, pieds nus"},
   trame:[
@@ -1791,12 +1846,16 @@ var STORY_DUOS = [
     {acte:3, scene:"L'huile de massage sort du placard sous prétexte de brûlures parfaitement imaginaires. {H} en couvre son torse à elle, puis descend.",
       replique:{qui:'H', texte:"Montrez-moi où ça chauffe encore."},
       intention:{H:"Suis ses indications à la lettre, avec les doigts.", F:"Guide-le. Dis-lui exactement où et comment."},
-      accessoires:['Huile de massage'], duree:150,
-      choix:{question:"Elle passe au-dessus ?", options:["Oui — elle le plaque contre le frigo","Non — elle le laisse tout diriger"]}},
-    {acte:3, scene:"Le bandeau tombe sur les yeux de {H}. « Procédure d'évacuation », dit-elle. Il ne voit plus rien, elle a tout le contrôle.",
+      accessoires:['Glaçons'], duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle passe au-dessus ?", options:["Oui — elle le plaque contre le frigo","Non — elle le laisse tout diriger"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Le bandeau tombe sur les yeux de {H}. « Procédure d'évacuation », dit-elle. Il ne voit plus rien, elle a tout le contrôle.",
       replique:{qui:'F', texte:"Vous ne bougez plus. C'est moi qui vous guide."},
       intention:{H:"Tu ne contrôles plus rien. Devine à chaque fois.", F:"Alterne bouche et mains. Fais-le attendre."},
-      accessoires:['Masque / Bandeau'], duree:150},
+       duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne passe pas au-dessus. {H} la garde contre le plan de travail, une main dans son dos, et continue à sa manière.",
+      replique:{qui:'H', texte:"Restez comme ça. Je gère."},
+      intention:{H:"Maintiens-la penchée. Prends ton temps.", F:"Tu lui laisses tout. Cambre-toi et attends."},
+      duree:150},
     {acte:4, scene:"{H} arrache le bandeau, la retourne contre le plan de travail et entre en elle. La vaisselle valdingue au sol.",
       replique:{qui:'F', texte:"Ne t'occupe pas de la vaisselle."},
       intention:{H:"Va plus fort, plus profond. Ne te retiens plus.", F:"Cambre-toi contre l'inox. Fais du bruit."},
@@ -1824,8 +1883,8 @@ var STORY_DUOS = [
       {texte:"{prenom} glisse la main de {partenaire} sous sa nuisette et l'y maintient — **1 minute**, la casserole calcinée encore posée sur la cuisinière derrière eux.",genre:'Homme',pratiques:['masturb_actif_f'],accessoires:[]}
     ],
     3:[
-      {texte:"{prenom} fait couler l'huile sur des brûlures parfaitement imaginaires, remonte le long de son torse, puis descend bien plus bas — le prétexte n'a jamais été aussi mince.",genre:'Femme',pratiques:[],accessoires:['Huile de massage']},
-      {texte:"{prenom} noue le bandeau sur les yeux de {partenaire}. « Procédure d'évacuation. » Elle rit — puis cesse complètement de rire.",genre:'Homme',pratiques:[],accessoires:['Masque / Bandeau']},
+      {texte:"{F} sort des glaçons du congélateur — « pour la brûlure » — et les fait fondre lentement sur le torse encore brûlant de {H}, puis bien plus bas.",genre:'Femme',pratiques:[],accessoires:['Huile de massage']},
+      {texte:"{H} coupe la lumière de la cuisine. Il ne reste que le rougeoiement du gyrophare par la fenêtre, qui balaie la pièce toutes les deux secondes.",genre:'Homme',pratiques:[],accessoires:['Masque / Bandeau']},
       {texte:"{prenom} la penche sur le plan de travail et s'aventure plus bas, du bout des doigts, généreusement lubrifiés — **1 minute** d'une patience que personne n'attendait d'un homme d'urgence.",genre:'Homme',pratiques:['anal_actif_1'],accessoires:[]},
       {texte:"{prenom} le plaque contre la porte du frigo et prend franchement le contrôle — bien plus téméraire qu'elle ne se serait crue capable.",genre:'Femme',pratiques:[],accessoires:[]}
     ],
@@ -1842,6 +1901,7 @@ var STORY_DUOS = [
   }
 },
 { id:'moniteur_eleve', homme:'h_moniteur', femme:'f_cliente', emoji:'⛷️', title:'Cours particulier',
+  epilogue:"Les braises s'éteignent, la neige tombe encore. Elle a déjà réservé la semaine prochaine — et cette fois, ce n'est plus un prétexte.",
   bg:'radial-gradient(ellipse at bottom, #2e1a10 0%, #0d1520 70%)',
   tenues:{H:"Pull technique, pantalon de ski", F:"Combinaison ouverte sur un body"},
   trame:[
@@ -1861,15 +1921,19 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"J'ai froid d'un côté et je brûle de l'autre."},
       intention:{H:"Descends. Prends ton temps, elle a attendu toute la semaine.", F:"Agrippe la fourrure à deux mains. Ne te retiens pas."},
       duree:150},
-    {acte:3, scene:"{H} rabat son bonnet sur les yeux de {F}. « Exercice d'équilibre. » Elle ne voit plus rien, ne sait plus d'où viendra le prochain contact.",
+    {acte:3, scene:"{H} l'installe dos à la baie vitrée, la neige glacée contre ses omoplates et le feu qui lui brûle le ventre. Elle ne sait plus lequel des deux la fait le plus frissonner.",
       replique:{qui:'H', texte:"Tu me diras si tu perds l'équilibre."},
       intention:{H:"Alterne les mains, la bouche, le vide. Fais-la deviner.", F:"Tu ne vois rien. Dis à voix haute ce que tu ressens."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Elle prend le dessus ?", options:["Oui — elle arrache le bonnet et le chevauche","Non — elle le laisse la guider jusqu'au bout"]}},
-    {acte:3, scene:"L'huile chauffée près du feu finit sur les cuisses fatiguées de {F}. {H} remonte lentement, bien au-delà de ce qu'un massage sportif justifie.",
+      duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle prend le dessus ?", options:["Oui — elle arrache le bonnet et le chevauche","Non — elle le laisse la guider jusqu'au bout"]}},
+    {acte:3, si:{domin:'elle'}, scene:"{H} s'occupe des cuisses courbaturées de {F} à mains nues, devant le feu, et remonte bien au-delà de ce qu'un massage sportif justifie.",
       replique:{qui:'F', texte:"Plus haut. Beaucoup plus haut."},
       intention:{H:"Obéis exactement. Ne va pas plus vite qu'elle ne demande.", F:"Guide-le centimètre par centimètre, à voix haute."},
-      accessoires:['Huile de massage'], duree:150},
+       duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne prend pas le dessus. {H} la garde sur la peau de mouton, dos au feu, et poursuit exactement comme il veut.",
+      replique:{qui:'H', texte:"Tu es venue apprendre. Alors laisse-moi faire."},
+      intention:{H:"Garde-la sous toi, devant le feu.", F:"Abandonne-toi complètement. Tu es venue pour ça."},
+      duree:150},
     {acte:4, scene:"{H} entre en {F} devant la cheminée, la peau brûlante d'un côté, glacée de l'autre. Dehors, la neige n'a pas cessé.",
       replique:{qui:'F', texte:"Plus fort. Personne à des kilomètres."},
       intention:{H:"Accélère franchement. Tiens-la par les hanches.", F:"Fais du bruit. Le chalet est isolé."},
@@ -1915,6 +1979,7 @@ var STORY_DUOS = [
   }
 },
 { id:'tatoueur_cliente', homme:'h_tatoueur', femme:'f_cliente', emoji:'🎨🛍️', title:'Sous l\'aiguille',
+  epilogue:"L'encre sèchera en trois jours. Le motif qu'elle a choisi est immense : il faudra revenir. Souvent.",
   bg:'radial-gradient(ellipse at center, #2a1018 0%, #0a0508 70%)',
   tenues:{H:"Débardeur noir, tablier, gants", F:"Brassière et short, hanche découverte"},
   trame:[
@@ -1934,14 +1999,18 @@ var STORY_DUOS = [
       replique:{qui:'H', texte:"Le salon est fermé, personne ne viendra."},
       intention:{H:"Laisse-la faire entièrement. Agrippe les accoudoirs.", F:"Prends-le en bouche, sans le quitter des yeux."},
       duree:150},
-    {acte:3, scene:"{H} noue un tissu du salon sur les yeux de {F} et la rassoit sur le fauteuil. « Pour ne pas voir le résultat avant la fin. »",
-      replique:{qui:'H', texte:"Tu me diras ce que tu sens. Précisément."},
+    {acte:3, scene:"{H} prend une plume et la fait courir exactement le long du tracé fraîchement encré, puis bien au-delà. Le contraste avec l'aiguille est saisissant.",
+      replique:{qui:'H', texte:"L'aiguille, puis ça. Dis-moi ce que tu préfères."},
       intention:{H:"Alterne doigts, bouche, souffle. Fais-la décrire à voix haute.", F:"Décris tout ce que tu ressens, sans filtre."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Qui décide de la suite ?", options:["Elle arrache le bandeau et le chevauche","Il continue de tout contrôler"]}},
-    {acte:3, scene:"Il la retourne à genoux sur le fauteuil, mains agrippées au dossier, et s'occupe d'elle avec la même précision qu'il met dans ses tracés.",
+      accessoires:['Plume'], duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Qui décide de la suite ?", options:["Elle arrache le bandeau et le chevauche","Il continue de tout contrôler"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Il la retourne à genoux sur le fauteuil, mains agrippées au dossier, et s'occupe d'elle avec la même précision qu'il met dans ses tracés.",
       replique:{qui:'F', texte:"Ne t'arrête surtout pas maintenant."},
       intention:{H:"Continue exactement au même rythme, sans jamais dévier.", F:"Tiens-toi au dossier. Laisse monter."},
+      duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne prend rien du tout. {H} la garde dans le fauteuil, mains sur les accoudoirs, et travaille avec sa précision habituelle.",
+      replique:{qui:'H', texte:"Ne bouge pas. Comme sous l'aiguille."},
+      intention:{H:"Immobilise-la sans la brusquer. Sois précis.", F:"Tiens-toi immobile, exactement comme pendant le tatouage."},
       duree:150},
     {acte:4, scene:"{H} entre en {F} sur le fauteuil inclinable, le film plastique du tatouage froissé entre eux.",
       replique:{qui:'F', texte:"Attention au tatouage. Et pas au reste."},
@@ -1988,6 +2057,7 @@ var STORY_DUOS = [
   }
 },
 { id:'pilote_hotesse', homme:'h_pilote', femme:'f_hotesse', emoji:'✈️', title:'Escale imprévue',
+  epilogue:"L'équipage remonte à bord à six heures. Personne ne remarquera que le fauteuil du commandant a été réglé différemment.",
   bg:'radial-gradient(ellipse at center, #16202e 0%, #080b10 70%)',
   tenues:{H:"Chemise blanche, épaulettes, cravate", F:"Uniforme d'hôtesse, foulard, bas"},
   trame:[
@@ -2007,15 +2077,19 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Mon uniforme va être froissé."},
       intention:{H:"Tant pis pour l'uniforme. Descends et prends ton temps.", F:"Agrippe l'accoudoir. Le foulard tombé au sol."},
       duree:150},
-    {acte:3, scene:"{H} noue le foulard d'uniforme sur les yeux de {F} et l'installe dans le fauteuil du commandant, face aux instruments éteints.",
-      replique:{qui:'H', texte:"Vous ne verrez rien venir de toute la nuit."},
+    {acte:3, scene:"{H} l'installe dans le fauteuil du commandant, face aux instruments éteints, et remonte lentement le long de ses bas jusque sous l'uniforme.",
+      replique:{qui:'H', texte:"Ne touchez à aucune commande. Quoi qu'il arrive."},
       intention:{H:"Fais-la deviner. Alterne, arrête-toi, reprends.", F:"Tu ne vois rien. Réagis à chaque contact, à voix haute."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Elle reprend les commandes ?", options:["Oui — elle le fait asseoir et le chevauche","Non — il garde le contrôle jusqu'au bout"]}},
-    {acte:3, scene:"Le champagne de la classe affaires finit ouvert. {F} en verse sur elle et laisse {H} venir le chercher, dans le cockpit obscur.",
+      duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle reprend les commandes ?", options:["Oui — elle le fait asseoir et le chevauche","Non — il garde le contrôle jusqu'au bout"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Le champagne de la classe affaires finit ouvert. {F} en verse sur elle et laisse {H} venir le chercher, dans le cockpit obscur.",
       replique:{qui:'F', texte:"Service à bord, commandant."},
       intention:{H:"Suis chaque goutte, sans rien laisser.", F:"Ne bouge pas. Laisse-le finir entièrement."},
-      accessoires:['Champagne'], duree:120},
+      accessoires:['Vin'], duree:120},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne reprend pas les commandes. {H} la garde dans le fauteuil du commandant et mène tout jusqu'au bout.",
+      replique:{qui:'H', texte:"C'est moi qui pilote. Toujours."},
+      intention:{H:"Tu diriges entièrement, sans lui rendre la main.", F:"Laisse-le tout piloter. Ne reprends rien."},
+      duree:150},
     {acte:4, scene:"{H} entre en {F} dans le cockpit, ses mains agrippant les instruments éteints, la pluie tambourinant sur le pare-brise.",
       replique:{qui:'F', texte:"Plus fort. L'avion est vide."},
       intention:{H:"Accélère. Va au bout de ce qu'elle demande.", F:"Fais du bruit. Il n'y a personne à des centaines de mètres."},
@@ -2061,6 +2135,7 @@ var STORY_DUOS = [
   }
 },
 { id:'musicien_fan', homme:'h_musicien', femme:'f_fan', emoji:'🎸🎤', title:'Backstage',
+  epilogue:"Les techniciens démontent la scène. Elle a la date suivante notée dans son téléphone depuis longtemps.",
   bg:'radial-gradient(ellipse at top, #2a1230 0%, #0c0610 70%)',
   tenues:{H:"T-shirt de scène, jean troué, bandana", F:"Top court, jupe, bottes"},
   trame:[
@@ -2080,15 +2155,19 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Ils vont entendre."},
       intention:{H:"Monte le volume d'une main. Descends entre ses cuisses de l'autre.", F:"Laisse-toi aller, la musique couvre tout."},
       duree:150},
-    {acte:3, scene:"{H} noue son bandana de scène sur les yeux de {F}. Elle n'entend plus que sa voix et la basse dans le sol.",
+    {acte:3, scene:"{H} coupe toutes les lumières des loges sauf la guirlande de scène. Il ne reste que la basse dans le sol et sa voix, tout près de son oreille.",
       replique:{qui:'H', texte:"Écoute juste ma voix maintenant."},
       intention:{H:"Guide-la uniquement à la voix. Dis-lui ce que tu vas faire avant de le faire.", F:"Obéis exactement à ce qu'il annonce."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Elle prend le pouvoir ?", options:["Oui — elle le pousse sur le canapé","Non — elle se laisse diriger entièrement"]}},
-    {acte:3, scene:"Elle lance un titre plus lent et impose à {H} le tempo exact du morceau. Chaque geste calé sur la basse.",
+      duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle prend le pouvoir ?", options:["Oui — elle le pousse sur le canapé","Non — elle se laisse diriger entièrement"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Elle lance un titre plus lent et impose à {H} le tempo exact du morceau. Chaque geste calé sur la basse.",
       replique:{qui:'F', texte:"Tu bouges au rythme. Pas plus vite."},
       intention:{H:"Tiens le tempo, même si c'est insoutenable.", F:"Ralentis encore. Fais-le tenir jusqu'au bout du morceau."},
       accessoires:['Musique'], duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne prend pas le pouvoir. {H} la garde contre le mur des loges et impose son propre tempo, sans la musique cette fois.",
+      replique:{qui:'H', texte:"Mon rythme. Pas celui du morceau."},
+      intention:{H:"Impose ta cadence, sans suivre la musique.", F:"Suis son tempo à lui. Complètement."},
+      duree:150},
     {acte:4, scene:"{H} entre en {F} sur le canapé des loges, la salle vide résonnant encore de l'autre côté du mur.",
       replique:{qui:'F', texte:"Plus fort que la musique."},
       intention:{H:"Accélère franchement. Ne te retiens plus.", F:"Crie si tu veux. La sono tourne encore."},
@@ -2134,6 +2213,7 @@ var STORY_DUOS = [
   }
 },
 { id:'photographe_modele', homme:'h_photographe', femme:'f_modele', emoji:'📷💃', title:'Dans l\'objectif',
+  epilogue:"Aucune de ces images n'existera jamais. C'est peut-être la meilleure séance de sa carrière.",
   bg:'radial-gradient(ellipse at center, #232323 0%, #060606 70%)',
   tenues:{H:"Chemise noire, appareil en bandoulière", F:"Peignoir de studio sur lingerie"},
   trame:[
@@ -2153,15 +2233,19 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"À mon tour de vous diriger."},
       intention:{H:"Laisse-la faire. Ne donne plus aucune consigne.", F:"Prends-le en bouche, sans le quitter des yeux."},
       duree:150},
-    {acte:3, scene:"{H} noue un foulard sur les yeux de {F}. « Pour capturer une autre expression. » L'appareil ne sortira plus de la soirée.",
+    {acte:3, scene:"{H} braque un seul projecteur sur {F} et éteint tout le reste. Elle ne voit plus rien au-delà du halo — mais elle sait qu'il la regarde.",
       replique:{qui:'H', texte:"Décrivez-moi ce que vous ressentez."},
       intention:{H:"Fais-la parler en continu. Adapte-toi à ce qu'elle dit.", F:"Décris tout à voix haute, sans filtre, sans t'arrêter."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Qui passe de l'autre côté de l'objectif ?", options:["Elle prend l'appareil et le photographie","Il garde le contrôle total"]}},
-    {acte:3, scene:"Elle s'empare de l'appareil et le pousse sur le canapé du studio. Cette fois, c'est lui qui est dans le cadre.",
+      duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Qui passe de l'autre côté de l'objectif ?", options:["Elle prend l'appareil et le photographie","Il garde le contrôle total"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Elle s'empare de l'appareil et le pousse sur le canapé du studio. Cette fois, c'est lui qui est dans le cadre.",
       replique:{qui:'F', texte:"Ne bougez plus. Vous êtes très bien comme ça."},
       intention:{H:"Laisse-toi regarder. Ne cache rien.", F:"Déclenche quelques photos, puis pose l'appareil et grimpe sur lui."},
       accessoires:['Appareil photo'], duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne prend pas l'appareil. {H} garde le cadrage, la lumière et la direction — elle reste devant l'objectif jusqu'au bout.",
+      replique:{qui:'H', texte:"Reste dans le cadre. Je m'occupe du reste."},
+      intention:{H:"Continue de la diriger, pose après pose.", F:"Tu restes le sujet. Obéis à chaque consigne."},
+      duree:150},
     {acte:4, scene:"{H} entre en {F} sur le canapé du studio, les projecteurs toujours braqués sur eux, sans le moindre angle mort.",
       replique:{qui:'F', texte:"Laissez la lumière."},
       intention:{H:"Accélère franchement. Tout est visible, tant mieux.", F:"Ne détourne pas le regard. Fais du bruit."},
@@ -2207,6 +2291,7 @@ var STORY_DUOS = [
   }
 },
 { id:'coach_cliente', homme:'h_coach', femme:'f_cliente', emoji:'🏋️', title:'Séance privée',
+  epilogue:"La salle rouvre dans quatre heures. Aucune de ces séries ne figurera dans le carnet d'entraînement.",
   bg:'radial-gradient(ellipse at bottom, #14202a 0%, #070a0d 70%)',
   tenues:{H:"Short de sport, torse nu", F:"Brassière et legging moulant"},
   trame:[
@@ -2226,15 +2311,19 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Je ne tiendrai pas la position longtemps."},
       intention:{H:"Descends. Tiens ses cuisses ouvertes.", F:"Accroche-toi à la barre. Tiens le plus longtemps possible."},
       duree:150},
-    {acte:3, scene:"{H} noue une serviette de sport sur les yeux de {F}. « Travail de proprioception. » Elle ne sait plus d'où viendra le prochain contact.",
-      replique:{qui:'H', texte:"Tu me dis quand tu ne tiens plus."},
+    {acte:3, scene:"{H} sort une paire de pinces et les ajuste lentement sur elle. « Test de résistance à la douleur. Dis-moi quand tu atteins ta limite. »",
+      replique:{qui:'H', texte:"Tu tiens combien de séries comme ça ?"},
       intention:{H:"Alterne, arrête-toi, reprends. Fais-la craquer.", F:"Dis-lui quand tu ne tiens plus. Il ne s'arrêtera pas pour autant."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Elle reprend la main ?", options:["Oui — elle le plaque contre les miroirs","Non — elle le laisse la pousser à bout"]}},
-    {acte:3, scene:"L'huile finit sur les épaules encore chaudes de {F}, puis descend bien au-delà de la récupération sportive.",
+      accessoires:['Pinces à seins'], duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle reprend la main ?", options:["Oui — elle le plaque contre les miroirs","Non — elle le laisse la pousser à bout"]}},
+    {acte:3, si:{domin:'elle'}, scene:"{H} l'installe sur le tapis, jambes ouvertes comme pour un étirement profond, et maintient la position bien plus longtemps que nécessaire.",
       replique:{qui:'F', texte:"Plus bas. C'est là que ça tire."},
       intention:{H:"Obéis exactement. Suis chaque indication.", F:"Guide-le précisément, à voix haute."},
-      accessoires:['Huile de massage'], duree:150},
+       duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne reprend pas la main. {H} la garde sur le banc, compte à voix haute, et ne la laisse pas s'arrêter.",
+      replique:{qui:'H', texte:"Encore trois. Tu ne descends pas avant."},
+      intention:{H:"Compte à voix haute. Ne la laisse pas abandonner.", F:"Tiens la position. Va au bout de la série."},
+      duree:150},
     {acte:4, scene:"{H} entre en {F} sur le banc de musculation, la salle déserte renvoyant chaque souffle en écho.",
       replique:{qui:'F', texte:"Plus fort. Il n'y a personne."},
       intention:{H:"Accélère. Ne compte plus rien.", F:"Fais du bruit. Les miroirs renvoient tout."},
@@ -2280,6 +2369,7 @@ var STORY_DUOS = [
   }
 },
 { id:'ecrivain_muse', homme:'h_ecrivain', femme:'f_muse', emoji:'🖋️📖', title:'Chapitre inédit',
+  epilogue:"Le manuscrit est en morceaux au sol. Le chapitre, lui, s'écrira tout seul demain matin.",
   bg:'radial-gradient(ellipse at center, #2e2010 0%, #100b05 70%)',
   tenues:{H:"Chemise entrouverte, lunettes de lecture", F:"Robe légère, cheveux détachés"},
   trame:[
@@ -2299,15 +2389,19 @@ var STORY_DUOS = [
       replique:{qui:'H', texte:"Je n'arriverai plus jamais à écrire à ce bureau."},
       intention:{H:"Laisse-la faire. Agrippe les accoudoirs.", F:"Prends-le en bouche, sans le quitter des yeux."},
       duree:150},
-    {acte:3, scene:"{H} noue un ruban de cuir sur les yeux de {F} et la rassoit sur le bureau, au milieu des pages éparpillées.",
+    {acte:3, scene:"{H} la rassoit sur le bureau au milieu des pages éparpillées et souffle toutes les bougies sauf une, placée juste derrière elle.",
       replique:{qui:'H', texte:"Décris-moi ce que tu ressens. Je note tout."},
       intention:{H:"Fais-la parler sans interruption. Adapte-toi à chaque mot.", F:"Ne t'arrête jamais de décrire, même quand c'est difficile."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Jusqu'où va la dictée ?", options:["Elle lui ordonne la suite, mot pour mot","Elle abandonne les mots complètement"]}},
-    {acte:3, scene:"Elle incline la bougie et laisse tomber quelques gouttes de cire tiède sur sa peau à lui, très haut sur la cuisse.",
+      duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Jusqu'où va la dictée ?", options:["Elle lui ordonne la suite, mot pour mot","Elle abandonne les mots complètement"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Elle incline la bougie et laisse tomber quelques gouttes de cire tiède sur sa peau à lui, très haut sur la cuisse.",
       replique:{qui:'F', texte:"Tiens-toi tranquille. Je choisis où."},
       intention:{H:"Ne bouge pas. Encaisse chaque goutte.", F:"Choisis tes endroits. Alterne cire et bouche."},
       accessoires:['Bougie'], duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle abandonne les mots. {F} ne dicte plus rien — elle se laisse écrire, page après page, sans reprendre la plume.",
+      replique:{qui:'H', texte:"Alors je continue seul. Ne dis plus rien."},
+      intention:{H:"Tu écris la scène entièrement. Décris tout à voix haute.", F:"Ne parle plus. Laisse-le raconter à ta place."},
+      duree:150},
     {acte:4, scene:"{H} entre en {F} sur le bureau jonché de pages, la bougie menaçant de tomber à chaque poussée.",
       replique:{qui:'F', texte:"C'est comme ça que ça se termine."},
       intention:{H:"Accélère franchement. Tant pis pour le manuscrit.", F:"Cambre-toi. Les pages se déchirent sous toi."},
@@ -2353,6 +2447,7 @@ var STORY_DUOS = [
   }
 },
 { id:'garde_celebrite', homme:'h_garde', femme:'f_celebrite', emoji:'🕶️💎', title:'Protection rapprochée',
+  epilogue:"Il reprendra son poste à l'aube, oreillette en place, impassible. Rien de tout ça ne figurera dans aucun rapport.",
   bg:'radial-gradient(ellipse at top, #241f10 0%, #0a0805 70%)',
   tenues:{H:"Costume noir, oreillette, lunettes", F:"Robe de soirée fendue, talons, bijoux"},
   trame:[
@@ -2372,15 +2467,19 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Ne me laisse pas attendre."},
       intention:{H:"Descends entre ses cuisses. Prends ton temps quand même.", F:"Accroche tes talons dans son dos. Ne te retiens pas."},
       duree:150},
-    {acte:3, scene:"{H} noue un foulard de soie sur les yeux de {F}. Pour une fois, c'est elle qui ne voit rien venir — et qui s'en remet entièrement à quelqu'un.",
-      replique:{qui:'H', texte:"Ce soir, c'est moi qui décide de ce que tu sens."},
+    {acte:3, scene:"{H} dénoue le foulard de soie de sa veste et le noue sur les yeux de {F}. Pour une fois, c'est elle qui ne voit rien venir.",
+      replique:{qui:'H', texte:"Ce soir, personne ne vous protège. Même pas moi."},
       intention:{H:"Alterne. Fais-la deviner. Ne suis aucun ordre.", F:"Tu ne commandes plus rien. Laisse-toi surprendre."},
       accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Elle reprend son autorité ?", options:["Oui — elle arrache le foulard","Non — elle lui cède totalement la nuit"]}},
-    {acte:3, scene:"Le champagne de la réception traîne encore sur la table basse. Elle en verse sur elle et le laisse venir le chercher.",
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle reprend son autorité ?", options:["Oui — elle arrache le foulard","Non — elle lui cède totalement la nuit"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Elle défait un à un les bijoux de la soirée et les laisse tomber sur la moquette. C'est la première fois qu'il la voit sans rien de tout ça.",
       replique:{qui:'F', texte:"Sers-toi."},
       intention:{H:"Suis chaque goutte, sans rien laisser.", F:"Ne bouge pas. Laisse-le finir entièrement."},
-      accessoires:['Champagne'], duree:120},
+       duree:120},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne reprend pas son autorité. {H} garde le foulard en place et décide de tout — pour une fois, elle n'a rien à diriger.",
+      replique:{qui:'H', texte:"Ce soir, vous ne commandez pas."},
+      intention:{H:"Tu décides de chaque chose. Elle ne voit toujours rien.", F:"Tu ne diriges plus rien du tout. Laisse-toi surprendre."},
+      duree:150},
     {acte:4, scene:"{H} la plaque contre la baie vitrée et entre en elle, sa joue contre le verre froid, la ville immense en dessous.",
       replique:{qui:'F', texte:"Plus fort. Personne ne peut monter."},
       intention:{H:"Accélère franchement. Une main dans ses cheveux.", F:"Mains à plat contre la vitre. Fais du bruit."},
@@ -2426,6 +2525,7 @@ var STORY_DUOS = [
   }
 },
 { id:'chauffeur_passagere', homme:'h_chauffeur', femme:'f_passagere', emoji:'🚗🌃', title:'Course de nuit',
+  epilogue:"Le compteur affiche un montant absurde. Elle paie sans regarder, et lui laisse son numéro.",
   bg:'radial-gradient(ellipse at bottom, #241a10 0%, #0a0d16 70%)',
   tenues:{H:"Costume sombre, cravate, gants", F:"Robe de soirée, manteau long"},
   trame:[
@@ -2445,15 +2545,19 @@ var STORY_DUOS = [
       replique:{qui:'F', texte:"Il n'y a pas la place."},
       intention:{H:"On fera avec. Descends et prends ton temps.", F:"Un pied contre la vitre, l'autre contre le siège. Ne te retiens pas."},
       duree:150},
-    {acte:3, scene:"{H} noue sa cravate sur les yeux de {F}, à l'arrière. Elle ne voit plus les lumières de la ville, seulement ce qu'il lui fait.",
-      replique:{qui:'H', texte:"Tu ne sauras pas ce qui vient."},
+    {acte:3, scene:"{F} sort un anneau vibrant de son sac — elle l'avait prévu avant même de monter. Elle le lui met elle-même, à l'arrière de la voiture.",
+      replique:{qui:'F', texte:"J'avais prévu le trajet long. Et ça avec."},
       intention:{H:"Alterne, arrête-toi, reprends. Fais-la deviner à chaque fois.", F:"Tu ne vois rien. Dis à voix haute ce que tu ressens."},
-      accessoires:['Masque / Bandeau'], duree:150,
-      choix:{question:"Elle prend le volant ?", options:["Oui — elle le chevauche et mène tout","Non — elle le laisse la diriger"]}},
-    {acte:3, scene:"Les vitres sont complètement opaques de buée. {F} grimpe sur les genoux de {H}, tête contre le plafond bas.",
+      accessoires:['Anneau vibrant'], duree:150,
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle prend le volant ?", options:["Oui — elle le chevauche et mène tout","Non — elle le laisse la diriger"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Les vitres sont complètement opaques de buée. {F} grimpe sur les genoux de {H}, tête contre le plafond bas.",
       replique:{qui:'F', texte:"On ne voit plus rien de dehors. Ni eux ni nous."},
       intention:{H:"Laisse-la s'installer. Tiens ses hanches.", F:"Frotte-toi contre lui, tout habillée, aussi longtemps que tu veux."},
       duree:120},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne prend pas le volant. {H} la garde sur la banquette et mène tout, sans lui rendre la main une seule fois.",
+      replique:{qui:'H', texte:"Restez assise. Je conduis."},
+      intention:{H:"Tu diriges tout depuis l'arrière.", F:"Laisse-le mener. Ne reprends rien."},
+      duree:150},
     {acte:4, scene:"{H} entre en {F} sur la banquette arrière. La voiture tangue doucement sur ses suspensions à chaque mouvement.",
       replique:{qui:'F', texte:"Plus fort. La voiture tiendra."},
       intention:{H:"Accélère franchement. Ne t'occupe plus de rien.", F:"Mains à plat contre la vitre embuée. Fais du bruit."},
@@ -2499,6 +2603,7 @@ var STORY_DUOS = [
   }
 },
 { id:'chef_critique', homme:'h_chef', femme:'f_critique', emoji:'👨\u200d🍳🍽️', title:'Coup de feu',
+  epilogue:"La cuisine rouvre à midi. La critique paraîtra vendredi — et elle sera dithyrambique, pour de tout autres raisons.",
   bg:'radial-gradient(ellipse at center, #331d10 0%, #0d0704 70%)',
   tenues:{H:"Veste de chef, tablier noué", F:"Chemisier, jupe, carnet et stylo"},
   trame:[
@@ -2522,10 +2627,14 @@ var STORY_DUOS = [
       replique:{qui:'H', texte:"Dites-moi si l'assaisonnement vous convient."},
       intention:{H:"Suis chaque trace, lentement, sans en laisser.", F:"Ne bouge pas. Note-lui ça à voix haute."},
       accessoires:['Chantilly'], duree:150,
-      choix:{question:"Elle prend la cuisine en main ?", options:["Oui — elle le penche sur le passe","Non — elle le laisse continuer son service"]}},
-    {acte:3, scene:"Elle le penche sur le passe, à sa place, et prend le contrôle. Dans cette cuisine, ce soir, c'est elle qui commande.",
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Elle prend la cuisine en main ?", options:["Oui — elle le penche sur le passe","Non — elle le laisse continuer son service"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Elle le penche sur le passe, à sa place, et prend le contrôle. Dans cette cuisine, ce soir, c'est elle qui commande.",
       replique:{qui:'F', texte:"Oui, chef. C'est ça qu'on dit ?"},
       intention:{H:"Laisse-la faire ce qu'elle veut. Ne bouge pas.", F:"Sers-toi de lui exactement comme tu en as envie."},
+      duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne prend pas la cuisine en main. {H} la garde sur le plan de travail et poursuit son service exactement comme il l'entend.",
+      replique:{qui:'H', texte:"Dans ma cuisine, c'est moi qui dresse."},
+      intention:{H:"Continue ton service, sans lui céder la place.", F:"Laisse-le faire. Tu notes, c'est tout."},
       duree:150},
     {acte:4, scene:"{H} entre en {F} contre le plan de travail, la vaisselle propre valdinguant au sol dans un fracas que personne n'entend.",
       replique:{qui:'F', texte:"Ne t'occupe pas de la vaisselle."},
@@ -2572,6 +2681,7 @@ var STORY_DUOS = [
   }
 },
 { id:'bibliothecaire_lectrice', homme:'h_bibliothecaire', femme:'f_lectrice', emoji:'📚📖', title:'Fermeture',
+  epilogue:"Les livres sont restés au sol. Il les rangera avant l'ouverture, en repensant à chaque page.",
   bg:'radial-gradient(ellipse at top, #2a2412 0%, #0d0b06 70%)',
   tenues:{H:"Chemise, gilet, lunettes", F:"Robe sage boutonnée, lunettes, chignon"},
   trame:[
@@ -2595,10 +2705,14 @@ var STORY_DUOS = [
       replique:{qui:'H', texte:"Écoute le texte. Rien que le texte."},
       intention:{H:"Continue de lire sans t'interrompre, quoi qu'il arrive.", F:"Essaie d'écouter. Tu n'y arriveras pas."},
       duree:150,
-      choix:{question:"Qui mène la fin du chapitre ?", options:["Elle lui arrache le livre","Il continue de lire jusqu'au bout"]}},
-    {acte:3, scene:"Elle le fait taire, le pousse contre les rayonnages les plus hauts et prend franchement le contrôle.",
+      choix:{cle:'domin', valeurs:['elle','lui'], question:"Qui mène la fin du chapitre ?", options:["Elle lui arrache le livre","Il continue de lire jusqu'au bout"]}},
+    {acte:3, si:{domin:'elle'}, scene:"Elle le fait taire, le pousse contre les rayonnages les plus hauts et prend franchement le contrôle.",
       replique:{qui:'F', texte:"Maintenant c'est moi la bibliothécaire."},
       intention:{H:"Laisse-la faire entièrement. Ne dis plus un mot.", F:"Sers-toi de lui comme tu veux, contre les étagères."},
+      duree:150},
+    {acte:3, si:{domin:'lui'}, scene:"Elle ne mène rien. {H} continue de lire à voix basse, sans s'interrompre, pendant que ses mains poursuivent leur travail.",
+      replique:{qui:'H', texte:"Le chapitre n'est pas terminé."},
+      intention:{H:"Continue ta lecture jusqu'au bout, quoi qu'il arrive.", F:"Essaie de suivre le texte. Tu n'y arriveras plus."},
       duree:150},
     {acte:4, scene:"{H} entre en {F} sur la table de lecture, les livres repoussés d'un geste. Le silence de la salle amplifie le moindre souffle.",
       replique:{qui:'F', texte:"Tant pis pour le silence."},
@@ -2645,6 +2759,36 @@ var STORY_DUOS = [
   }
 }
 ];
+
+// ══════════════ HISTOIRES PERSONNALISÉES (admin) ══════════════
+// customStories contient : les histoires créées par l'admin, les surcharges d'histoires de
+// base (même id) et les suppressions (_deleted). STORY_DUOS est la liste fusionnée utilisée
+// partout dans le jeu.
+var STORIES_KEY = 'custom_stories_v28';
+// Lecture/écriture autonomes : ce module s'exécute avant la définition de loadCustom/saveCustom.
+var customStories = (function(){ try{ return JSON.parse(localStorage.getItem(STORIES_KEY)||'[]') || []; }catch(e){ return []; } })();
+function saveCustomStories(){
+  try{ localStorage.setItem(STORIES_KEY, JSON.stringify(customStories)); }catch(e){}
+  rebuildStoryDuos();
+}
+var STORY_DUOS = [];
+function rebuildStoryDuos(){
+  var out = [];
+  STORY_DUOS_BASE.forEach(function(d){
+    var over = customStories.filter(function(s){ return s.id===d.id; })[0];
+    if(over && over._deleted) return;            // histoire de base masquée
+    out.push(over ? Object.assign({}, d, over) : d); // surcharge partielle
+  });
+  customStories.forEach(function(s){
+    if(s._deleted) return;
+    if(!STORY_DUOS_BASE.some(function(d){ return d.id===s.id; })) out.push(s); // histoire créée
+  });
+  STORY_DUOS.length = 0;
+  out.forEach(function(d){ STORY_DUOS.push(d); });
+  return STORY_DUOS;
+}
+rebuildStoryDuos();
+
 
 
 /* ═══════════════════ GÉNÉRATEUR DE MISES EN SCÈNE (Mode Histoire) ═══════════════════
@@ -3091,7 +3235,7 @@ var ACCESSOIRES_BASE = {
   "Boissons":       ["Champagne","Vin"],
   "Aliments":       ["Chantilly","Fraises","Glaçons","Nutella"],
   "Objets sexuels": ["Gode","Gode anal","Double gode","Gode ceinture","Anneau vibrant","Vibromasseur","Plug anal"],
-  "BDSM":           ["Cravache","Fouet","Menottes","Masque / Bandeau","Pinces à seins"],
+  "BDSM":           ["Cravache","Fouet","Menottes","Masque / Bandeau","Pinces à seins","Ruban / foulard de soie"],
   "Vidéos":         ["Vidéos porno","Films érotiques"],
   "Sans accessoires":["Aucun"]
 };
@@ -5529,6 +5673,14 @@ function clearPlayedHistory(){
 function savePlayedHistory(){
   try{ var arr=Array.from(G.playedTexts).slice(-500); localStorage.setItem(PLAYED_KEY,JSON.stringify(arr)); }catch(e){}
 }
+// Réinitialisation depuis l'onglet Mémoire : le badge "✓ déjà joué" disparaît alors partout
+// (mémoire, prochaine partie, sélecteur de gages perso).
+function resetPlayedGages(){
+  if(!confirm('Effacer l\'historique des gages déjà joués ?\n\nLe badge « ✓ déjà joué » disparaîtra partout dans l\'admin, et tous les gages redeviendront prioritaires au tirage.')) return;
+  try{ localStorage.removeItem(PLAYED_KEY); }catch(e){}
+  G.playedTexts = new Set();
+  adminTab('memoire', null);
+}
 // ── Mémoire inter-sessions liée aux profils joueurs ──
 function getHistKey(){
   var names=G.players.map(function(p){return p.prenom;}).sort().join('_').toLowerCase().replace(/[\s']+/g,'');
@@ -5932,18 +6084,26 @@ function renderBoutique(){
       + lingerieBrands.map(function(b){ return '<a href="'+b.url+'" target="_blank" rel="noopener" class="btn ghost sm" style="padding:6px 8px;font-size:11px;text-decoration:none;text-align:center;margin:0">'+b.label+'</a>'; }).join('')
       + '</div></div>';
     var TENUES_SHOP = [
-      {label:'👮‍♀️ Uniforme de policière', q:'déguisement policière sexy femme adulte'},
-      {label:'👩‍⚕️ Blouse d\'infirmière', q:'déguisement infirmière sexy femme adulte'},
-      {label:'🥼 Blouse de médecin', q:'blouse médecin blanche déguisement adulte'},
-      {label:'👩‍🏫 Tenue stricte + lunettes', q:'chemisier jupe crayon lunettes secrétaire stricte'},
-      {label:'💃 Lingerie de danseuse', q:'lingerie porte-jarretelles talons femme'},
-      {label:'✈️ Uniforme d\'hôtesse de l\'air', q:'déguisement hôtesse de l\'air sexy adulte'},
-      {label:'🚒 Tenue de pompier', q:'déguisement pompier homme adulte'},
-      {label:'🕶️ Costume de garde du corps', q:'costume noir homme cravate oreillette'},
-      {label:'👨‍🍳 Veste de chef cuisinier', q:'veste chef cuisinier tablier noir'},
-      {label:'💆 Tenue de masseur / serviette spa', q:'peignoir serviette spa coton'},
-      {label:'🎤 Tenue rock de scène', q:'t-shirt rock bandana jean troué homme'},
-      {label:'📚 Tenue sage + lunettes', q:'robe boutonnée classique lunettes femme'}
+      {label:'🔒 Garde à vue — uniforme de policière', q:'déguisement policière sexy femme ceinturon adulte'},
+      {label:'🗡️👑 La tour du donjon — robe médiévale + chemise de lin', q:'robe médiévale princesse lacets adulte déguisement'},
+      {label:'💉 Chambre 204 — blouse d\'infirmière + badge', q:'déguisement infirmière sexy femme badge adulte'},
+      {label:'🎓 Soutenance privée — chemisier strict, jupe crayon, lunettes', q:'chemisier blanc jupe crayon lunettes femme stricte'},
+      {label:'💃 Salon privé — lingerie fine + porte-jarretelles', q:'ensemble lingerie porte-jarretelles talons femme'},
+      {label:'💆 Le dernier rendez-vous — peignoir & serviette spa', q:'peignoir serviette spa coton blanc'},
+      {label:'📦 Livraison surprise — polo livreur + casquette', q:'polo casquette livreur déguisement homme'},
+      {label:'🍸 Dernier verre — robe courte + talons', q:'robe courte moulante soirée femme talons'},
+      {label:'🚒 Sauvetage — pantalon pompier + bretelles', q:'déguisement pompier homme bretelles adulte'},
+      {label:'⛷️ Cours particulier — combinaison de ski + body', q:'body moulant femme combinaison ski'},
+      {label:'🎨 Sous l\'aiguille — débardeur noir, tablier, gants', q:'tablier noir gants latex débardeur tatoueur'},
+      {label:'✈️ Escale imprévue — uniforme d\'hôtesse + foulard', q:'déguisement hôtesse de l\'air foulard bas adulte'},
+      {label:'🎸 Backstage — t-shirt de scène, jean troué, bandana', q:'t-shirt rock bandana jean troué homme'},
+      {label:'📷 Dans l\'objectif — peignoir de studio sur lingerie', q:'peignoir satin court femme lingerie'},
+      {label:'🏋️ Séance privée — brassière + legging moulant', q:'brassière legging sport moulant femme'},
+      {label:'🖋️ Chapitre inédit — chemise + lunettes de lecture', q:'chemise lin homme lunettes lecture'},
+      {label:'🕶️ Protection rapprochée — costume noir + oreillette', q:'costume noir homme cravate oreillette sécurité'},
+      {label:'🚗 Course de nuit — costume chauffeur + gants', q:'costume chauffeur gants blancs casquette homme'},
+      {label:'👨\u200d🍳 Coup de feu — veste de chef + tablier', q:'veste chef cuisinier tablier noir professionnel'},
+      {label:'📚 Fermeture — robe sage boutonnée + lunettes', q:'robe boutonnée classique femme lunettes chignon'}
     ];
     tenuesBox.innerHTML = lingerieHTML + TENUES_SHOP.map(function(t){ return shopRow(t.label, t.q); }).join('');
   }
@@ -7056,15 +7216,37 @@ function renderStorySelectPage(){
   var inedites = STORY_DUOS.filter(function(d){ return !hist[d.id]; });
   var vecues  = STORY_DUOS.filter(function(d){ return !!hist[d.id]; })
                           .sort(function(a,b){ return (hist[b.id].last||0)-(hist[a.id].last||0); });
+  var ACC_ICONS = {'Menottes':'🔗','Cravache':'🏇','Fouet':'🖤','Masque / Bandeau':'🙈','Pinces à seins':'📎',
+    'Huile de massage':'🧴','Bougie':'🕯️','Plume':'🪶','Musique':'🎵','Appareil photo':'📷','Lubrifiant':'💧',
+    'Champagne':'🍾','Vin':'🍷','Chantilly':'🍦','Fraises':'🍓','Glaçons':'🧊','Nutella':'🍫',
+    'Vibromasseur':'📳','Anneau vibrant':'💍','Gode':'🍆','Gode anal':'🍑','Plug anal':'🔌','Gode ceinture':'🎽',
+    'Lingerie / sous-vêtements sexy':'👙'};
   function card(d){
     var lbl = _storyHistLabel(d.id);
-    return '<div onclick="selectStoryDuo(\''+d.id+'\')" style="cursor:pointer;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;'+(lbl?'opacity:.72':'')+'">'
+    var accs = _duoAccessoires(d);
+    var badges = '';
+    if(accs.length) badges += accs.map(function(a){ return (ACC_ICONS[a]||'🎁'); }).join(' ');
+    if(d.tenues) badges += (badges?' ':'')+'👗';
+    // Détail replié : le clic sur la pastille ne doit PAS lancer l'histoire (stopPropagation).
+    var detail = '';
+    if(accs.length || d.tenues){
+      detail = '<div id="sinfo-'+d.id+'" class="hidden" style="margin-top:7px;padding:9px 11px;background:var(--card2);border:1px solid var(--border);border-radius:9px;font-size:11.5px;line-height:1.55">';
+      if(accs.length) detail += '<div><b style="color:var(--gold)">Accessoires :</b> '+accs.map(function(a){return (ACC_ICONS[a]||'🎁')+' '+a;}).join(' · ')+'</div>';
+      if(d.tenues) detail += '<div style="margin-top:'+(accs.length?'5px':'0')+'"><b style="color:var(--gold)">Tenues :</b><br>👨 '+d.tenues.H+'<br>👩 '+d.tenues.F+'</div>';
+      detail += '<div style="margin-top:6px;font-size:10.5px;color:var(--muted);font-style:italic">Tout reste optionnel : tu pourras refuser accessoires et tenues juste avant de commencer.</div></div>';
+    }
+    return '<div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;'+(lbl?'opacity:.72':'')+'">'
+      + '<div onclick="selectStoryDuo(\''+d.id+'\')" style="cursor:pointer;display:flex;gap:12px;align-items:flex-start">'
       + '<div style="font-size:28px;flex:0 0 auto">'+d.emoji+'</div>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="font-weight:700;font-size:15px;color:var(--gold)">'+d.title+'</div>'
       + (lbl ? '<div style="font-size:10.5px;color:var(--success);margin-top:2px">✓ Vécue le '+lbl+'</div>' : '')
       + '<div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4">'+d.premise+'</div>'
-      + '</div></div>';
+      + '</div></div>'
+      + (badges ? '<div onclick="event.stopPropagation();toggleStoryInfo(\''+d.id+'\')" style="cursor:pointer;margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--card2);border:1px solid var(--border);border-radius:14px;font-size:13px">'
+          + badges + '<span style="font-size:10px;color:var(--muted)">détails</span></div>' : '')
+      + detail
+      + '</div>';
   }
   var html = '';
   if(inedites.length){
@@ -7083,7 +7265,12 @@ function resetStoryHist(){
   saveStoryHist({});
   renderStorySelectPage();
 }
+function toggleStoryInfo(id){
+  var el = document.getElementById('sinfo-'+id);
+  if(el) el.classList.toggle('hidden');
+}
 function selectStoryDuo(id){
+  G._storyChoix = {}; // nouvelle histoire = choix de bifurcation remis à zéro
   var duo = STORY_DUOS.filter(function(d){return d.id===id;})[0];
   if(!duo) return;
   applyDuo(duo);
@@ -7096,9 +7283,15 @@ function selectStoryDuo(id){
 // accessoires thématiques, en un seul choix, sans casser l'immersion du prologue.
 function _duoAccessoires(duo){
   var accs = {};
-  Object.keys(duo.scenes||{}).forEach(function(lvl){
-    (duo.scenes[lvl]||[]).forEach(function(s){ (s.accessoires||[]).forEach(function(a){ accs[a]=true; }); });
-  });
+  // Priorité à la trame : c'est elle qui est réellement jouée. Les anciennes `scenes` ne
+  // servent que de repli pour une histoire qui n'aurait pas de trame.
+  if(duo.trame && duo.trame.length){
+    duo.trame.forEach(function(b){ (b.accessoires||[]).forEach(function(a){ accs[a]=true; }); });
+  } else {
+    Object.keys(duo.scenes||{}).forEach(function(lvl){
+      (duo.scenes[lvl]||[]).forEach(function(s){ (s.accessoires||[]).forEach(function(a){ accs[a]=true; }); });
+    });
+  }
   return Object.keys(accs);
 }
 function renderStorySetupPage(){
@@ -7113,12 +7306,13 @@ function renderStorySetupPage(){
 
   if(accs.length){
     html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">';
-    html += '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">Cette histoire utilise :</div>';
-    html += '<div style="font-size:14px;margin-bottom:12px;line-height:1.6">'+accs.map(function(a){return '• '+a;}).join('<br>')+'</div>';
-    html += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 12px">'
-      + '<input type="checkbox" id="story-use-acc" checked style="width:18px;height:18px;flex:0 0 auto">'
-      + '<span style="font-size:13.5px">On les a — on joue avec</span></label>';
-    html += '<p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4">Décoche si vous ne les avez pas : les scènes qui en ont besoin seront écartées, l\'histoire reste cohérente.</p>';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">Accessoires de cette histoire</div>';
+    html += '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.4">Coche ceux que vous avez. Les scènes qui utilisent un accessoire décoché seront écartées — l\'histoire reste cohérente.</div>';
+    html += accs.map(function(a, i){
+      return '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;margin-bottom:6px">'
+        + '<input type="checkbox" class="story-acc-cb" data-acc="'+a.replace(/"/g,'&quot;')+'" checked style="width:18px;height:18px;flex:0 0 auto">'
+        + '<span style="font-size:13.5px">'+a+'</span></label>';
+    }).join('');
     html += '</div>';
   } else {
     html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;font-size:13px;color:var(--muted)">Cette histoire ne nécessite aucun accessoire particulier.</div>';
@@ -7146,10 +7340,13 @@ function renderStorySetupPage(){
 }
 function confirmStorySetup(){
   var duo = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
-  var accs = duo ? _duoAccessoires(duo) : [];
-  var useAcc = document.getElementById('story-use-acc');
   var useTen = document.getElementById('story-use-tenues');
-  G.acc = (accs.length && (!useAcc || useAcc.checked)) ? accs.slice() : ['Aucun'];
+  // Chaque accessoire est accepté ou refusé individuellement.
+  var choisis = [];
+  document.querySelectorAll('.story-acc-cb').forEach(function(cb){
+    if(cb.checked) choisis.push(cb.getAttribute('data-acc'));
+  });
+  G.acc = choisis.length ? choisis : ['Aucun'];
   // Tenues : validées indépendamment. Si refusées, le récit n'y fait plus référence.
   G._storyTenues = !!(duo && duo.tenues && (!useTen || useTen.checked));
   G._rolesChosen = true;
@@ -8114,7 +8311,9 @@ function _trameBeatToGage(beat, pH, pF, idx){
   }
   if(beat.choix){
     html += '<div class="story-beat-choice"><div class="story-beat-choice-q">'+fill(beat.choix.question)+'</div>'
-      + beat.choix.options.map(function(o){ return '<div class="story-beat-choice-o">• '+fill(o)+'</div>'; }).join('')
+      + beat.choix.options.map(function(o, oi){
+          return '<div class="story-beat-choice-o" onclick="pickStoryChoice('+idx+','+oi+',this)" style="cursor:pointer;padding:6px 8px;border-radius:8px;border:1px solid transparent">▸ '+fill(o)+'</div>';
+        }).join('')
       + '</div>';
   }
   return {
@@ -8131,12 +8330,65 @@ function _trameBeatToGage(beat, pH, pF, idx){
   };
 }
 function _lcFirst(s){ return s ? s.charAt(0).toLowerCase()+s.slice(1) : ''; }
+// Points de bascule : le choix est mémorisé et oriente réellement les beats suivants.
+// Un beat portant `si:'xxx'` n'apparaît que si le choix 'xxx' a été retenu.
+function pickStoryChoice(beatIdx, optIdx, elBtn){
+  G._storyChoix = G._storyChoix || {};
+  var pool = G.gagesByLevel[G.level]||[];
+  var gage = pool[G.gageIdx];
+  var duo = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
+  if(!duo || !gage) return;
+  var beat = (duo.trame||[]).filter(function(b,i){ return i===gage._beatIdx; })[0];
+  if(!beat || !beat.choix) return;
+  var cle = beat.choix.cle || ('c'+gage._beatIdx);
+  G._storyChoix[cle] = (beat.choix.valeurs && beat.choix.valeurs[optIdx]) || String(optIdx);
+  // Retour visuel : l'option choisie reste surlignée
+  var parent = elBtn && elBtn.parentNode;
+  if(parent){
+    parent.querySelectorAll('.story-beat-choice-o').forEach(function(o){
+      o.style.borderColor='transparent'; o.style.background=''; o.style.opacity='.55';
+    });
+    elBtn.style.borderColor='var(--accent)';
+    elBtn.style.background='rgba(var(--accent-rgb,232,67,122),.14)';
+    elBtn.style.opacity='1';
+  }
+  vibrate(10);
+  // Reconstruit la suite en tenant compte du choix, sans perdre la position actuelle.
+  var lvl=G.level, idx=G.gageIdx;
+  var hf = getRoleHF();
+  if(hf.pH && hf.pF){
+    buildTrameGame(duo, hf.pH, hf.pF);
+    G.level=lvl; G.gageIdx=idx;
+  }
+}
 function buildTrameGame(duo, pH, pF){
   G.gagesByLevel = {}; G.changePool = {};
+  var _varVues = {};
   var beats = (duo.trame||[]).filter(function(b){
+    // Bifurcation : un beat conditionné n'apparaît que si le choix correspondant a été fait.
+    if(b.si){
+      var ch = G._storyChoix || {};
+      var okSi = Object.keys(b.si).every(function(k){ return ch[k]===b.si[k]; });
+      if(!okSi) return false;
+    }
+    // Variantes exclusives : plusieurs versions d'une même scène selon l'accessoire
+    // disponible — on n'en garde qu'une seule (la première compatible).
+    if(b.variante){
+      if(_varVues[b.variante]) return false;
+    }
     // Un beat qui exige un accessoire absent est écarté : l'histoire reste cohérente sans lui.
-    if(!b.accessoires || !b.accessoires.length) return true;
-    return b.accessoires.every(function(a){ return (G.acc||[]).indexOf(a)>=0; });
+    if(b.accessoires && b.accessoires.length){
+      if(!b.accessoires.every(function(a){ return (G.acc||[]).indexOf(a)>=0; })) return false;
+    }
+    // Idem pour les pratiques : au moins un des deux joueurs doit l'avoir cochée.
+    if(b.pratiques && b.pratiques.length){
+      var okPrat = b.pratiques.every(function(p){
+        return (pH.pratiques||[]).indexOf(p)>=0 || (pF.pratiques||[]).indexOf(p)>=0;
+      });
+      if(!okPrat) return false;
+    }
+    if(b.variante) _varVues[b.variante] = true;
+    return true;
   });
   // Tenues validées : un beat d'ouverture ancre le jeu de rôle avant la première scène.
   if(G._storyTenues && duo.tenues){
@@ -8696,6 +8948,11 @@ function displayGage() {
   if(G.mode==='brise_glace'){
     levelBadge.className='level-badge lvl-'+G.level;
     levelBadge.textContent='🧊 Brise-glace';
+  } else if(G.mode==='story'){
+    // Le badge remplace l'écran de transition : il situe l'acte dans l'histoire en cours.
+    var _duoB = G._storyDuo ? STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0] : null;
+    levelBadge.className='level-badge lvl-'+G.level;
+    levelBadge.textContent = (_duoB ? _duoB.emoji+' ' : '') + 'Acte '+G.level+'/5';
   } else {
     levelBadge.className='level-badge lvl-'+G.level;
     levelBadge.textContent='Niv.'+G.level+' — '+lvlNames[G.level];
@@ -8747,6 +9004,14 @@ function displayGage() {
       } else if(secs){
         hideDice();
         showTimer(secs);
+        // Mode Histoire : le minuteur se lance seul (après un court temps de lecture) pour
+        // ne pas avoir à sortir du récit pour appuyer sur un bouton.
+        if(G.mode==='story' && !AUTO_PLAY_ON){
+          if(_storyTimerTO) clearTimeout(_storyTimerTO);
+          _storyTimerTO = setTimeout(function(){
+            if(!timerRun && timerLeft>0 && G.mode==='story') toggleTimer();
+          }, 6000);
+        }
       } else {
         el('g-timer').classList.add('hidden');
         hideDice();
@@ -8768,10 +9033,31 @@ function displayGage() {
   var lvlLabel=el('lvl-prog-label');
   if(lvlLabel) lvlLabel.textContent=(G.gageIdx+1)+'/'+pool.length;
   el('g-counter').textContent='Niveau '+G.level+'/5'+(gage._ch?' ⚡':'')+(gage._kama?' 🪷':'')+(gage._bonusTimerX2?' ⏱️x2':'')+(gage._bonusChoice?' 🔀':'')+(gage._bonusSurprise?' 🎯':'');
-  // Show "edit players" link on very first gage
+  // Premier gage : lien de retour. En mode Histoire il n'y a pas de pratiques à modifier —
+  // on propose de changer d'histoire à la place.
+  var estStory = (G.mode==='story');
   var editBtn=document.getElementById('btn-edit-players');
-  if(editBtn) editBtn.style.display=(G.gageIdx===0&&G.level===1)?'block':'none';
+  if(editBtn) editBtn.style.display=(!estStory && G.gageIdx===0 && G.level===1)?'block':'none';
+  // Disponible à tout moment en mode Histoire (et pas seulement sur la première scène).
+  var backSt=document.getElementById('btn-back-stories');
+  if(backSt) backSt.style.display = estStory ? 'block' : 'none';
+  // Mode Histoire : aucun gage imposé, seulement des suggestions à suivre → pas de "Changer".
+  var chBtn=document.getElementById('btn-change');
+  if(chBtn) chBtn.style.display = estStory ? 'none' : '';
+  // Vocabulaire narratif : on avance dans un récit, on ne passe pas un gage.
+  var nextBtn=document.getElementById('btn-next');
+  if(nextBtn) nextBtn.textContent = estStory ? '▶ La suite' : 'Suivant →';
   updateScores();
+}
+function backToStoryChoice(sansConfirm){
+  if(!sansConfirm && !confirm('Revenir au choix des histoires ? La partie en cours sera abandonnée.')) return;
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  stopTimer();
+  if(typeof clearAppBackground==='function') clearAppBackground();
+  G._storyDuo = null;
+  G._rolesChosen = false;
+  renderStorySelectPage();
+  goTo('page-story-select');
 }
 
 function getRoleHF(){
@@ -9299,6 +9585,7 @@ function validateGage(){
     if(G.progressLog.length>20) G.progressLog.shift();
   }
   soundGageValidate();
+  if(gage) markPlayed(gage.texte); // validation explicite = gage réellement réalisé
   if(G.scores[p.prenom]>=50){showVictory(p.prenom,G.scores[p.prenom]);return;}
   nextGage(true);
 }
@@ -9540,6 +9827,7 @@ function rollDice(){
     }
   },80);
 }
+var _storyTimerTO = null;
 function showTimer(s){
   timerSecs=s;timerLeft=s;timerRun=false;
   if(timerInt){clearInterval(timerInt);timerInt=null;}
@@ -9547,6 +9835,7 @@ function showTimer(s){
   el('g-timer').classList.remove('hidden');
 }
 function stopTimer(){
+  if(_storyTimerTO){ clearTimeout(_storyTimerTO); _storyTimerTO=null; }
   timerRun=false;
   if(timerInt){clearInterval(timerInt);timerInt=null;}
   el('g-timer').classList.add('hidden');
@@ -9771,6 +10060,23 @@ function getStoryChapterText(toLvl){
 }
 function showLevelTransition(fromLvl, toLvl) {
   savePlayedHistory();
+  // Mode Histoire : pas d'écran de transition, il casserait le fil du récit. On enchaîne
+  // directement — le badge de niveau au-dessus de la carte suffit à situer l'avancement.
+  if(G.mode==='story'){
+    var isFreeSt = false;
+    if(toLvl >= 3 && !isFreeSt && !isPremium()){
+      G._pendingLevel = toLvl;
+      showPaywall();
+      return;
+    }
+    soundLevelUp();
+    vibrate([20,40,20]);
+    G.level = toLvl;
+    G._pendingLevel = null;
+    G.gageIdx = 0;
+    displayGage();
+    return;
+  }
   // In competition: ALWAYS show bonus card for the leader at each level end
   if(G.mode==='competition') {
     var cnames=Object.keys(G.scores);
@@ -9980,6 +10286,42 @@ function showEnd(){
   el('btn-skip').classList.add('hidden');
   el('btn-validate').classList.add('hidden');
   el('btn-next').classList.add('hidden');
+
+  // Mode Histoire : épilogue narratif propre au scénario, à la place du récapitulatif générique.
+  if(G.mode==='story' && G._storyDuo){
+    var _duoEnd = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
+    if(_duoEnd){
+      var _hf = getRoleHF();
+      var _epi = (_duoEnd.epilogue||'')
+        .replace(/\{H\}/g, _hf.pH?_hf.pH.prenom:'')
+        .replace(/\{F\}/g, _hf.pF?_hf.pF.prenom:'');
+      el('g-counter').textContent = 'Fin de l\'histoire';
+      el('g-card').innerHTML =
+          '<div class="gage-card" style="text-align:center">'
+        + '<div style="font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:10px">Épilogue</div>'
+        + '<div style="font-size:44px;margin-bottom:8px">'+_duoEnd.emoji+'</div>'
+        + '<h2 style="font-family:\'Cormorant Garamond\',serif;font-size:26px;font-weight:700;margin-bottom:16px">'+_duoEnd.title+'</h2>'
+        + '<p style="font-family:\'Cormorant Garamond\',serif;font-size:18px;line-height:1.7;font-style:italic;opacity:.92">'+_epi+'</p>'
+        + '<div style="margin-top:20px;font-size:12px;color:var(--muted)">Prenez le temps de sortir du rôle ensemble.</div>'
+        + '</div>'
+        + '<div class="btn-row" style="margin-top:16px">'
+        + '<button class="btn ghost" onclick="backToStoryChoice(true)">📖 Autre histoire</button>'
+        + '<button class="btn" onclick="location.reload()">🏠 Accueil</button>'
+        + '</div>';
+      if(voiceNarrationOn && 'speechSynthesis' in window && _epi){
+        try{
+          speechSynthesis.cancel();
+          var uttE = new SpeechSynthesisUtterance(_epi);
+          uttE.lang='fr-FR';
+          var fvE=_pickFrenchVoice(); if(fvE) uttE.voice=fvE;
+          uttE.rate=0.80; uttE.pitch=0.90;
+          speechSynthesis.speak(uttE);
+        }catch(e){}
+      }
+      markStoryPlayed(G._storyDuo);
+      return;
+    }
+  }
 
   if(G.mode==='competition'){
     var sorted=Object.keys(G.scores).sort(function(a,b){return G.scores[b]-G.scores[a];});
@@ -10486,6 +10828,8 @@ function adminTab(tab, btn) {
   else if(tab==='kama') { cnt.innerHTML = renderAdminKama(); }
   else if(tab==='nextgame') { cnt.innerHTML = renderAdminNextGame(); renderCustomGagePicker(); renderNextGamePicker(); }
   else if(tab==='bgimages') { cnt.innerHTML = renderAdminBgTab(); }
+  else if(tab==='stories') { cnt.innerHTML = renderAdminStories(); }
+  else if(tab==='media') { cnt.innerHTML = renderAdminMedia(); }
 }
 
 function renderAdminGages() {
@@ -11104,11 +11448,20 @@ function renderAdminMemoire(){
 
   var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:10px">Chaque fois qu\'un joueur passe ou change un gage, c\'est mémorisé ici et ce gage réapparaît ensuite bien moins souvent pour lui (jamais totalement exclu). Cette page t\'aide à repérer les gages à revoir ou retirer.</p>';
 
+  var playedCount = (function(){ try{ var a=JSON.parse(localStorage.getItem(PLAYED_KEY)||'[]'); return Array.isArray(a)?a.length:0; }catch(e){ return 0; } })();
   html += '<div style="display:flex;gap:8px;margin-bottom:14px">'
     + '<div style="flex:1;background:var(--card2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">'+texts.length+'</div><div style="font-size:10px;color:var(--muted)">gages avec signal</div></div>'
     + '<div style="flex:1;background:var(--card2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">'+totalEvents+'</div><div style="font-size:10px;color:var(--muted)">passages / changements</div></div>'
     + '<div style="flex:1;background:var(--card2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">'+dislikedCount+'</div><div style="font-size:10px;color:var(--muted)">👎 explicites (fin de partie)</div></div>'
     + '</div>';
+
+  // Historique "déjà joué" — réinitialisable, le badge ✓ disparaît alors partout dans l'admin.
+  html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">'
+    + '<div><div style="font-size:13px;font-weight:700">✓ Gages déjà joués</div>'
+    + '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+playedCount+' gage(s) réellement réalisés (timer/dé engagé ou validation)</div></div>'
+    + (playedCount ? '<button class="btn ghost sm" style="padding:6px 12px;font-size:11px;white-space:nowrap;margin:0" onclick="resetPlayedGages()">↺ Réinitialiser</button>' : '')
+    + '</div></div>';
 
   // ── Classement combiné : 👎 explicites + signaux implicites (passer/changer) ──
   var rows = texts.map(function(t){
@@ -11233,12 +11586,28 @@ function _dataKeyGroups(){
     {label:'⭐ Favoris', keys:['pulsations_favs_v1']},
     {label:'📝 Mes gages (liste perso hors admin)', keys:['myg_v28']},
     {label:'⚙️ Réglages (thème, voix, langue)', keys:['jdc_theme_v28','voice_narration_v28','pulsations_lang']},
+    {label:'📁 Médiathèque personnelle', keys:['media_lib_v28']},
+    {label:'🎬 Histoires personnalisées', keys:['custom_stories_v28']},
+    {label:'🖼️ Fonds d\'écran', keys:['bg_images_v28']},
+    {label:'📖 Histoires déjà vécues', keys:['story_hist_v28']},
     {label:'💾 Partie en cours', keys:['jdc_save_v28','jdc_game_save_v28']}
   ];
 }
 function renderAdminData(){
   var groups=_dataKeyGroups();
-  var html='<p style="font-size:12px;color:var(--muted);margin-bottom:10px">Tout ce que tu personnalises (gages perso, pratiques ajoutées, accessoires, gages masqués, profils, historique...) ne vit que dans le navigateur de cet appareil. Un vidage de cache, un changement de téléphone ou une réinstallation efface tout, sans prévenir. Exporte régulièrement un fichier de sauvegarde, et importe-le sur un nouvel appareil pour tout récupérer.</p>';
+  var _fid=null; try{ _fid=localStorage.getItem(FACEID_KEY); }catch(e){}
+  var html='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:4px">🔐 Déverrouillage admin</div>'
+    + '<div style="font-size:11.5px;color:var(--muted);line-height:1.45;margin-bottom:9px">'
+    + (_fid ? 'Face ID est actif : il sera proposé en premier, le code 4213 reste disponible en secours.'
+            : 'Actuellement protégé par le code. Tu peux ajouter Face ID (ou l\'empreinte) de cet appareil.')
+    + (_faceIdDispo() ? '' : '<br><span style="color:var(--warn)">⚠️ Indisponible ici : Face ID exige une page en HTTPS ou l\'app ajoutée à l\'écran d\'accueil.</span>')
+    + '</div>'
+    + (_fid
+        ? '<button class="btn ghost sm" style="width:100%;margin:0" onclick="adminForgetFaceId()">🗑️ Retirer Face ID</button>'
+        : '<button class="btn ghost sm" style="width:100%;margin:0" onclick="adminEnrollFaceId()">👤 Activer Face ID</button>')
+    + '</div>';
+  html+='<p style="font-size:12px;color:var(--muted);margin-bottom:10px">Tout ce que tu personnalises (gages perso, pratiques ajoutées, accessoires, gages masqués, profils, historique...) ne vit que dans le navigateur de cet appareil. Un vidage de cache, un changement de téléphone ou une réinstallation efface tout, sans prévenir. Exporte régulièrement un fichier de sauvegarde, et importe-le sur un nouvel appareil pour tout récupérer.</p>';
 
   html+='<div style="background:var(--card2);border-radius:12px;padding:12px;margin-bottom:14px">';
   html+='<h3 style="font-size:13px;color:var(--gold);margin-bottom:8px">Ce qui sera inclus</h3>';
@@ -11661,6 +12030,7 @@ var BG_MODES = [
   {id:'story', label:'🎬 Histoire (fond par défaut)'},
   {id:'kamasutra', label:'🪷 Kâmasûtra'}
 ];
+var _bgLastMsg = null;
 function handleBgImageUpload(input, category, key){
   var f = input.files && input.files[0];
   var errEl = document.getElementById('bg-err-'+category+'-'+key);
@@ -11691,6 +12061,11 @@ function handleBgImageUpload(input, category, key){
       if(!customBgImages[category]) customBgImages[category]={};
       customBgImages[category][key] = dataUrl;
       saveBgImages();
+      // Message de confirmation, avec le détail de la compression réellement effectuée.
+      var avant = (f.size/1024).toFixed(0);
+      var apres = (dataUrl.length*0.75/1024).toFixed(0); // base64 -> ~3/4 en octets
+      var msg = '✅ Image ajoutée — compressée de '+avant+' Ko à '+apres+' Ko ('+img.width+'×'+img.height+' → '+w+'×'+h+').';
+      _bgLastMsg = {cat:category, key:key, texte:msg};
       renderAdminBgTab();
     };
     img.onerror = function(){ if(errEl){ errEl.textContent = '❌ Impossible de lire cette image (fichier corrompu ?).'; errEl.style.color='var(--warn)'; } };
@@ -11721,6 +12096,380 @@ function _bgRow(category, key, label, placeholderStyle){
     + '<div id="bg-err-'+category+'-'+key+'" style="font-size:10.5px;margin-top:4px"></div>'
     + '</div></div>';
 }
+// ══════════════ ONGLET HISTOIRES (admin) ══════════════
+var _stEdit = null; // id en cours d'édition, ou '__new__'
+// ══════════════ MÉDIATHÈQUE PERSONNELLE (admin, sans effet sur le jeu) ══════════════
+// Bibliothèque de liens : rien n'est téléchargé ni aspiré — on stocke l'adresse de la page
+// officielle, ce qui garde les vues aux créatrices et évite tout contenu copié localement.
+var MEDIA_KEY = 'media_lib_v28';
+var mediaLib = (function(){ try{ return JSON.parse(localStorage.getItem(MEDIA_KEY)||'[]')||[]; }catch(e){ return []; } })();
+function saveMediaLib(){ try{ localStorage.setItem(MEDIA_KEY, JSON.stringify(mediaLib)); }catch(e){} }
+var _mediaFilter = {q:'', cat:'', tag:'', vue:'tout'};
+var _mediaEdit = null;
+function _mediaCats(){
+  var s={}; mediaLib.forEach(function(m){ if(m.cat) s[m.cat]=true; });
+  return Object.keys(s).sort();
+}
+function _mediaTags(){
+  var s={}; mediaLib.forEach(function(m){ (m.tags||[]).forEach(function(t){ s[t]=true; }); });
+  return Object.keys(s).sort();
+}
+function _mediaFiltered(){
+  var f=_mediaFilter, q=(f.q||'').toLowerCase();
+  return mediaLib.filter(function(m){
+    if(f.vue==='afaire' && !m.afaire) return false;
+    if(f.vue==='favoris' && !(m.note>=4)) return false;
+    if(f.cat && m.cat!==f.cat) return false;
+    if(f.tag && (m.tags||[]).indexOf(f.tag)<0) return false;
+    if(q){
+      var hay=((m.nom||'')+' '+(m.cat||'')+' '+(m.tags||[]).join(' ')+' '+(m.notes||'')).toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  }).sort(function(a,b){ return (b.ajout||0)-(a.ajout||0); });
+}
+function mediaSetFilter(champ, val){
+  _mediaFilter[champ] = (_mediaFilter[champ]===val && champ!=='vue') ? '' : val;
+  adminTab('media', null);
+}
+function mediaSearchChange(){
+  var e=document.getElementById('media-q');
+  _mediaFilter.q = e? e.value : '';
+  var box=document.getElementById('media-list');
+  if(box) box.innerHTML = _mediaListHTML();
+}
+function mediaNew(){ _mediaEdit='__new__'; adminTab('media',null); }
+function mediaEdit(id){ _mediaEdit=id; adminTab('media',null); }
+function mediaCancel(){ _mediaEdit=null; adminTab('media',null); }
+function mediaDelete(id){
+  if(!confirm('Supprimer cette entrée de la médiathèque ?')) return;
+  mediaLib = mediaLib.filter(function(m){ return m.id!==id; });
+  saveMediaLib(); adminTab('media',null);
+}
+function mediaSetNote(id, n){
+  var m = mediaLib.filter(function(x){return x.id===id;})[0];
+  if(!m) return;
+  m.note = (m.note===n) ? 0 : n;
+  saveMediaLib();
+  var box=document.getElementById('media-list'); if(box) box.innerHTML=_mediaListHTML();
+}
+function mediaToggleAfaire(id){
+  var m = mediaLib.filter(function(x){return x.id===id;})[0];
+  if(!m) return;
+  m.afaire = !m.afaire;
+  saveMediaLib();
+  var box=document.getElementById('media-list'); if(box) box.innerHTML=_mediaListHTML();
+}
+// Vignette : soit une image locale (compressée très petit), soit un lien d'image.
+var _mediaVignette = null;
+function handleMediaThumb(input){
+  var f = input.files && input.files[0];
+  var err = document.getElementById('media-thumb-err');
+  if(err) err.textContent='';
+  if(!f) return;
+  if(['image/png','image/jpeg','image/jpg','image/webp'].indexOf(f.type)<0){
+    if(err){ err.textContent='❌ Format non supporté. PNG, JPG ou WEBP.'; err.style.color='var(--warn)'; }
+    input.value=''; return;
+  }
+  if(f.size > 8*1024*1024){
+    if(err){ err.textContent='❌ Image trop lourde (max 8 Mo).'; err.style.color='var(--warn)'; }
+    input.value=''; return;
+  }
+  if(err){ err.textContent='⏳ Traitement…'; err.style.color='var(--muted)'; }
+  var rd = new FileReader();
+  rd.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var max = 320; // vignette : petite, pour ne pas saturer le stockage du navigateur
+      var sc = Math.min(1, max/Math.max(img.width, img.height));
+      var w = Math.round(img.width*sc), h = Math.round(img.height*sc);
+      var cv = document.createElement('canvas');
+      cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      _mediaVignette = cv.toDataURL('image/jpeg', 0.72);
+      var prev = document.getElementById('media-thumb-preview');
+      if(prev){ prev.style.backgroundImage="url('"+_mediaVignette+"')"; prev.textContent=''; }
+      if(err){ err.textContent='✅ Vignette prête ('+Math.round(_mediaVignette.length*0.75/1024)+' Ko)'; err.style.color='var(--success)'; }
+    };
+    img.onerror=function(){ if(err){ err.textContent='❌ Image illisible.'; err.style.color='var(--warn)'; } };
+    img.src = e.target.result;
+  };
+  rd.readAsDataURL(f);
+}
+function mediaThumbFromUrl(){
+  var e=document.getElementById('media-thumburl');
+  var u=e? e.value.trim() : '';
+  if(!u) return;
+  if(!/^https?:\/\//i.test(u)) u='https://'+u;
+  _mediaVignette = u;
+  var prev=document.getElementById('media-thumb-preview');
+  if(prev){ prev.style.backgroundImage="url('"+u+"')"; prev.textContent=''; }
+}
+function mediaClearThumb(){
+  _mediaVignette = null;
+  var prev=document.getElementById('media-thumb-preview');
+  if(prev){ prev.style.backgroundImage=''; prev.textContent='🖼️'; }
+  var u=document.getElementById('media-thumburl'); if(u) u.value='';
+}
+function mediaSave(){
+  var v=function(id){ var e=document.getElementById(id); return e? e.value.trim() : ''; };
+  var nom=v('media-nom');
+  if(!nom){ alert('Donne au moins un nom à cette entrée.'); return; }
+  var url=v('media-url');
+  if(url && !/^https?:\/\//i.test(url)) url='https://'+url;
+  var isNew = _mediaEdit==='__new__';
+  var obj = {
+    id: isNew ? ('m_'+Date.now()) : _mediaEdit,
+    nom: nom,
+    url: url,
+    cat: v('media-cat'),
+    tags: v('media-tags').split(',').map(function(t){return t.trim();}).filter(Boolean),
+    notes: v('media-notes'),
+    note: parseInt(v('media-note'),10)||0,
+    afaire: !!(document.getElementById('media-afaire')||{}).checked,
+    thumb: _mediaVignette || null,
+    ajout: isNew ? Date.now() : (mediaLib.filter(function(m){return m.id===_mediaEdit;})[0]||{}).ajout || Date.now()
+  };
+  mediaLib = mediaLib.filter(function(m){ return m.id!==obj.id; });
+  mediaLib.push(obj);
+  saveMediaLib();
+  _mediaEdit=null; adminTab('media',null);
+}
+function _mediaStars(m){
+  var out='';
+  for(var i=1;i<=5;i++){
+    out += '<span onclick="mediaSetNote(\''+m.id+'\','+i+')" style="cursor:pointer;font-size:15px;color:'+((m.note||0)>=i?'var(--gold)':'var(--border)')+'">★</span>';
+  }
+  return out;
+}
+function _mediaListHTML(){
+  var list=_mediaFiltered();
+  if(!list.length) return '<p style="text-align:center;color:var(--muted);font-size:12.5px;padding:18px 0">Aucune entrée ne correspond.</p>';
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">' + list.map(function(m){
+    var d = m.ajout ? new Date(m.ajout).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : '';
+    var vign = m.thumb
+      ? '<div style="width:100%;aspect-ratio:16/10;background-image:url(\''+m.thumb+'\');background-size:cover;background-position:center;border-radius:10px 10px 0 0"></div>'
+      : '<div style="width:100%;aspect-ratio:16/10;background:var(--card2);border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:26px;opacity:.35">🖼️</div>';
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;display:flex;flex-direction:column">'
+      + (m.url ? '<a href="'+m.url+'" target="_blank" rel="noopener" style="text-decoration:none;display:block">'+vign+'</a>' : vign)
+      + '<div style="padding:8px 9px;flex:1;display:flex;flex-direction:column">'
+      + '<div style="font-size:12.5px;font-weight:700;line-height:1.3">'+(m.afaire?'🔖 ':'')+m.nom+'</div>'
+      + (m.cat? '<div style="font-size:10px;color:var(--gold);margin-top:2px">'+m.cat+'</div>':'')
+      + ((m.tags||[]).length? '<div style="font-size:9.5px;color:var(--muted);margin-top:3px;line-height:1.3">'+m.tags.map(function(t){return '#'+t;}).join(' ')+'</div>':'')
+      + '<div style="margin-top:5px;font-size:12px">'+_mediaStars(m)+'</div>'
+      + (m.notes? '<div style="font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.35">'+m.notes+'</div>':'')
+      + '<div style="font-size:9px;color:var(--muted);margin-top:auto;padding-top:5px">'+d+'</div>'
+      + '<div style="display:flex;gap:4px;margin-top:6px">'
+      + '<button class="btn ghost sm" style="flex:1;padding:4px;font-size:10px;margin:0" onclick="mediaToggleAfaire(\''+m.id+'\')">'+(m.afaire?'✓':'🔖')+'</button>'
+      + '<button class="btn ghost sm" style="flex:1;padding:4px;font-size:10px;margin:0" onclick="mediaEdit(\''+m.id+'\')">✏️</button>'
+      + '<button class="btn ghost sm" style="flex:1;padding:4px;font-size:10px;margin:0" onclick="mediaDelete(\''+m.id+'\')">🗑️</button>'
+      + '</div></div></div>';
+  }).join('') + '</div>';
+}
+function renderAdminMedia(){
+  if(_mediaEdit) return _renderMediaForm();
+  var cats=_mediaCats(), tags=_mediaTags();
+  var nAfaire = mediaLib.filter(function(m){return m.afaire;}).length;
+  var html = '<p style="font-size:11.5px;color:var(--muted);margin-bottom:10px;line-height:1.5">Ta bibliothèque personnelle de liens, sans aucun effet sur le jeu. On enregistre l\'adresse des pages officielles — rien n\'est téléchargé ni copié localement.</p>';
+  html += '<button class="btn sm" style="width:100%;margin-bottom:12px" onclick="mediaNew()">➕ Ajouter une entrée</button>';
+  html += '<div class="search-box" style="margin-bottom:10px"><input type="text" id="media-q" value="'+(_mediaFilter.q||'').replace(/"/g,'&quot;')+'" oninput="mediaSearchChange()" placeholder="🔎 Rechercher (nom, tag, note…)"></div>';
+  function chip(champ,val,label,on){
+    return '<button type="button" onclick="mediaSetFilter(\''+champ+'\',\''+val.replace(/'/g,"\\'")+'\')" style="border:1px solid '+(on?'var(--gold)':'var(--border)')+';background:'+(on?'rgba(216,166,87,.16)':'var(--card)')+';color:'+(on?'var(--gold)':'var(--text)')+';border-radius:16px;padding:5px 11px;font-size:11.5px;cursor:pointer;margin:0 5px 5px 0;font-family:inherit">'+label+'</button>';
+  }
+  html += '<div style="margin-bottom:8px">'
+    + chip('vue','tout','Tout', _mediaFilter.vue==='tout')
+    + chip('vue','afaire','🔖 À voir'+(nAfaire?' ('+nAfaire+')':''), _mediaFilter.vue==='afaire')
+    + chip('vue','favoris','★ Favoris (4-5)', _mediaFilter.vue==='favoris')
+    + '</div>';
+  if(cats.length){
+    html += '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 5px">Catégories</div><div>'
+      + cats.map(function(k){ return chip('cat',k,k,_mediaFilter.cat===k); }).join('') + '</div>';
+  }
+  if(tags.length){
+    html += '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 5px">Tags</div><div>'
+      + tags.map(function(t){ return chip('tag',t,'#'+t,_mediaFilter.tag===t); }).join('') + '</div>';
+  }
+  html += '<div style="font-size:10.5px;color:var(--muted);margin:12px 0 8px">'+mediaLib.length+' entrée(s) au total</div>';
+  html += '<div id="media-list">'+_mediaListHTML()+'</div>';
+  return html;
+}
+function _renderMediaForm(){
+  var isNew=_mediaEdit==='__new__';
+  var m = isNew ? {nom:'',url:'',cat:'',tags:[],notes:'',note:0,afaire:false} : (mediaLib.filter(function(x){return x.id===_mediaEdit;})[0]||{});
+  var cats=_mediaCats();
+  _mediaVignette = m.thumb || null;
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    + '<strong style="font-size:15px">'+(isNew?'Nouvelle entrée':'Modifier')+'</strong>'
+    + '<button class="btn ghost sm" style="padding:5px 12px;font-size:11px;margin:0" onclick="mediaCancel()">← Retour</button></div>';
+  // Vignette : aperçu + import local ou lien d'image
+  h += '<label class="field-label">Vignette (aperçu)</label>';
+  h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">'
+    + '<div id="media-thumb-preview" style="width:96px;height:60px;flex:0 0 auto;border-radius:9px;border:1px solid var(--border);background:var(--card2)'
+    + (m.thumb? ';background-image:url(\''+m.thumb+'\')':'')
+    + ';background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.9">'+(m.thumb?'':'🖼️')+'</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<label class="btn ghost sm" style="display:block;padding:6px 10px;font-size:11px;cursor:pointer;margin:0 0 5px">📁 Choisir une image<input type="file" accept="image/png,image/jpeg,image/webp" onchange="handleMediaThumb(this)" style="display:none"></label>'
+    + '<div style="display:flex;gap:5px"><input type="text" id="media-thumburl" placeholder="…ou coller un lien d\'image" style="flex:1;font-size:11px;padding:6px 8px;margin:0">'
+    + '<button class="btn ghost sm" style="padding:6px 9px;font-size:11px;margin:0" onclick="mediaThumbFromUrl()">OK</button></div>'
+    + '<button class="btn ghost sm" style="padding:4px 9px;font-size:10.5px;margin:5px 0 0" onclick="mediaClearThumb()">✕ Retirer</button>'
+    + '<div id="media-thumb-err" style="font-size:10px;margin-top:4px"></div>'
+    + '</div></div>';
+  h += '<label class="field-label">Nom</label><input type="text" id="media-nom" value="'+(m.nom||'').replace(/"/g,'&quot;')+'" placeholder="Nom de la créatrice, du site…">';
+  h += '<label class="field-label">Lien (page officielle)</label><input type="text" id="media-url" value="'+(m.url||'').replace(/"/g,'&quot;')+'" placeholder="https://…">';
+  h += '<label class="field-label">Catégorie</label><input type="text" id="media-cat" list="media-cats" value="'+(m.cat||'').replace(/"/g,'&quot;')+'" placeholder="Ex: Streameuses">';
+  h += '<datalist id="media-cats">'+cats.map(function(k){return '<option value="'+k+'">';}).join('')+'</datalist>';
+  h += '<label class="field-label">Tags (séparés par des virgules)</label><input type="text" id="media-tags" value="'+((m.tags||[]).join(', ')).replace(/"/g,'&quot;')+'" placeholder="blonde, POV, français">';
+  h += '<label class="field-label">Note personnelle</label><textarea id="media-notes" style="min-height:60px" placeholder="Ce que tu as aimé…">'+(m.notes||'')+'</textarea>';
+  h += '<div class="field-row"><div><label class="field-label">Étoiles (0-5)</label><input type="number" id="media-note" min="0" max="5" value="'+(m.note||0)+'"></div>'
+    + '<div><label class="field-label">&nbsp;</label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 0"><input type="checkbox" id="media-afaire" '+(m.afaire?'checked':'')+' style="width:17px;height:17px"> <span style="font-size:13px">🔖 À voir plus tard</span></label></div></div>';
+  h += '<div class="btn-row" style="margin-top:14px"><button class="btn ghost" onclick="mediaCancel()">Annuler</button><button class="btn success" onclick="mediaSave()">💾 Enregistrer</button></div>';
+  return h;
+}
+function renderAdminStories(){
+  if(_stEdit) return _renderStoryForm();
+  var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Crée tes propres histoires, modifie ou masque celles fournies. Chaque histoire se joue en 9 étapes réparties sur 5 actes (2/2/2/2/1).</p>';
+  html += '<button class="btn sm" style="width:100%;margin-bottom:14px" onclick="stNew()">➕ Créer une nouvelle histoire</button>';
+  var masquees = customStories.filter(function(s){ return s._deleted; });
+  html += STORY_DUOS.map(function(d){
+    var perso = !STORY_DUOS_BASE.some(function(b){ return b.id===d.id; });
+    var modif = !perso && customStories.some(function(s){ return s.id===d.id && !s._deleted; });
+    var nbBeats = (d.trame||[]).length;
+    var accs = _duoAccessoires(d);
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:13.5px;font-weight:700">'+d.emoji+' '+d.title
+      + (perso ? ' <span class="admin-mini-tag" style="color:var(--accent)">perso</span>' : '')
+      + (modif ? ' <span class="admin-mini-tag" style="color:var(--warn)">modifiée</span>' : '')
+      + '</div>'
+      + '<div style="font-size:10.5px;color:var(--muted);margin-top:3px">'+nbBeats+' étapes'
+      + (accs.length ? ' · '+accs.join(', ') : ' · aucun accessoire')
+      + (d.tenues ? ' · tenues ✓' : '')+'</div>'
+      + '</div></div>'
+      + '<div style="display:flex;gap:6px;margin-top:8px">'
+      + '<button class="btn ghost sm" style="flex:1;padding:5px;font-size:11px;margin:0" onclick="stEdit(\''+d.id+'\')">✏️ Modifier</button>'
+      + '<button class="btn ghost sm" style="flex:1;padding:5px;font-size:11px;margin:0" onclick="stDelete(\''+d.id+'\')">🗑️ '+(perso?'Supprimer':'Masquer')+'</button>'
+      + '</div></div>';
+  }).join('');
+  if(masquees.length){
+    html += '<div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;padding-top:12px;border-top:1px solid var(--border)">Masquées ('+masquees.length+')</div>';
+    html += masquees.map(function(s){
+      var base = STORY_DUOS_BASE.filter(function(b){ return b.id===s.id; })[0];
+      var titre = base ? (base.emoji+' '+base.title) : s.id;
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card2);border-radius:10px;padding:9px 12px;margin-bottom:6px">'
+        + '<span style="font-size:12.5px;opacity:.7">'+titre+'</span>'
+        + '<button class="btn ghost sm" style="padding:5px 10px;font-size:11px;margin:0" onclick="stRestore(\''+s.id+'\')">↺ Restaurer</button>'
+        + '</div>';
+    }).join('');
+  }
+  return html;
+}
+function stNew(){ _stEdit='__new__'; adminTab('stories',null); }
+function stEdit(id){ _stEdit=id; adminTab('stories',null); }
+function stCancel(){ _stEdit=null; adminTab('stories',null); }
+function stDelete(id){
+  var perso = !STORY_DUOS_BASE.some(function(b){ return b.id===id; });
+  if(!confirm(perso ? 'Supprimer définitivement cette histoire ?' : 'Masquer cette histoire ? Elle n\'apparaîtra plus dans le choix des histoires, mais tu pourras la restaurer.')) return;
+  if(perso){
+    customStories = customStories.filter(function(s){ return s.id!==id; });
+  } else {
+    var ex = customStories.filter(function(s){ return s.id===id; })[0];
+    if(ex) ex._deleted = true; else customStories.push({id:id, _deleted:true});
+  }
+  saveCustomStories();
+  adminTab('stories',null);
+}
+function stRestore(id){
+  customStories = customStories.filter(function(s){ return !(s.id===id && s._deleted); });
+  saveCustomStories();
+  adminTab('stories',null);
+}
+function _renderStoryForm(){
+  var isNew = _stEdit==='__new__';
+  var d = isNew ? null : STORY_DUOS.filter(function(x){ return x.id===_stEdit; })[0];
+  var t = d || {emoji:'🎬', title:'', premise:'', tenues:{H:'',F:''}, trame:[]};
+  var accAll = (function(){ var a=[]; var ad=getAccData(); Object.keys(ad).forEach(function(k){ if(k!=='Sans accessoires'&&k!=='Vidéos') a=a.concat(ad[k]); }); return a; })();
+  var rolesH = ROLES.Homme, rolesF = ROLES.Femme;
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    + '<strong style="font-size:15px">'+(isNew?'Nouvelle histoire':'Modifier : '+t.title)+'</strong>'
+    + '<button class="btn ghost sm" style="padding:5px 12px;font-size:11px;margin:0" onclick="stCancel()">← Retour</button></div>';
+  h += '<div class="field-row"><div style="flex:0 0 70px"><label class="field-label">Emoji</label><input type="text" id="st-emoji" value="'+(t.emoji||'')+'" maxlength="6"></div>'
+    + '<div style="flex:1"><label class="field-label">Titre</label><input type="text" id="st-title" value="'+(t.title||'').replace(/"/g,'&quot;')+'" placeholder="Ex: Nuit blanche"></div></div>';
+  h += '<label class="field-label">Prémisse (le décor, la situation de départ)</label>';
+  h += '<textarea id="st-premise" style="min-height:70px" placeholder="Le bureau est vide depuis 20h...">'+(t.premise||'')+'</textarea>';
+  h += '<div class="field-row"><div><label class="field-label">Rôle Homme</label><select id="st-roleh">'
+    + rolesH.map(function(r){ return '<option value="'+r.id+'"'+((d&&d.homme===r.id)?' selected':'')+'>'+r.emoji+' '+r.label+'</option>'; }).join('')+'</select></div>'
+    + '<div><label class="field-label">Rôle Femme</label><select id="st-rolef">'
+    + rolesF.map(function(r){ return '<option value="'+r.id+'"'+((d&&d.femme===r.id)?' selected':'')+'>'+r.emoji+' '+r.label+'</option>'; }).join('')+'</select></div></div>';
+  h += '<div class="field-row"><div><label class="field-label">Tenue Homme</label><input type="text" id="st-tenueh" value="'+((t.tenues&&t.tenues.H)||'').replace(/"/g,'&quot;')+'" placeholder="Chemise ouverte"></div>'
+    + '<div><label class="field-label">Tenue Femme</label><input type="text" id="st-tenuef" value="'+((t.tenues&&t.tenues.F)||'').replace(/"/g,'&quot;')+'" placeholder="Robe courte, talons"></div></div>';
+  h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px">Les 9 étapes</div>';
+  h += '<p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.4">2 étapes par acte pour les actes 1 à 4, 1 seule pour l\'acte 5 (le final). Pour chaque étape : la situation, une réplique à dire, et une intention de jeu pour chacun.</p>';
+  var ACTES=[1,1,2,2,3,3,4,4,5];
+  for(var i=0;i<9;i++){
+    var b = (t.trame&&t.trame[i]) || {};
+    var rep = b.replique||{}; var itn = b.intention||{};
+    h += '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px">'
+      + '<div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">Acte '+ACTES[i]+' — étape '+(i+1)+(ACTES[i]===5?' (final)':'')+'</div>'
+      + '<textarea id="st-scene-'+i+'" style="min-height:52px;font-size:12.5px" placeholder="La situation...">'+(b.scene||'')+'</textarea>'
+      + '<div class="field-row" style="margin-top:6px"><div style="flex:0 0 78px"><select id="st-repqui-'+i+'"><option value="F"'+(rep.qui==='F'?' selected':'')+'>Elle</option><option value="H"'+(rep.qui==='H'?' selected':'')+'>Lui</option></select></div>'
+      + '<div style="flex:1"><input type="text" id="st-reptxt-'+i+'" value="'+(rep.texte||'').replace(/"/g,'&quot;')+'" placeholder="Réplique à dire"></div></div>'
+      + '<div class="field-row" style="margin-top:6px"><div><input type="text" id="st-inth-'+i+'" value="'+(itn.H||'').replace(/"/g,'&quot;')+'" placeholder="Intention (lui)"></div>'
+      + '<div><input type="text" id="st-intf-'+i+'" value="'+(itn.F||'').replace(/"/g,'&quot;')+'" placeholder="Intention (elle)"></div></div>'
+      + '<div class="field-row" style="margin-top:6px"><div style="flex:0 0 110px"><input type="number" id="st-duree-'+i+'" value="'+(b.duree||'')+'" placeholder="Durée (s)" min="0" step="15"></div>'
+      + '<div style="flex:1"><select id="st-acc-'+i+'"><option value="">Aucun accessoire</option>'
+      + accAll.map(function(a){ return '<option value="'+a+'"'+((b.accessoires&&b.accessoires[0]===a)?' selected':'')+'>'+a+'</option>'; }).join('')
+      + '</select></div></div>'
+      + '</div>';
+  }
+  h += '<div class="btn-row" style="margin-top:14px"><button class="btn ghost" onclick="stCancel()">Annuler</button><button class="btn success" onclick="stSave()">💾 Enregistrer</button></div>';
+  return h;
+}
+function stSave(){
+  var v = function(id){ var e=document.getElementById(id); return e? e.value.trim() : ''; };
+  var title = v('st-title');
+  if(!title){ alert('Donne un titre à ton histoire.'); return; }
+  var isNew = _stEdit==='__new__';
+  var id = isNew ? ('perso_'+Date.now()) : _stEdit;
+  var ACTES=[1,1,2,2,3,3,4,4,5];
+  var trame=[];
+  for(var i=0;i<9;i++){
+    var scene = v('st-scene-'+i);
+    if(!scene) continue; // étape laissée vide = ignorée
+    var beat = {acte:ACTES[i], scene:scene};
+    var rt = v('st-reptxt-'+i);
+    if(rt) beat.replique = {qui: v('st-repqui-'+i)||'F', texte: rt};
+    var ih = v('st-inth-'+i), iff = v('st-intf-'+i);
+    if(ih||iff) beat.intention = {H:ih, F:iff};
+    var du = parseInt(v('st-duree-'+i),10);
+    if(du>0) beat.duree = du;
+    var ac = v('st-acc-'+i);
+    if(ac) beat.accessoires = [ac];
+    trame.push(beat);
+  }
+  if(!trame.length){ alert('Renseigne au moins une étape (la situation).'); return; }
+  var base = STORY_DUOS_BASE.filter(function(b){ return b.id===id; })[0];
+  var obj = {
+    id:id,
+    emoji: v('st-emoji')||'🎬',
+    title: title,
+    premise: v('st-premise'),
+    homme: v('st-roleh'),
+    femme: v('st-rolef'),
+    trame: trame,
+    bg: (base && base.bg) || 'radial-gradient(ellipse at center, #241a2e 0%, #0a070d 70%)'
+  };
+  var th = v('st-tenueh'), tf = v('st-tenuef');
+  if(th||tf) obj.tenues = {H:th, F:tf};
+  // scenes : requis par l'ancien moteur en repli — on reprend celles de la base si elles existent
+  obj.scenes = (base && base.scenes) || {1:[],2:[],3:[],4:[],5:[]};
+  customStories = customStories.filter(function(s){ return s.id!==id; });
+  customStories.push(obj);
+  saveCustomStories();
+  _stEdit = null;
+  adminTab('stories',null);
+  alert('Histoire enregistrée !');
+}
 function renderAdminBgTab(){
   var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Ajoute une image de fond personnalisée par mode de jeu ou par histoire. Sans image, le dégradé de couleur par défaut du jeu s\'applique. Formats PNG/JPG/WEBP, 8 Mo max (compressée automatiquement).</p>';
   html += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Par mode de jeu</div>';
@@ -11729,6 +12478,14 @@ function renderAdminBgTab(){
   html += STORY_DUOS.map(function(d){
     return _bgRow('stories', d.id, d.emoji+' '+d.title, 'background:'+d.bg);
   }).join('');
+  // Rafraîchit l'onglet en place s'il est déjà affiché, puis restitue le message de compression.
+  var cnt = document.getElementById('admin-content');
+  if(cnt && _bgLastMsg){
+    cnt.innerHTML = html;
+    var el = document.getElementById('bg-err-'+_bgLastMsg.cat+'-'+_bgLastMsg.key);
+    if(el){ el.textContent = _bgLastMsg.texte; el.style.color = 'var(--success)'; }
+    _bgLastMsg = null;
+  }
   return html;
 }
 function getBgImage(category, key){
@@ -13525,6 +14282,72 @@ function _getValidCodes() {
 
 function showModePaywall(type) {}
 
+// ── Déverrouillage admin : Face ID (WebAuthn) si disponible, code en repli ──
+var FACEID_KEY = 'admin_faceid_v28';
+function _faceIdDispo(){
+  return !!(window.PublicKeyCredential && navigator.credentials && location.protocol==='https:');
+}
+function _b64u(buf){
+  var b=''; new Uint8Array(buf).forEach(function(x){ b+=String.fromCharCode(x); });
+  return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function _rndBuf(n){ var a=new Uint8Array(n); (crypto.getRandomValues?crypto.getRandomValues(a):a); return a; }
+// Enregistre le visage/empreinte de l'appareil comme clé d'accès admin.
+function adminEnrollFaceId(){
+  if(!_faceIdDispo()){ alert('Face ID indisponible ici.\n\nIl faut ouvrir le jeu en HTTPS (ou depuis l\'écran d\'accueil de l\'iPhone) — pas depuis un fichier local.'); return; }
+  navigator.credentials.create({ publicKey:{
+    challenge:_rndBuf(32),
+    rp:{name:'Pulsations'},
+    user:{ id:_rndBuf(16), name:'admin', displayName:'Administrateur' },
+    pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+    authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required' },
+    timeout:60000, attestation:'none'
+  }}).then(function(cred){
+    try{ localStorage.setItem(FACEID_KEY, _b64u(cred.rawId)); }catch(e){}
+    alert('✅ Face ID enregistré — il déverrouillera l\'admin la prochaine fois.');
+  }).catch(function(e){
+    alert('Enregistrement annulé ou refusé par l\'appareil.');
+  });
+}
+function adminForgetFaceId(){
+  try{ localStorage.removeItem(FACEID_KEY); }catch(e){}
+  alert('Face ID retiré. Le code reste actif.');
+}
+function _adminGrant(){
+  ADMIN_ON = true;
+  var b=document.getElementById('btn-admin');
+  if(b){ b.style.display='block'; }
+  try { localStorage.setItem(PREMIUM_KEY, 'true'); } catch(e){}
+  var pb=document.getElementById('premium-badge'); if(pb) pb.style.display='block';
+  ['mc-decouverte','mc-competition'].forEach(function(id){
+    var card=document.getElementById(id);
+    if(card){ card.classList.add('unlocked'); var lock=card.querySelector('.mode-lock'); if(lock) lock.style.display='none'; }
+  });
+  alert('✅ Mode admin activé — accès libre complet débloqué pour tester le jeu');
+}
+function _adminAskCode(){
+  var code=prompt('🔑 Code administrateur :');
+  if(code==='4213') _adminGrant();
+  else if(code!==null) alert('❌ Code incorrect');
+}
+function adminUnlockFlow(){
+  var id=null;
+  try{ id=localStorage.getItem(FACEID_KEY); }catch(e){}
+  // Face ID enregistré ET contexte compatible → on le propose en premier.
+  if(id && _faceIdDispo()){
+    var raw=atob(id.replace(/-/g,'+').replace(/_/g,'/'));
+    var bytes=new Uint8Array(raw.length);
+    for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+    navigator.credentials.get({ publicKey:{
+      challenge:_rndBuf(32),
+      allowCredentials:[{ type:'public-key', id:bytes.buffer }],
+      userVerification:'required', timeout:60000
+    }}).then(function(){ _adminGrant(); })
+      .catch(function(){ _adminAskCode(); }); // échec ou annulation → repli sur le code
+    return;
+  }
+  _adminAskCode();
+}
 var _adminTaps=0, _adminTimer=null;
 function adminTap(){
   _adminTaps++;
@@ -13532,24 +14355,7 @@ function adminTap(){
   if(_adminTaps>=4){
     _adminTaps=0;
     clearTimeout(_adminTimer);
-    var code=prompt('🔑 Code administrateur :');
-    if(code==='4213'){
-      ADMIN_ON = true;
-      var b=document.getElementById('btn-admin');
-      if(b){ b.style.display='block'; }
-      // Active le premium complet pour tester librement
-      try { localStorage.setItem(PREMIUM_KEY, 'true'); } catch(e){}
-      // Affiche le badge premium
-      var pb=document.getElementById('premium-badge'); if(pb) pb.style.display='block';
-      // Débloque visuellement toutes les cartes premium
-      ['mc-decouverte','mc-competition'].forEach(function(id){
-        var card=document.getElementById(id);
-        if(card){ card.classList.add('unlocked'); var lock=card.querySelector('.mode-lock'); if(lock) lock.style.display='none'; }
-      });
-      alert('✅ Mode admin activé — accès libre complet débloqué pour tester le jeu');
-    } else if(code!==null){
-      alert('❌ Code incorrect');
-    }
+    adminUnlockFlow();
     return;
   }
   _adminTimer=setTimeout(function(){_adminTaps=0;},2000);
