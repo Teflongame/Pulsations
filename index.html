@@ -12020,7 +12020,21 @@ function ngToggle(key){
 // ══════════════ FONDS D'ÉCRAN (admin) ══════════════
 var BG_IMAGES_KEY = 'bg_images_v28';
 var customBgImages = loadCustom(BG_IMAGES_KEY) || {modes:{}, stories:{}};
-function saveBgImages(){ saveCustom(BG_IMAGES_KEY, customBgImages); }
+function saveBgImages(){
+  // Ne jamais échouer en silence : si le stockage est plein, l'image est retirée et
+  // l'utilisateur est prévenu, plutôt que de croire à tort que c'est enregistré.
+  try{
+    localStorage.setItem(BG_IMAGES_KEY, JSON.stringify(customBgImages));
+    return true;
+  }catch(e){
+    alert('⚠️ Stockage plein : ce fond n\'a PAS pu être enregistré.\n\nSupprime quelques fonds ou vignettes de la médiathèque, puis réessaie.');
+    return false;
+  }
+}
+// Poids total occupé par les fonds, pour l'afficher dans l'onglet.
+function _bgPoidsKo(){
+  try{ return Math.round((localStorage.getItem(BG_IMAGES_KEY)||'').length/1024); }catch(e){ return 0; }
+}
 var BG_MODES = [
   {id:'classique', label:'🎲 Classique'},
   {id:'pimente', label:'🔥 Pimenté'},
@@ -12050,17 +12064,23 @@ function handleBgImageUpload(input, category, key){
   reader.onload = function(e){
     var img = new Image();
     img.onload = function(){
-      var maxW = 900;
+      var maxW = 600; // plus léger : le stockage du navigateur est très limité sur iPhone
       var scale = Math.min(1, maxW/img.width);
       var w = Math.round(img.width*scale), h = Math.round(img.height*scale);
       var canvas = document.createElement('canvas');
       canvas.width=w; canvas.height=h;
       var ctx = canvas.getContext('2d');
       ctx.drawImage(img,0,0,w,h);
-      var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.70);
       if(!customBgImages[category]) customBgImages[category]={};
+      var _avant = customBgImages[category][key];
       customBgImages[category][key] = dataUrl;
-      saveBgImages();
+      if(!saveBgImages()){
+        // Enregistrement refusé : on restaure l'état précédent pour rester cohérent.
+        if(_avant) customBgImages[category][key]=_avant; else delete customBgImages[category][key];
+        renderAdminBgTab();
+        return;
+      }
       // Message de confirmation, avec le détail de la compression réellement effectuée.
       var avant = (f.size/1024).toFixed(0);
       var apres = (dataUrl.length*0.75/1024).toFixed(0); // base64 -> ~3/4 en octets
@@ -12132,14 +12152,19 @@ function mediaSetFilter(champ, val){
   _mediaFilter[champ] = (_mediaFilter[champ]===val && champ!=='vue') ? '' : val;
   adminTab('media', null);
 }
+function mediaPickFilter(champ, val){
+  // Menu déroulant : on applique la valeur telle quelle (pas de bascule comme sur une pastille).
+  _mediaFilter[champ] = val || '';
+  adminTab('media', null);
+}
 function mediaSearchChange(){
   var e=document.getElementById('media-q');
   _mediaFilter.q = e? e.value : '';
   var box=document.getElementById('media-list');
   if(box) box.innerHTML = _mediaListHTML();
 }
-function mediaNew(){ _mediaEdit='__new__'; adminTab('media',null); }
-function mediaEdit(id){ _mediaEdit=id; adminTab('media',null); }
+function mediaNew(){ _mediaView=null; _mediaEdit='__new__'; adminTab('media',null); }
+function mediaEdit(id){ _mediaView=null; _mediaEdit=id; adminTab('media',null); }
 function mediaCancel(){ _mediaEdit=null; adminTab('media',null); }
 function mediaDelete(id){
   if(!confirm('Supprimer cette entrée de la médiathèque ?')) return;
@@ -12196,6 +12221,97 @@ function handleMediaThumb(input){
   };
   rd.readAsDataURL(f);
 }
+// ── Vignette automatique ──
+// 1) Fichier vidéo local : on lit la 1re image lisible et on la capture. Fiable à 100%.
+function handleMediaVideoThumb(input){
+  var f = input.files && input.files[0];
+  var err = document.getElementById('media-thumb-err');
+  if(err) err.textContent='';
+  if(!f) return;
+  if(f.type.indexOf('video/')!==0){
+    if(err){ err.textContent='❌ Ce n\'est pas un fichier vidéo.'; err.style.color='var(--warn)'; }
+    input.value=''; return;
+  }
+  if(err){ err.textContent='⏳ Extraction de l\'image…'; err.style.color='var(--muted)'; }
+  var url = URL.createObjectURL(f);
+  var v = document.createElement('video');
+  v.preload='metadata'; v.muted=true; v.playsInline=true; v.src=url;
+  var done=false;
+  var grab=function(){
+    if(done) return; done=true;
+    try{
+      var max=320;
+      var sc=Math.min(1, max/Math.max(v.videoWidth||320, v.videoHeight||180));
+      var w=Math.round((v.videoWidth||320)*sc), h=Math.round((v.videoHeight||180)*sc);
+      var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(v,0,0,w,h);
+      _mediaVignette = cv.toDataURL('image/jpeg',0.72);
+      var prev=document.getElementById('media-thumb-preview');
+      if(prev){ prev.style.backgroundImage="url('"+_mediaVignette+"')"; prev.textContent=''; }
+      if(err){ err.textContent='✅ Image extraite de la vidéo'; err.style.color='var(--success)'; }
+    }catch(e){
+      if(err){ err.textContent='❌ Impossible de lire cette vidéo.'; err.style.color='var(--warn)'; }
+    }
+    URL.revokeObjectURL(url);
+  };
+  // On se place à ~1s pour éviter une première image noire
+  v.onloadeddata = function(){ try{ v.currentTime = Math.min(1, (v.duration||2)/3); }catch(e){ grab(); } };
+  v.onseeked = grab;
+  v.onerror = function(){
+    if(err){ err.textContent='❌ Format vidéo non lisible par le navigateur.'; err.style.color='var(--warn)'; }
+    URL.revokeObjectURL(url);
+  };
+  setTimeout(function(){ if(!done) grab(); }, 4000); // filet de sécurité
+}
+// 2) Lien YouTube / Vimeo : on déduit la miniature officielle depuis l'identifiant.
+function _thumbFromKnownHost(u){
+  var m = u.match(/(?:youtube\.com\/.*[?&]v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
+  if(m) return 'https://img.youtube.com/vi/'+m[1]+'/hqdefault.jpg';
+  return null;
+}
+// 3) Depuis le lien saisi dans le champ principal : tente la miniature officielle.
+function mediaAutoThumb(){
+  var e=document.getElementById('media-url');
+  var u=e? e.value.trim() : '';
+  var err=document.getElementById('media-thumb-err');
+  if(!u){ if(err){ err.textContent='Renseigne d\'abord le lien plus haut.'; err.style.color='var(--warn)'; } return; }
+  if(!/^https?:\/\//i.test(u)) u='https://'+u;
+  var t=_thumbFromKnownHost(u);
+  if(t){
+    _mediaVignette=t;
+    var prev=document.getElementById('media-thumb-preview');
+    if(prev){ prev.style.backgroundImage="url('"+t+"')"; prev.textContent=''; }
+    if(err){ err.textContent='✅ Miniature officielle récupérée'; err.style.color='var(--success)'; }
+    return;
+  }
+  // Lien .mp4 direct : possible seulement si le serveur l'autorise (CORS)
+  if(/\.(mp4|webm|ogg|mov)(\?|$)/i.test(u)){
+    if(err){ err.textContent='⏳ Tentative sur la vidéo…'; err.style.color='var(--muted)'; }
+    var v=document.createElement('video');
+    v.crossOrigin='anonymous'; v.preload='metadata'; v.muted=true; v.src=u;
+    var fini=false;
+    v.onloadeddata=function(){ try{ v.currentTime=Math.min(1,(v.duration||2)/3); }catch(e2){} };
+    v.onseeked=function(){
+      if(fini) return; fini=true;
+      try{
+        var cv=document.createElement('canvas'); cv.width=320; cv.height=180;
+        cv.getContext('2d').drawImage(v,0,0,320,180);
+        _mediaVignette=cv.toDataURL('image/jpeg',0.72);
+        var prev=document.getElementById('media-thumb-preview');
+        if(prev){ prev.style.backgroundImage="url('"+_mediaVignette+"')"; prev.textContent=''; }
+        if(err){ err.textContent='✅ Image extraite de la vidéo'; err.style.color='var(--success)'; }
+      }catch(e3){
+        if(err){ err.textContent='⚠️ Ce site interdit la capture. Utilise « Extraire d\'une vidéo » avec le fichier, ou une image manuelle.'; err.style.color='var(--warn)'; }
+      }
+    };
+    v.onerror=function(){
+      if(err){ err.textContent='⚠️ Vidéo inaccessible depuis le navigateur. Choisis une image manuellement.'; err.style.color='var(--warn)'; }
+    };
+    setTimeout(function(){ if(!fini && err && err.textContent.indexOf('Tentative')>=0){ err.textContent='⚠️ Pas de miniature récupérable pour ce lien. Choisis une image manuellement.'; err.style.color='var(--warn)'; } }, 6000);
+    return;
+  }
+  if(err){ err.textContent='⚠️ Miniature automatique impossible pour ce lien (le site ne l\'autorise pas). Choisis une image manuellement.'; err.style.color='var(--warn)'; }
+}
 function mediaThumbFromUrl(){
   var e=document.getElementById('media-thumburl');
   var u=e? e.value.trim() : '';
@@ -12210,6 +12326,90 @@ function mediaClearThumb(){
   var prev=document.getElementById('media-thumb-preview');
   if(prev){ prev.style.backgroundImage=''; prev.textContent='🖼️'; }
   var u=document.getElementById('media-thumburl'); if(u) u.value='';
+}
+// Contenu du dossier en cours d'édition (vidéos + galerie photos)
+var _mediaVideos = [];
+var _mediaPhotos = [];
+function mediaAddVideoRow(){
+  _mediaVideos.push({url:'', desc:''});
+  _renderVideoRows();
+}
+function mediaDelVideoRow(i){
+  _mediaCaptureVideos();
+  _mediaVideos.splice(i,1);
+  _renderVideoRows();
+}
+function _mediaCaptureVideos(){
+  _mediaVideos.forEach(function(v,i){
+    var u=document.getElementById('mv-url-'+i), d=document.getElementById('mv-desc-'+i);
+    if(u) v.url=u.value.trim();
+    if(d) v.desc=d.value.trim();
+  });
+}
+function _renderVideoRows(){
+  var box=document.getElementById('media-videos');
+  if(!box) return;
+  box.innerHTML = _mediaVideos.map(function(v,i){
+    return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:8px 9px;margin-bottom:6px">'
+      + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:5px">'
+      + '<span style="font-size:11px;color:var(--gold);font-weight:700;flex:0 0 auto">🎬 '+(i+1)+'</span>'
+      + '<input type="text" id="mv-url-'+i+'" value="'+(v.url||'').replace(/"/g,'&quot;')+'" placeholder="Lien de la vidéo" style="flex:1;font-size:11.5px;padding:6px 8px;margin:0">'
+      + '<button class="btn ghost sm" style="padding:5px 8px;font-size:11px;margin:0;flex:0 0 auto" onclick="mediaDelVideoRow('+i+')">✕</button>'
+      + '</div>'
+      + '<input type="text" id="mv-desc-'+i+'" value="'+(v.desc||'').replace(/"/g,'&quot;')+'" placeholder="Descriptif (ex: compilation, POV, 12 min…)" style="width:100%;font-size:11px;padding:6px 8px;margin:0">'
+      + '</div>';
+  }).join('') || '<p style="font-size:11px;color:var(--muted);padding:4px 0">Aucune vidéo pour l\'instant.</p>';
+}
+// Galerie : plusieurs photos d'un coup, compressées comme les vignettes.
+function handleMediaPhotos(input){
+  var files = input.files;
+  var err=document.getElementById('media-photos-err');
+  if(!files || !files.length) return;
+  var restants = files.length;
+  if(err){ err.textContent='⏳ Traitement de '+files.length+' image(s)…'; err.style.color='var(--muted)'; }
+  Array.prototype.forEach.call(files, function(f){
+    if(f.type.indexOf('image/')!==0){ restants--; return; }
+    var rd=new FileReader();
+    rd.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var max=480;
+        var sc=Math.min(1, max/Math.max(img.width,img.height));
+        var w=Math.round(img.width*sc), h=Math.round(img.height*sc);
+        var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        _mediaPhotos.push(cv.toDataURL('image/jpeg',0.70));
+        restants--;
+        _renderPhotoGrid();
+        if(restants<=0 && err){ err.textContent='✅ '+_mediaPhotos.length+' photo(s) dans le dossier'; err.style.color='var(--success)'; }
+      };
+      img.onerror=function(){ restants--; };
+      img.src=e.target.result;
+    };
+    rd.readAsDataURL(f);
+  });
+  input.value='';
+}
+function mediaAddPhotoUrl(){
+  var e=document.getElementById('media-photo-url');
+  var u=e? e.value.trim() : '';
+  if(!u) return;
+  if(!/^https?:\/\//i.test(u)) u='https://'+u;
+  _mediaPhotos.push(u);
+  e.value='';
+  _renderPhotoGrid();
+}
+function mediaDelPhoto(i){ _mediaPhotos.splice(i,1); _renderPhotoGrid(); }
+function _renderPhotoGrid(){
+  var box=document.getElementById('media-photos-grid');
+  if(!box) return;
+  box.innerHTML = _mediaPhotos.length
+    ? '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">' + _mediaPhotos.map(function(p,i){
+        return '<div style="position:relative;aspect-ratio:1;border-radius:7px;border:1px solid var(--border);background:var(--card2) url(\''+p+'\') center/contain no-repeat">'
+          + '<button onclick="mediaDelPhoto('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;padding:0">✕</button>'
+          + '</div>';
+      }).join('') + '</div>'
+    : '<p style="font-size:11px;color:var(--muted);padding:4px 0">Aucune photo dans le dossier.</p>';
 }
 function mediaSave(){
   var v=function(id){ var e=document.getElementById(id); return e? e.value.trim() : ''; };
@@ -12228,6 +12428,8 @@ function mediaSave(){
     note: parseInt(v('media-note'),10)||0,
     afaire: !!(document.getElementById('media-afaire')||{}).checked,
     thumb: _mediaVignette || null,
+    videos: (function(){ _mediaCaptureVideos(); return _mediaVideos.filter(function(v){return v.url;}); })(),
+    photos: _mediaPhotos.slice(),
     ajout: isNew ? Date.now() : (mediaLib.filter(function(m){return m.id===_mediaEdit;})[0]||{}).ajout || Date.now()
   };
   mediaLib = mediaLib.filter(function(m){ return m.id!==obj.id; });
@@ -12248,12 +12450,13 @@ function _mediaListHTML(){
   return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">' + list.map(function(m){
     var d = m.ajout ? new Date(m.ajout).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) : '';
     var vign = m.thumb
-      ? '<div style="width:100%;aspect-ratio:16/10;background-image:url(\''+m.thumb+'\');background-size:cover;background-position:center;border-radius:10px 10px 0 0"></div>'
+      ? '<div style="width:100%;aspect-ratio:16/10;background-image:url(\''+m.thumb+'\');background-size:contain;background-repeat:no-repeat;background-position:center;background-color:var(--card2);border-radius:10px 10px 0 0"></div>'
       : '<div style="width:100%;aspect-ratio:16/10;background:var(--card2);border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:26px;opacity:.35">🖼️</div>';
     return '<div style="background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;display:flex;flex-direction:column">'
-      + (m.url ? '<a href="'+m.url+'" target="_blank" rel="noopener" style="text-decoration:none;display:block">'+vign+'</a>' : vign)
+      + '<div onclick="mediaOpen(\''+m.id+'\')" style="cursor:pointer">'+vign+'</div>'
       + '<div style="padding:8px 9px;flex:1;display:flex;flex-direction:column">'
-      + '<div style="font-size:12.5px;font-weight:700;line-height:1.3">'+(m.afaire?'🔖 ':'')+m.nom+'</div>'
+      + '<div onclick="mediaOpen(\''+m.id+'\')" style="cursor:pointer;font-size:12.5px;font-weight:700;line-height:1.3">'+(m.afaire?'🔖 ':'')+m.nom+'</div>'
+      + (((m.videos||[]).length || (m.photos||[]).length) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+((m.videos||[]).length?'🎬 '+m.videos.length+' ':'')+((m.photos||[]).length?'📷 '+m.photos.length:'')+'</div>' : '')
       + (m.cat? '<div style="font-size:10px;color:var(--gold);margin-top:2px">'+m.cat+'</div>':'')
       + ((m.tags||[]).length? '<div style="font-size:9.5px;color:var(--muted);margin-top:3px;line-height:1.3">'+m.tags.map(function(t){return '#'+t;}).join(' ')+'</div>':'')
       + '<div style="margin-top:5px;font-size:12px">'+_mediaStars(m)+'</div>'
@@ -12266,7 +12469,49 @@ function _mediaListHTML(){
       + '</div></div></div>';
   }).join('') + '</div>';
 }
+var _mediaView = null; // id du dossier ouvert en consultation
+function mediaOpen(id){ _mediaView=id; adminTab('media',null); }
+function mediaCloseView(){ _mediaView=null; adminTab('media',null); }
+function _renderMediaView(){
+  var m = mediaLib.filter(function(x){return x.id===_mediaView;})[0];
+  if(!m){ _mediaView=null; return renderAdminMedia(); }
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    + '<strong style="font-size:15px">'+(m.afaire?'🔖 ':'')+m.nom+'</strong>'
+    + '<button class="btn ghost sm" style="padding:5px 12px;font-size:11px;margin:0" onclick="mediaCloseView()">← Retour</button></div>';
+  // Profil
+  h += '<div style="display:flex;gap:12px;margin-bottom:12px">';
+  h += m.thumb
+    ? '<div style="width:110px;height:110px;flex:0 0 auto;border-radius:12px;border:1px solid var(--border);background:var(--card2) url(\''+m.thumb+'\') center/contain no-repeat"></div>'
+    : '<div style="width:110px;height:110px;flex:0 0 auto;border-radius:12px;border:1px solid var(--border);background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:30px;opacity:.35">🖼️</div>';
+  h += '<div style="flex:1;min-width:0">'
+    + (m.cat? '<div style="font-size:11px;color:var(--gold)">'+m.cat+'</div>':'')
+    + ((m.tags||[]).length? '<div style="font-size:10.5px;color:var(--muted);margin-top:3px">'+m.tags.map(function(t){return '#'+t;}).join(' ')+'</div>':'')
+    + '<div style="margin-top:5px">'+_mediaStars(m)+'</div>'
+    + (m.notes? '<div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.4">'+m.notes+'</div>':'')
+    + (m.url? '<a href="'+m.url+'" target="_blank" rel="noopener" class="btn ghost sm" style="display:inline-block;padding:5px 11px;font-size:11px;text-decoration:none;margin:8px 0 0">🔗 Page officielle</a>':'')
+    + '</div></div>';
+  // Vidéos
+  var vids = m.videos||[];
+  h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px">🎬 Vidéos ('+vids.length+')</div>';
+  h += vids.length ? vids.map(function(v,i){
+      return '<a href="'+v.url+'" target="_blank" rel="noopener" style="display:flex;gap:9px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:6px;text-decoration:none;color:var(--text)">'
+        + '<span style="font-size:17px;flex:0 0 auto">▶️</span>'
+        + '<span style="flex:1;min-width:0"><span style="display:block;font-size:12.5px;font-weight:600">'+(v.desc||('Vidéo '+(i+1)))+'</span>'
+        + '<span style="display:block;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.url+'</span></span></a>';
+    }).join('') : '<p style="font-size:11.5px;color:var(--muted)">Aucune vidéo.</p>';
+  // Photos
+  var phs = m.photos||[];
+  h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px">📷 Photos ('+phs.length+')</div>';
+  h += phs.length
+    ? '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' + phs.map(function(p){
+        return '<a href="'+p+'" target="_blank" rel="noopener" style="display:block;aspect-ratio:1;border-radius:8px;border:1px solid var(--border);background:var(--card2) url(\''+p+'\') center/contain no-repeat"></a>';
+      }).join('') + '</div>'
+    : '<p style="font-size:11.5px;color:var(--muted)">Aucune photo.</p>';
+  h += '<div class="btn-row" style="margin-top:16px"><button class="btn ghost" onclick="mediaEdit(\''+m.id+'\')">✏️ Modifier</button><button class="btn ghost" onclick="mediaCloseView()">Fermer</button></div>';
+  return h;
+}
 function renderAdminMedia(){
+  if(_mediaView) return _renderMediaView();
   if(_mediaEdit) return _renderMediaForm();
   var cats=_mediaCats(), tags=_mediaTags();
   var nAfaire = mediaLib.filter(function(m){return m.afaire;}).length;
@@ -12281,13 +12526,29 @@ function renderAdminMedia(){
     + chip('vue','afaire','🔖 À voir'+(nAfaire?' ('+nAfaire+')':''), _mediaFilter.vue==='afaire')
     + chip('vue','favoris','★ Favoris (4-5)', _mediaFilter.vue==='favoris')
     + '</div>';
-  if(cats.length){
-    html += '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 5px">Catégories</div><div>'
-      + cats.map(function(k){ return chip('cat',k,k,_mediaFilter.cat===k); }).join('') + '</div>';
-  }
-  if(tags.length){
-    html += '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 5px">Tags</div><div>'
-      + tags.map(function(t){ return chip('tag',t,'#'+t,_mediaFilter.tag===t); }).join('') + '</div>';
+  if(cats.length || tags.length){
+    html += '<div class="field-row" style="margin-top:8px">';
+    if(cats.length){
+      html += '<div><label class="field-label" style="font-size:10px">Catégorie</label>'
+        + '<select onchange="mediaPickFilter(\'cat\',this.value)" style="font-size:12px;padding:7px 8px">'
+        + '<option value="">Toutes ('+cats.length+')</option>'
+        + cats.map(function(k){
+            var n = mediaLib.filter(function(m){return m.cat===k;}).length;
+            return '<option value="'+k.replace(/"/g,'&quot;')+'"'+(_mediaFilter.cat===k?' selected':'')+'>'+k+' ('+n+')</option>';
+          }).join('')
+        + '</select></div>';
+    }
+    if(tags.length){
+      html += '<div><label class="field-label" style="font-size:10px">Tag</label>'
+        + '<select onchange="mediaPickFilter(\'tag\',this.value)" style="font-size:12px;padding:7px 8px">'
+        + '<option value="">Tous ('+tags.length+')</option>'
+        + tags.map(function(t){
+            var n = mediaLib.filter(function(m){return (m.tags||[]).indexOf(t)>=0;}).length;
+            return '<option value="'+t.replace(/"/g,'&quot;')+'"'+(_mediaFilter.tag===t?' selected':'')+'>#'+t+' ('+n+')</option>';
+          }).join('')
+        + '</select></div>';
+    }
+    html += '</div>';
   }
   html += '<div style="font-size:10.5px;color:var(--muted);margin:12px 0 8px">'+mediaLib.length+' entrée(s) au total</div>';
   html += '<div id="media-list">'+_mediaListHTML()+'</div>';
@@ -12298,6 +12559,8 @@ function _renderMediaForm(){
   var m = isNew ? {nom:'',url:'',cat:'',tags:[],notes:'',note:0,afaire:false} : (mediaLib.filter(function(x){return x.id===_mediaEdit;})[0]||{});
   var cats=_mediaCats();
   _mediaVignette = m.thumb || null;
+  _mediaVideos = (m.videos||[]).map(function(v){ return {url:v.url, desc:v.desc}; });
+  _mediaPhotos = (m.photos||[]).slice();
   var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
     + '<strong style="font-size:15px">'+(isNew?'Nouvelle entrée':'Modifier')+'</strong>'
     + '<button class="btn ghost sm" style="padding:5px 12px;font-size:11px;margin:0" onclick="mediaCancel()">← Retour</button></div>';
@@ -12306,8 +12569,10 @@ function _renderMediaForm(){
   h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">'
     + '<div id="media-thumb-preview" style="width:96px;height:60px;flex:0 0 auto;border-radius:9px;border:1px solid var(--border);background:var(--card2)'
     + (m.thumb? ';background-image:url(\''+m.thumb+'\')':'')
-    + ';background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.9">'+(m.thumb?'':'🖼️')+'</div>'
+    + ';background-size:contain;background-repeat:no-repeat;background-position:center;display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.9">'+(m.thumb?'':'🖼️')+'</div>'
     + '<div style="flex:1;min-width:0">'
+    + '<button class="btn ghost sm" style="width:100%;padding:6px 10px;font-size:11px;margin:0 0 5px" onclick="mediaAutoThumb()">✨ Miniature auto (depuis le lien)</button>'
+    + '<label class="btn ghost sm" style="display:block;padding:6px 10px;font-size:11px;cursor:pointer;margin:0 0 5px">🎬 Extraire d\'une vidéo<input type="file" accept="video/*" onchange="handleMediaVideoThumb(this)" style="display:none"></label>'
     + '<label class="btn ghost sm" style="display:block;padding:6px 10px;font-size:11px;cursor:pointer;margin:0 0 5px">📁 Choisir une image<input type="file" accept="image/png,image/jpeg,image/webp" onchange="handleMediaThumb(this)" style="display:none"></label>'
     + '<div style="display:flex;gap:5px"><input type="text" id="media-thumburl" placeholder="…ou coller un lien d\'image" style="flex:1;font-size:11px;padding:6px 8px;margin:0">'
     + '<button class="btn ghost sm" style="padding:6px 9px;font-size:11px;margin:0" onclick="mediaThumbFromUrl()">OK</button></div>'
@@ -12322,7 +12587,19 @@ function _renderMediaForm(){
   h += '<label class="field-label">Note personnelle</label><textarea id="media-notes" style="min-height:60px" placeholder="Ce que tu as aimé…">'+(m.notes||'')+'</textarea>';
   h += '<div class="field-row"><div><label class="field-label">Étoiles (0-5)</label><input type="number" id="media-note" min="0" max="5" value="'+(m.note||0)+'"></div>'
     + '<div><label class="field-label">&nbsp;</label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 0"><input type="checkbox" id="media-afaire" '+(m.afaire?'checked':'')+' style="width:17px;height:17px"> <span style="font-size:13px">🔖 À voir plus tard</span></label></div></div>';
+  // ── Vidéos du dossier ──
+  h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">🎬 Vidéos</div>';
+  h += '<div id="media-videos"></div>';
+  h += '<button class="btn ghost sm" style="width:100%;margin:0 0 4px" onclick="_mediaCaptureVideos();mediaAddVideoRow()">➕ Ajouter une vidéo</button>';
+  // ── Galerie photos ──
+  h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">📷 Photos du dossier</div>';
+  h += '<div id="media-photos-grid"></div>';
+  h += '<label class="btn ghost sm" style="display:block;width:100%;padding:6px 10px;font-size:11px;cursor:pointer;margin:6px 0 5px;text-align:center">📁 Ajouter des photos (plusieurs possibles)<input type="file" accept="image/*" multiple onchange="handleMediaPhotos(this)" style="display:none"></label>';
+  h += '<div style="display:flex;gap:5px"><input type="text" id="media-photo-url" placeholder="…ou coller un lien d\'image" style="flex:1;font-size:11px;padding:6px 8px;margin:0">'
+    + '<button class="btn ghost sm" style="padding:6px 9px;font-size:11px;margin:0" onclick="mediaAddPhotoUrl()">＋</button></div>';
+  h += '<div id="media-photos-err" style="font-size:10px;margin-top:4px"></div>';
   h += '<div class="btn-row" style="margin-top:14px"><button class="btn ghost" onclick="mediaCancel()">Annuler</button><button class="btn success" onclick="mediaSave()">💾 Enregistrer</button></div>';
+  setTimeout(function(){ _renderVideoRows(); _renderPhotoGrid(); }, 0);
   return h;
 }
 function renderAdminStories(){
@@ -12471,7 +12748,12 @@ function stSave(){
   alert('Histoire enregistrée !');
 }
 function renderAdminBgTab(){
-  var html = '<p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Ajoute une image de fond personnalisée par mode de jeu ou par histoire. Sans image, le dégradé de couleur par défaut du jeu s\'applique. Formats PNG/JPG/WEBP, 8 Mo max (compressée automatiquement).</p>';
+  var _nbBg = Object.keys(customBgImages.modes||{}).length + Object.keys(customBgImages.stories||{}).length;
+  var html = '<div style="background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-bottom:12px">'
+    + '<div style="font-size:12px;font-weight:700;margin-bottom:3px">💾 '+_nbBg+' fond(s) — '+_bgPoidsKo()+' Ko utilisés</div>'
+    + '<div style="font-size:10.5px;color:var(--muted);line-height:1.45">Les fonds sont stockés dans ce navigateur uniquement. <b>Si tu ouvres une nouvelle version du fichier, ils ne suivent pas</b> — utilise Données → Exporter avant, puis Importer après.</div>'
+    + '</div>';
+  html += '<p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Ajoute une image de fond personnalisée par mode de jeu ou par histoire. Sans image, le dégradé de couleur par défaut du jeu s\'applique. Formats PNG/JPG/WEBP, 8 Mo max (compressée automatiquement).</p>';
   html += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Par mode de jeu</div>';
   html += BG_MODES.map(function(m){ return _bgRow('modes', m.id, m.label); }).join('');
   html += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px">Par histoire (mode Histoire)</div>';
