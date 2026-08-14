@@ -12019,21 +12019,93 @@ function ngToggle(key){
 }
 // ══════════════ FONDS D'ÉCRAN (admin) ══════════════
 var BG_IMAGES_KEY = 'bg_images_v28';
-var customBgImages = loadCustom(BG_IMAGES_KEY) || {modes:{}, stories:{}};
-function saveBgImages(){
-  // Ne jamais échouer en silence : si le stockage est plein, l'image est retirée et
-  // l'utilisateur est prévenu, plutôt que de croire à tort que c'est enregistré.
-  try{
-    localStorage.setItem(BG_IMAGES_KEY, JSON.stringify(customBgImages));
+// ══════════════ STOCKAGE LOURD : IndexedDB ══════════════
+// localStorage est plafonné à ~5 Mo sur iPhone — largement insuffisant pour des images.
+// IndexedDB n'a pas cette limite (plusieurs centaines de Mo selon l'espace disque).
+var IDB_NAME='pulsations_db', IDB_STORE='blobs', _idb=null;
+function idbOpen(){
+  return new Promise(function(res, rej){
+    if(_idb) return res(_idb);
+    if(!window.indexedDB) return rej('no-idb');
+    var rq = indexedDB.open(IDB_NAME, 1);
+    rq.onupgradeneeded = function(e){
+      var db=e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+    };
+    rq.onsuccess = function(e){ _idb=e.target.result; res(_idb); };
+    rq.onerror = function(){ rej('idb-error'); };
+  });
+}
+function idbSet(k, v){
+  return idbOpen().then(function(db){
+    return new Promise(function(res, rej){
+      var tx=db.transaction(IDB_STORE,'readwrite');
+      tx.objectStore(IDB_STORE).put(v, k);
+      tx.oncomplete=function(){ res(true); };
+      tx.onerror=function(){ rej('write-error'); };
+      tx.onabort=function(){ rej(tx.error && tx.error.name==='QuotaExceededError' ? 'quota' : 'abort'); };
+    });
+  });
+}
+function idbGet(k){
+  return idbOpen().then(function(db){
+    return new Promise(function(res){
+      var rq=db.transaction(IDB_STORE,'readonly').objectStore(IDB_STORE).get(k);
+      rq.onsuccess=function(){ res(rq.result); };
+      rq.onerror=function(){ res(undefined); };
+    });
+  }).catch(function(){ return undefined; });
+}
+// Estimation de l'espace disponible, pour l'afficher à l'utilisateur.
+function idbEstimate(){
+  if(navigator.storage && navigator.storage.estimate) return navigator.storage.estimate();
+  return Promise.resolve(null);
+}
+var customBgImages = {modes:{}, stories:{}};
+var _bgReady = false;
+// Chargement au démarrage + migration unique depuis l'ancien stockage.
+function initBgImages(){
+  return idbGet(BG_IMAGES_KEY).then(function(v){
+    if(v && typeof v==='object'){ customBgImages = v; }
+    else {
+      // Migration : on récupère ce qui existait dans localStorage, puis on libère la place.
+      var old = null;
+      try{ old = JSON.parse(localStorage.getItem(BG_IMAGES_KEY)||'null'); }catch(e){}
+      if(old && typeof old==='object'){
+        customBgImages = old;
+        idbSet(BG_IMAGES_KEY, customBgImages).then(function(){
+          try{ localStorage.removeItem(BG_IMAGES_KEY); }catch(e){}
+        }).catch(function(){});
+      }
+    }
+    if(!customBgImages.modes) customBgImages.modes={};
+    if(!customBgImages.stories) customBgImages.stories={};
+    _bgReady = true;
+  }).catch(function(){
+    try{ customBgImages = JSON.parse(localStorage.getItem(BG_IMAGES_KEY)||'null') || {modes:{},stories:{}}; }catch(e){ customBgImages={modes:{},stories:{}}; }
+    _bgReady = true;
+  });
+}
+initBgImages().then(function(){
+  // L'onglet peut avoir été affiché avant la fin du chargement : on le rafraîchit.
+  var nav=document.querySelector('.admin-tab.active');
+  if(nav && nav.id==='atab-bgimages-nav') adminTab('bgimages', nav);
+});
+function saveBgImages(cb){
+  // Écriture asynchrone dans IndexedDB : plus de plafond à 5 Mo.
+  return idbSet(BG_IMAGES_KEY, customBgImages).then(function(){
+    if(cb) cb(true);
     return true;
-  }catch(e){
-    alert('⚠️ Stockage plein : ce fond n\'a PAS pu être enregistré.\n\nSupprime quelques fonds ou vignettes de la médiathèque, puis réessaie.');
+  }).catch(function(err){
+    if(err==='quota') alert('⚠️ Espace disque insuffisant sur l\'appareil.\n\nLibère de la place, ou supprime quelques fonds.');
+    else alert('⚠️ Ce fond n\'a pas pu être enregistré (stockage indisponible).');
+    if(cb) cb(false);
     return false;
-  }
+  });
 }
 // Poids total occupé par les fonds, pour l'afficher dans l'onglet.
 function _bgPoidsKo(){
-  try{ return Math.round((localStorage.getItem(BG_IMAGES_KEY)||'').length/1024); }catch(e){ return 0; }
+  try{ return Math.round(JSON.stringify(customBgImages).length/1024); }catch(e){ return 0; }
 }
 var BG_MODES = [
   {id:'classique', label:'🎲 Classique'},
@@ -12075,18 +12147,19 @@ function handleBgImageUpload(input, category, key){
       if(!customBgImages[category]) customBgImages[category]={};
       var _avant = customBgImages[category][key];
       customBgImages[category][key] = dataUrl;
-      if(!saveBgImages()){
-        // Enregistrement refusé : on restaure l'état précédent pour rester cohérent.
-        if(_avant) customBgImages[category][key]=_avant; else delete customBgImages[category][key];
+      // Écriture asynchrone : on ne confirme qu'une fois réellement enregistré.
+      saveBgImages(function(ok){
+        if(!ok){
+          if(_avant) customBgImages[category][key]=_avant; else delete customBgImages[category][key];
+          renderAdminBgTab();
+          return;
+        }
+        var avant = (f.size/1024).toFixed(0);
+        var apres = (dataUrl.length*0.75/1024).toFixed(0); // base64 -> ~3/4 en octets
+        var msg = '✅ Image ajoutée — compressée de '+avant+' Ko à '+apres+' Ko ('+img.width+'×'+img.height+' → '+w+'×'+h+').';
+        _bgLastMsg = {cat:category, key:key, texte:msg};
         renderAdminBgTab();
-        return;
-      }
-      // Message de confirmation, avec le détail de la compression réellement effectuée.
-      var avant = (f.size/1024).toFixed(0);
-      var apres = (dataUrl.length*0.75/1024).toFixed(0); // base64 -> ~3/4 en octets
-      var msg = '✅ Image ajoutée — compressée de '+avant+' Ko à '+apres+' Ko ('+img.width+'×'+img.height+' → '+w+'×'+h+').';
-      _bgLastMsg = {cat:category, key:key, texte:msg};
-      renderAdminBgTab();
+      });
     };
     img.onerror = function(){ if(errEl){ errEl.textContent = '❌ Impossible de lire cette image (fichier corrompu ?).'; errEl.style.color='var(--warn)'; } };
     img.src = e.target.result;
@@ -12122,8 +12195,37 @@ var _stEdit = null; // id en cours d'édition, ou '__new__'
 // Bibliothèque de liens : rien n'est téléchargé ni aspiré — on stocke l'adresse de la page
 // officielle, ce qui garde les vues aux créatrices et évite tout contenu copié localement.
 var MEDIA_KEY = 'media_lib_v28';
-var mediaLib = (function(){ try{ return JSON.parse(localStorage.getItem(MEDIA_KEY)||'[]')||[]; }catch(e){ return []; } })();
-function saveMediaLib(){ try{ localStorage.setItem(MEDIA_KEY, JSON.stringify(mediaLib)); }catch(e){} }
+// La médiathèque contient photos et vignettes : stockée en IndexedDB, pas de plafond 5 Mo.
+var mediaLib = [];
+function initMediaLib(){
+  return idbGet(MEDIA_KEY).then(function(v){
+    if(Array.isArray(v)) { mediaLib = v; return; }
+    var old=null;
+    try{ old = JSON.parse(localStorage.getItem(MEDIA_KEY)||'null'); }catch(e){}
+    if(Array.isArray(old)){
+      mediaLib = old;
+      idbSet(MEDIA_KEY, mediaLib).then(function(){
+        try{ localStorage.removeItem(MEDIA_KEY); }catch(e){}
+      }).catch(function(){});
+    }
+  }).catch(function(){
+    try{ mediaLib = JSON.parse(localStorage.getItem(MEDIA_KEY)||'[]')||[]; }catch(e){ mediaLib=[]; }
+  });
+}
+initMediaLib().then(function(){
+  var nav=document.querySelector('.admin-tab.active');
+  if(nav && nav.id==='atab-media-nav') adminTab('media', nav);
+});
+function saveMediaLib(cb){
+  return idbSet(MEDIA_KEY, mediaLib).then(function(){ if(cb) cb(true); return true; })
+    .catch(function(err){
+      alert(err==='quota'
+        ? '⚠️ Espace disque insuffisant. Supprime quelques photos, puis réessaie.'
+        : '⚠️ Enregistrement impossible (stockage indisponible).');
+      if(cb) cb(false);
+      return false;
+    });
+}
 var _mediaFilter = {q:'', cat:'', tag:'', vue:'tout'};
 var _mediaEdit = null;
 function _mediaCats(){
@@ -12751,8 +12853,15 @@ function renderAdminBgTab(){
   var _nbBg = Object.keys(customBgImages.modes||{}).length + Object.keys(customBgImages.stories||{}).length;
   var html = '<div style="background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-bottom:12px">'
     + '<div style="font-size:12px;font-weight:700;margin-bottom:3px">💾 '+_nbBg+' fond(s) — '+_bgPoidsKo()+' Ko utilisés</div>'
-    + '<div style="font-size:10.5px;color:var(--muted);line-height:1.45">Les fonds sont stockés dans ce navigateur uniquement. <b>Si tu ouvres une nouvelle version du fichier, ils ne suivent pas</b> — utilise Données → Exporter avant, puis Importer après.</div>'
+    + '<div id="bg-quota" style="font-size:10.5px;color:var(--muted);line-height:1.45">Stockage étendu actif — la limite de 5 Mo est levée.<br><b>Si tu ouvres une nouvelle version du fichier, les fonds ne suivent pas</b> : utilise Données → Exporter avant, puis Importer après.</div>'
     + '</div>';
+  setTimeout(function(){
+    idbEstimate().then(function(e){
+      if(!e) return;
+      var el=document.getElementById('bg-quota');
+      if(el) el.innerHTML = 'Stockage étendu actif — <b>'+Math.round((e.quota-e.usage)/1024/1024)+' Mo disponibles</b> (limite de 5 Mo levée).<br><b>Si tu ouvres une nouvelle version du fichier, les fonds ne suivent pas</b> : utilise Données → Exporter avant, puis Importer après.';
+    }).catch(function(){});
+  }, 0);
   html += '<p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Ajoute une image de fond personnalisée par mode de jeu ou par histoire. Sans image, le dégradé de couleur par défaut du jeu s\'applique. Formats PNG/JPG/WEBP, 8 Mo max (compressée automatiquement).</p>';
   html += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Par mode de jeu</div>';
   html += BG_MODES.map(function(m){ return _bgRow('modes', m.id, m.label); }).join('');
