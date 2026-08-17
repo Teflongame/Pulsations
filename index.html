@@ -1117,7 +1117,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <button class="admin-tab" id="atab-data-nav" onclick="adminTab('data',this)">💾 Données</button>
   </div>
   <div id="admin-content"></div>
-  <button class="btn ghost" style="margin-top:14px" onclick="goTo('page-home')">← Retour</button>
+  <button class="btn ghost" style="margin-top:14px" onclick="adminBack()" id="admin-back-btn">← Retour</button>
 </div>
 
 
@@ -10813,6 +10813,28 @@ function deleteProfile(i) {
 // ══════════════ ADMIN ══════════════
 var adminGageSubTab = 'form';
 
+// Le bouton du bas remonte d'un niveau dans l'admin (formulaire → fiche → liste),
+// et ne quitte vers l'accueil que depuis le premier niveau. Évite de perdre un formulaire.
+function adminBack(){
+  if(typeof _mediaEdit!=='undefined' && _mediaEdit){
+    if(!confirm('Quitter sans enregistrer les modifications ?')) return;
+    _mediaEdit=null; adminTab('media',null); return;
+  }
+  if(typeof _mediaView!=='undefined' && _mediaView){ _mediaView=null; adminTab('media',null); return; }
+  if(typeof _stEdit!=='undefined' && _stEdit){
+    if(!confirm('Quitter sans enregistrer les modifications ?')) return;
+    _stEdit=null; adminTab('stories',null); return;
+  }
+  goTo('page-home');
+}
+function _adminBackLabel(){
+  var b=document.getElementById('admin-back-btn');
+  if(!b) return;
+  var interne = (typeof _mediaEdit!=='undefined' && _mediaEdit)
+             || (typeof _mediaView!=='undefined' && _mediaView)
+             || (typeof _stEdit!=='undefined' && _stEdit);
+  b.textContent = interne ? '← Retour à la liste' : '← Retour';
+}
 function adminTab(tab, btn) {
   document.querySelectorAll('.admin-tab').forEach(function(b){ b.classList.remove('active'); });
   if(btn) btn.classList.add('active');
@@ -10830,6 +10852,7 @@ function adminTab(tab, btn) {
   else if(tab==='bgimages') { cnt.innerHTML = renderAdminBgTab(); }
   else if(tab==='stories') { cnt.innerHTML = renderAdminStories(); }
   else if(tab==='media') { cnt.innerHTML = renderAdminMedia(); }
+  _adminBackLabel();
 }
 
 function renderAdminGages() {
@@ -12475,12 +12498,14 @@ function handleMediaPhotos(input){
     rd.onload=function(e){
       var img=new Image();
       img.onload=function(){
-        var max=480;
+        // Haute résolution : la photo est conservée DANS le jeu, tu peux supprimer
+        // l'original du téléphone sans perdre en qualité à l'affichage plein écran.
+        var max=1600;
         var sc=Math.min(1, max/Math.max(img.width,img.height));
         var w=Math.round(img.width*sc), h=Math.round(img.height*sc);
         var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
         cv.getContext('2d').drawImage(img,0,0,w,h);
-        _mediaPhotos.push(cv.toDataURL('image/jpeg',0.70));
+        _mediaPhotos.push(cv.toDataURL('image/jpeg',0.82));
         restants--;
         _renderPhotoGrid();
         if(restants<=0 && err){ err.textContent='✅ '+_mediaPhotos.length+' photo(s) dans le dossier'; err.style.color='var(--success)'; }
@@ -12571,6 +12596,49 @@ function _mediaListHTML(){
       + '</div></div></div>';
   }).join('') + '</div>';
 }
+// ── Visionneuse plein écran ──
+// Ouvrir une image en data:URL dans un nouvel onglet ne fonctionne pas sur iOS :
+// on affiche donc un vrai calque plein écran, avec navigation entre les photos.
+var _lbPhotos=[], _lbIdx=0;
+function lbOpen(dossierId, i){
+  var m = mediaLib.filter(function(x){return x.id===dossierId;})[0];
+  if(!m) return;
+  _lbPhotos = (m.photos||[]).slice();
+  _lbIdx = i||0;
+  var ov=document.getElementById('lightbox');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='lightbox';
+    ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center';
+    ov.innerHTML='<div id="lb-img" style="flex:1;width:100%;background-size:contain;background-repeat:no-repeat;background-position:center"></div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:12px 16px 26px;box-sizing:border-box">'
+      + '<button onclick="lbPrev()" style="background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:22px;padding:11px 20px;font-size:17px;cursor:pointer">‹</button>'
+      + '<span id="lb-count" style="color:#fff;font-size:13px;opacity:.85"></span>'
+      + '<button onclick="lbNext()" style="background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:22px;padding:11px 20px;font-size:17px;cursor:pointer">›</button>'
+      + '</div>'
+      + '<button onclick="lbClose()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:17px;cursor:pointer">✕</button>';
+    document.body.appendChild(ov);
+    // Balayage tactile pour changer de photo
+    var x0=null;
+    ov.addEventListener('touchstart', function(e){ x0=e.touches[0].clientX; }, {passive:true});
+    ov.addEventListener('touchend', function(e){
+      if(x0===null) return;
+      var dx=e.changedTouches[0].clientX-x0;
+      if(Math.abs(dx)>50){ dx<0 ? lbNext() : lbPrev(); }
+      x0=null;
+    }, {passive:true});
+  }
+  ov.style.display='flex';
+  _lbRender();
+}
+function _lbRender(){
+  var im=document.getElementById('lb-img'), ct=document.getElementById('lb-count');
+  if(im) im.style.backgroundImage = "url('"+_lbPhotos[_lbIdx]+"')";
+  if(ct) ct.textContent = (_lbIdx+1)+' / '+_lbPhotos.length;
+}
+function lbNext(){ if(!_lbPhotos.length) return; _lbIdx=(_lbIdx+1)%_lbPhotos.length; _lbRender(); }
+function lbPrev(){ if(!_lbPhotos.length) return; _lbIdx=(_lbIdx-1+_lbPhotos.length)%_lbPhotos.length; _lbRender(); }
+function lbClose(){ var ov=document.getElementById('lightbox'); if(ov) ov.style.display='none'; }
 var _mediaView = null; // id du dossier ouvert en consultation
 function mediaOpen(id){ _mediaView=id; adminTab('media',null); }
 function mediaCloseView(){ _mediaView=null; adminTab('media',null); }
@@ -12605,8 +12673,8 @@ function _renderMediaView(){
   var phs = m.photos||[];
   h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px">📷 Photos ('+phs.length+')</div>';
   h += phs.length
-    ? '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' + phs.map(function(p){
-        return '<a href="'+p+'" target="_blank" rel="noopener" style="display:block;aspect-ratio:1;border-radius:8px;border:1px solid var(--border);background:var(--card2) url(\''+p+'\') center/contain no-repeat"></a>';
+    ? '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' + phs.map(function(p,i){
+        return '<div onclick="lbOpen(\''+m.id+'\','+i+')" style="cursor:pointer;aspect-ratio:1;border-radius:8px;border:1px solid var(--border);background:var(--card2) url(\''+p+'\') center/contain no-repeat"></div>';
       }).join('') + '</div>'
     : '<p style="font-size:11.5px;color:var(--muted)">Aucune photo.</p>';
   h += '<div class="btn-row" style="margin-top:16px"><button class="btn ghost" onclick="mediaEdit(\''+m.id+'\')">✏️ Modifier</button><button class="btn ghost" onclick="mediaCloseView()">Fermer</button></div>';
@@ -12695,6 +12763,7 @@ function _renderMediaForm(){
   h += '<button class="btn ghost sm" style="width:100%;margin:0 0 4px" onclick="_mediaCaptureVideos();mediaAddVideoRow()">➕ Ajouter une vidéo</button>';
   // ── Galerie photos ──
   h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">📷 Photos du dossier</div>';
+  h += '<p style="font-size:10.5px;color:var(--muted);margin:0 0 6px;line-height:1.4">Les photos de ton téléphone sont copiées dans le jeu en haute définition — tu peux ensuite les supprimer de ta galerie.</p>';
   h += '<div id="media-photos-grid"></div>';
   h += '<label class="btn ghost sm" style="display:block;width:100%;padding:6px 10px;font-size:11px;cursor:pointer;margin:6px 0 5px;text-align:center">📁 Ajouter des photos (plusieurs possibles)<input type="file" accept="image/*" multiple onchange="handleMediaPhotos(this)" style="display:none"></label>';
   h += '<div style="display:flex;gap:5px"><input type="text" id="media-photo-url" placeholder="…ou coller un lien d\'image" style="flex:1;font-size:11px;padding:6px 8px;margin:0">'
