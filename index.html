@@ -6706,31 +6706,57 @@ function renderPlayerPage() {
       // Illustrations tirées de la médiathèque : sélection par tag ou par dossier.
       var _tagsDispo = {}; var _dossiers = [];
       mediaLib.forEach(function(m){
-        if((m.photos||[]).length){
-          _dossiers.push({id:m.id, nom:m.nom, n:m.photos.length});
-          (m.tags||[]).forEach(function(t){ _tagsDispo[t]=(_tagsDispo[t]||0)+m.photos.length; });
+        // Un dossier compte s'il a des photos OU des vidéos : sinon on ne pourrait pas
+        // activer les vidéos d'un dossier qui n'a pas encore de photo.
+        var nP=(m.photos||[]).length, nV=(m.videos||[]).filter(function(v){return v.url;}).length;
+        if(nP || nV){
+          _dossiers.push({id:m.id, nom:m.nom, n:nP, nv:nV});
+          (m.tags||[]).forEach(function(t){ _tagsDispo[t]=(_tagsDispo[t]||0)+nP; });
         }
       });
       var _lstTags = Object.keys(_tagsDispo).sort();
       html += '<div style="background:var(--card);border-radius:12px;padding:12px 16px;margin-top:10px">';
       html += '<div style="font-size:14px;font-weight:700;margin-bottom:4px">🖼️ Illustrations</div>';
       if(!_dossiers.length){
-        html += '<p style="font-size:11.5px;color:var(--muted);margin:0;line-height:1.45">Aucune photo dans la médiathèque. Ajoute des photos dans Admin → Médiathèque pour illustrer tes séances.</p>';
+        html += '<p style="font-size:11.5px;color:var(--muted);margin:0;line-height:1.45">Médiathèque vide. Ajoute des photos ou des vidéos dans Admin → Médiathèque pour illustrer tes séances.</p>';
       } else {
         html += '<p style="font-size:11.5px;color:var(--muted);margin:0 0 8px;line-height:1.45">Affiche une photo de ta médiathèque à chaque étape.</p>';
         html += '<label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin-bottom:8px">'
           + '<input type="checkbox" id="solo-illu-opt" '+(window._soloIllu?'checked':'')+' onchange="window._soloIllu=this.checked" style="width:18px;height:18px">'
           + '<span style="font-size:13.5px">Activer les illustrations</span></label>';
-        if(_lstTags.length){
+        var _lstTagsOk = _lstTags.filter(function(t){ return _tagsDispo[t]>0; });
+        if(_lstTagsOk.length){
           html += '<label class="field-label" style="font-size:10.5px">Critère (tag)</label>';
           html += '<select id="solo-illu-tag" onchange="window._soloIlluTag=this.value" style="font-size:12.5px;padding:7px 8px;margin-bottom:6px"><option value="">Toutes les photos</option>'
-            + _lstTags.map(function(t){ return '<option value="'+t.replace(/"/g,'&quot;')+'"'+(window._soloIlluTag===t?' selected':'')+'>'+t+' ('+_tagsDispo[t]+' photos)</option>'; }).join('')
+            + _lstTagsOk.map(function(t){ return '<option value="'+t.replace(/"/g,'&quot;')+'"'+(window._soloIlluTag===t?' selected':'')+'>'+t+' ('+_tagsDispo[t]+' photos)</option>'; }).join('')
             + '</select>';
         }
-        html += '<label class="field-label" style="font-size:10.5px">…ou un dossier précis</label>';
-        html += '<select id="solo-illu-dossier" onchange="window._soloIlluDossier=this.value" style="font-size:12.5px;padding:7px 8px"><option value="">Tous les dossiers</option>'
-          + _dossiers.map(function(dd){ return '<option value="'+dd.id+'"'+(window._soloIlluDossier===dd.id?' selected':'')+'>'+dd.nom+' ('+dd.n+' photos)</option>'; }).join('')
-          + '</select>';
+        // Favoris : dossiers notés 4 ou 5 étoiles
+        var _nFav = mediaLib.filter(function(m){ return (m.photos||[]).length && (m.note||0)>=4; })
+                            .reduce(function(s,m){ return s+m.photos.length; }, 0);
+        if(_nFav){
+          html += '<label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin-bottom:8px">'
+            + '<input type="checkbox" id="solo-illu-fav" '+(window._soloIlluFav?'checked':'')+' onchange="window._soloIlluFav=this.checked" style="width:17px;height:17px">'
+            + '<span style="font-size:13px">★ Favoris uniquement ('+_nFav+' photos)</span></label>';
+        }
+        // Sélection multiple de dossiers, pour mélanger plusieurs femmes.
+        html += '<label class="field-label" style="font-size:10.5px">Dossiers (plusieurs possibles)</label>';
+        window._soloIlluDossiers = window._soloIlluDossiers || [];
+        html += '<div style="max-height:150px;overflow-y:auto;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:7px 9px">';
+        html += _dossiers.map(function(dd){
+          var on = window._soloIlluDossiers.indexOf(dd.id)>=0;
+          return '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">'
+            + '<input type="checkbox" '+(on?'checked':'')+' onchange="soloToggleDossier(\''+dd.id+'\',this.checked)" style="width:16px;height:16px">'
+            + '<span style="font-size:12.5px">'+dd.nom+' <span style="color:var(--muted);font-size:10.5px">('+(dd.n?dd.n+' 📷':'')+(dd.n&&dd.nv?' · ':'')+(dd.nv?dd.nv+' 🎬':'')+')</span></span></label>';
+        }).join('');
+        html += '</div>';
+        html += '<p style="font-size:10.5px;color:var(--muted);margin:5px 0 0">Aucun coché = tous les dossiers.</p>';
+        var _nVid = mediaLib.reduce(function(s,m){ return s+((m.videos||[]).filter(function(v){return v.url;}).length); }, 0);
+        if(_nVid){
+          html += '<label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)">'
+            + '<input type="checkbox" id="solo-vid-opt" '+(window._soloVideos?'checked':'')+' onchange="window._soloVideos=this.checked" style="width:17px;height:17px">'
+            + '<span style="font-size:13px">🎬 Proposer aussi des vidéos ('+_nVid+' dispo)</span></label>';
+        }
       }
       html += '</div>';
     }
@@ -8635,14 +8661,35 @@ function _soloBeatToGage(beat, player, idx){
     modes:['solo'], solo:true, _p:player.prenom, _ch:false, _kama:false, _trame:true, _beatIdx:idx};
 }
 // Constitue le pool de photos selon les critères choisis (tag et/ou dossier).
+function soloToggleDossier(id, on){
+  window._soloIlluDossiers = window._soloIlluDossiers || [];
+  var i = window._soloIlluDossiers.indexOf(id);
+  if(on && i<0) window._soloIlluDossiers.push(id);
+  if(!on && i>=0) window._soloIlluDossiers.splice(i,1);
+}
 function _soloPhotoPool(){
   var tag = window._soloIlluTag || '';
-  var dossier = window._soloIlluDossier || '';
+  var sel = window._soloIlluDossiers || [];
+  var favOnly = !!window._soloIlluFav;
   var out = [];
   mediaLib.forEach(function(m){
-    if(dossier && m.id!==dossier) return;
+    if(sel.length && sel.indexOf(m.id)<0) return;   // aucun coché = tous
     if(tag && (m.tags||[]).indexOf(tag)<0) return;
+    if(favOnly && (m.note||0)<4) return;
     (m.photos||[]).forEach(function(p){ out.push(p); });
+  });
+  return shuffle(out);
+}
+function _soloVideoPool(){
+  var tag = window._soloIlluTag || '';
+  var sel = window._soloIlluDossiers || [];
+  var favOnly = !!window._soloIlluFav;
+  var out = [];
+  mediaLib.forEach(function(m){
+    if(sel.length && sel.indexOf(m.id)<0) return;
+    if(tag && (m.tags||[]).indexOf(tag)<0) return;
+    if(favOnly && (m.note||0)<4) return;
+    (m.videos||[]).forEach(function(v){ if(v.url) out.push(v); });
   });
   return shuffle(out);
 }
@@ -8652,12 +8699,15 @@ function buildSoloTrameGame(){
   G.gagesByLevel={}; G.changePool={};
   // Illustrations : une photo différente par étape, tirée sans répétition tant que possible.
   var pool = window._soloIllu ? _soloPhotoPool() : [];
-  var pi = 0;
+  var vpool = window._soloVideos ? _soloVideoPool() : [];
+  var pi = 0, vi = 0;
   trame.forEach(function(b,i){
     var lvl=b.acte||1;
     if(!G.gagesByLevel[lvl]) G.gagesByLevel[lvl]=[];
     var g = _soloBeatToGage(b, player, i);
     if(pool.length){ g._photo = pool[pi % pool.length]; pi++; }
+    // Une vidéo tous les deux actes, pour ne pas casser le rythme de la séance.
+    if(vpool.length && (i===1 || i===4 || i===7)){ g._video = vpool[vi % vpool.length]; vi++; }
     G.gagesByLevel[lvl].push(g);
   });
   [1,2,3,4,5].forEach(function(l){
@@ -9329,6 +9379,11 @@ function renderGageCard(gage, player, partner) {
     .replace(/{role_f}/g, '<strong style="color:var(--rose)">'+roleFLabel+'</strong>')
     .replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:var(--gold)">$1</strong>');
   txt = gage._trame ? txt : formatGageBodyHTML(txt);
+  // Vidéo de la médiathèque : bouton de lecture directement dans la partie.
+  if(gage._video){
+    txt = '<div onclick="vpOpen(\''+gage._video.url.replace(/'/g,"\\'")+'\',\''+(gage._video.desc||'').replace(/'/g,"\\'")+'\')" style="cursor:pointer;display:flex;gap:9px;align-items:center;justify-content:center;background:rgba(var(--accent-rgb,232,67,122),.14);border:1px solid rgba(var(--accent-rgb,232,67,122),.35);border-radius:11px;padding:11px 13px;margin-bottom:12px">'
+      + '<span style="font-size:19px">▶️</span><span style="font-size:12.5px;font-weight:600">'+(gage._video.desc||'Lancer la vidéo')+'</span></div>' + txt;
+  }
   // Illustration de la médiathèque (mode solo) : cliquable pour l'agrandir.
   if(gage._photo){
     txt = '<div onclick="soloPhotoZoom()" style="cursor:pointer;width:100%;aspect-ratio:4/3;border-radius:12px;margin-bottom:14px;background:var(--card2) url(\''+gage._photo+'\') center/contain no-repeat;border:1px solid var(--border)"></div>' + txt;
@@ -12574,6 +12629,15 @@ function handleMediaPhotos(input){
     if(f.type.indexOf('image/')!==0){ restants--; return; }
     var rd=new FileReader();
     rd.onload=function(e){
+      // GIF animé : on garde le fichier tel quel — le passer par un canvas ne
+      // conserverait que la première image et tuerait l'animation.
+      if(f.type==='image/gif'){
+        _mediaPhotos.push(e.target.result);
+        restants--;
+        _renderPhotoGrid();
+        if(restants<=0 && err){ err.textContent='✅ '+_mediaPhotos.length+' photo(s) dans le dossier'; err.style.color='var(--success)'; }
+        return;
+      }
       var img=new Image();
       img.onload=function(){
         // Haute résolution : la photo est conservée DANS le jeu, tu peux supprimer
@@ -12678,6 +12742,70 @@ function _mediaListHTML(){
 // Ouvrir une image en data:URL dans un nouvel onglet ne fonctionne pas sur iOS :
 // on affiche donc un vrai calque plein écran, avec navigation entre les photos.
 var _lbPhotos=[], _lbIdx=0;
+// ══════════════ LECTEUR VIDÉO INTÉGRÉ ══════════════
+// Trois cas gérés : fichier vidéo direct (.mp4/.webm) → lecteur natif ; lien d'intégration
+// officiel (…/embed/…) → cadre intégré ; page classique → ouverture externe, car la quasi-
+// totalité des sites interdisent techniquement d'être affichés dans une autre page.
+function _videoKind(u){
+  if(!u) return 'none';
+  if(/\.(mp4|webm|ogg|ogv|m4v|mov)(\?|#|$)/i.test(u)) return 'file';
+  if(/\/embed\/|player\.vimeo\.com|youtube\.com\/embed|youtu\.be\//i.test(u)) return 'embed';
+  if(/youtube\.com\/watch\?v=/i.test(u)) return 'youtube';
+  return 'page';
+}
+function _toEmbedUrl(u){
+  var m = u.match(/youtube\.com\/watch\?v=([\w-]{11})/);
+  if(m) return 'https://www.youtube.com/embed/'+m[1];
+  m = u.match(/youtu\.be\/([\w-]{11})/);
+  if(m) return 'https://www.youtube.com/embed/'+m[1];
+  return u;
+}
+function vpOpen(url, titre){
+  if(!url) return;
+  var kind = _videoKind(url);
+  if(kind==='page'){
+    // Non intégrable : on ouvre dans le navigateur plutôt que d'afficher un cadre vide.
+    window.open(url,'_blank','noopener');
+    return;
+  }
+  var ov = document.getElementById('videoplayer');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id='videoplayer';
+    ov.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0';
+    ov.innerHTML='<div id="vp-title" style="color:#fff;font-size:13px;padding:14px 54px 10px;text-align:center;opacity:.9;width:100%;box-sizing:border-box"></div>'
+      + '<div id="vp-body" style="flex:1;width:100%;display:flex;align-items:center;justify-content:center"></div>'
+      + '<div style="padding:10px 16px 26px;width:100%;box-sizing:border-box;text-align:center">'
+      + '<a id="vp-ext" href="#" target="_blank" rel="noopener" style="color:#9ab;font-size:12px;text-decoration:none">↗ Ouvrir dans le navigateur</a></div>'
+      + '<button onclick="vpClose()" style="position:absolute;top:12px;right:14px;background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:50%;width:38px;height:38px;font-size:17px;cursor:pointer">✕</button>';
+    document.body.appendChild(ov);
+  }
+  var body = document.getElementById('vp-body');
+  var t = document.getElementById('vp-title');
+  var ext = document.getElementById('vp-ext');
+  if(t) t.textContent = titre || '';
+  if(ext) ext.href = url;
+  if(kind==='file'){
+    body.innerHTML = '<video src="'+url+'" controls playsinline autoplay style="max-width:100%;max-height:100%;background:#000"></video>';
+  } else {
+    var eu = _toEmbedUrl(url);
+    body.innerHTML = '<iframe src="'+eu+'" allow="autoplay; fullscreen; encrypted-media" allowfullscreen frameborder="0" style="width:100%;height:100%;border:0;background:#000"></iframe>'
+      + '<div id="vp-warn" style="position:absolute;bottom:64px;left:0;right:0;text-align:center;color:#c99;font-size:11px;padding:0 20px"></div>';
+    // Si le site refuse l'intégration, l'utilisateur doit pouvoir rebondir.
+    setTimeout(function(){
+      var w=document.getElementById('vp-warn');
+      if(w) w.textContent = 'Si la vidéo ne démarre pas, le site refuse l\'intégration : utilise le lien ci-dessous.';
+    }, 3500);
+  }
+  ov.style.display='flex';
+}
+function vpClose(){
+  var ov=document.getElementById('videoplayer');
+  if(!ov) return;
+  var body=document.getElementById('vp-body');
+  if(body) body.innerHTML=''; // coupe la lecture
+  ov.style.display='none';
+}
 function lbOpen(dossierId, i){
   var m = mediaLib.filter(function(x){return x.id===dossierId;})[0];
   if(!m) return;
@@ -12754,10 +12882,10 @@ function _renderMediaView(){
   var vids = m.videos||[];
   h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px">🎬 Vidéos ('+vids.length+')</div>';
   h += vids.length ? vids.map(function(v,i){
-      return '<a href="'+v.url+'" target="_blank" rel="noopener" style="display:flex;gap:9px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:6px;text-decoration:none;color:var(--text)">'
+      return '<div onclick="vpOpen(\''+v.url.replace(/'/g,"\\'")+'\',\''+(v.desc||'').replace(/'/g,"\\'")+'\')" style="cursor:pointer;display:flex;gap:9px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:6px;text-decoration:none;color:var(--text)">'
         + '<span style="font-size:17px;flex:0 0 auto">▶️</span>'
         + '<span style="flex:1;min-width:0"><span style="display:block;font-size:12.5px;font-weight:600">'+(v.desc||('Vidéo '+(i+1)))+'</span>'
-        + '<span style="display:block;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.url+'</span></span></a>';
+        + '<span style="display:block;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.url+'</span></span></div>';
     }).join('') : '<p style="font-size:11.5px;color:var(--muted)">Aucune vidéo.</p>';
   // Photos
   var phs = m.photos||[];
@@ -12855,7 +12983,7 @@ function _renderMediaForm(){
   h += '<div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">📷 Photos du dossier</div>';
   h += '<p style="font-size:10.5px;color:var(--muted);margin:0 0 6px;line-height:1.4">Les photos de ton téléphone sont copiées dans le jeu en haute définition — tu peux ensuite les supprimer de ta galerie.</p>';
   h += '<div id="media-photos-grid"></div>';
-  h += '<label class="btn ghost sm" style="display:block;width:100%;padding:6px 10px;font-size:11px;cursor:pointer;margin:6px 0 5px;text-align:center">📁 Ajouter des photos (plusieurs possibles)<input type="file" accept="image/*" multiple onchange="handleMediaPhotos(this)" style="display:none"></label>';
+  h += '<label class="btn ghost sm" style="display:block;width:100%;padding:6px 10px;font-size:11px;cursor:pointer;margin:6px 0 5px;text-align:center">📁 Ajouter des photos (plusieurs possibles)<input type="file" accept="image/*,image/gif" multiple onchange="handleMediaPhotos(this)" style="display:none"></label>';
   h += '<div style="display:flex;gap:5px"><input type="text" id="media-photo-url" placeholder="…ou coller un lien d\'image" style="flex:1;font-size:11px;padding:6px 8px;margin:0">'
     + '<button class="btn ghost sm" style="padding:6px 9px;font-size:11px;margin:0" onclick="mediaAddPhotoUrl()">＋</button></div>';
   h += '<div id="media-photos-err" style="font-size:10px;margin-top:4px"></div>';
