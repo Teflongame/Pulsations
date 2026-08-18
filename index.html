@@ -6703,6 +6703,36 @@ function renderPlayerPage() {
       html += '<input type="checkbox" id="solo-anal-opt" '+analChecked+' onchange="window._soloWantAnal=this.checked" style="width:18px;height:18px;cursor:pointer">';
       html += '<label for="solo-anal-opt" style="font-size:14px;cursor:pointer">Inclure les gages anaux / prostatiques</label>';
       html += '</div>';
+      // Illustrations tirées de la médiathèque : sélection par tag ou par dossier.
+      var _tagsDispo = {}; var _dossiers = [];
+      mediaLib.forEach(function(m){
+        if((m.photos||[]).length){
+          _dossiers.push({id:m.id, nom:m.nom, n:m.photos.length});
+          (m.tags||[]).forEach(function(t){ _tagsDispo[t]=(_tagsDispo[t]||0)+m.photos.length; });
+        }
+      });
+      var _lstTags = Object.keys(_tagsDispo).sort();
+      html += '<div style="background:var(--card);border-radius:12px;padding:12px 16px;margin-top:10px">';
+      html += '<div style="font-size:14px;font-weight:700;margin-bottom:4px">🖼️ Illustrations</div>';
+      if(!_dossiers.length){
+        html += '<p style="font-size:11.5px;color:var(--muted);margin:0;line-height:1.45">Aucune photo dans la médiathèque. Ajoute des photos dans Admin → Médiathèque pour illustrer tes séances.</p>';
+      } else {
+        html += '<p style="font-size:11.5px;color:var(--muted);margin:0 0 8px;line-height:1.45">Affiche une photo de ta médiathèque à chaque étape.</p>';
+        html += '<label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin-bottom:8px">'
+          + '<input type="checkbox" id="solo-illu-opt" '+(window._soloIllu?'checked':'')+' onchange="window._soloIllu=this.checked" style="width:18px;height:18px">'
+          + '<span style="font-size:13.5px">Activer les illustrations</span></label>';
+        if(_lstTags.length){
+          html += '<label class="field-label" style="font-size:10.5px">Critère (tag)</label>';
+          html += '<select id="solo-illu-tag" onchange="window._soloIlluTag=this.value" style="font-size:12.5px;padding:7px 8px;margin-bottom:6px"><option value="">Toutes les photos</option>'
+            + _lstTags.map(function(t){ return '<option value="'+t.replace(/"/g,'&quot;')+'"'+(window._soloIlluTag===t?' selected':'')+'>'+t+' ('+_tagsDispo[t]+' photos)</option>'; }).join('')
+            + '</select>';
+        }
+        html += '<label class="field-label" style="font-size:10.5px">…ou un dossier précis</label>';
+        html += '<select id="solo-illu-dossier" onchange="window._soloIlluDossier=this.value" style="font-size:12.5px;padding:7px 8px"><option value="">Tous les dossiers</option>'
+          + _dossiers.map(function(dd){ return '<option value="'+dd.id+'"'+(window._soloIlluDossier===dd.id?' selected':'')+'>'+dd.nom+' ('+dd.n+' photos)</option>'; }).join('')
+          + '</select>';
+      }
+      html += '</div>';
     }
   }
   if(!isDisc && !isSolo) {
@@ -8604,14 +8634,31 @@ function _soloBeatToGage(beat, player, idx){
   return {texte:html, niveau:beat.acte||1, genre:player.genre, pratiques:[pr], accessoires:[],
     modes:['solo'], solo:true, _p:player.prenom, _ch:false, _kama:false, _trame:true, _beatIdx:idx};
 }
+// Constitue le pool de photos selon les critères choisis (tag et/ou dossier).
+function _soloPhotoPool(){
+  var tag = window._soloIlluTag || '';
+  var dossier = window._soloIlluDossier || '';
+  var out = [];
+  mediaLib.forEach(function(m){
+    if(dossier && m.id!==dossier) return;
+    if(tag && (m.tags||[]).indexOf(tag)<0) return;
+    (m.photos||[]).forEach(function(p){ out.push(p); });
+  });
+  return shuffle(out);
+}
 function buildSoloTrameGame(){
   var player = G.players[0];
   var trame = SOLO_TRAMES[player.genre] || SOLO_TRAMES.Homme;
   G.gagesByLevel={}; G.changePool={};
+  // Illustrations : une photo différente par étape, tirée sans répétition tant que possible.
+  var pool = window._soloIllu ? _soloPhotoPool() : [];
+  var pi = 0;
   trame.forEach(function(b,i){
     var lvl=b.acte||1;
     if(!G.gagesByLevel[lvl]) G.gagesByLevel[lvl]=[];
-    G.gagesByLevel[lvl].push(_soloBeatToGage(b, player, i));
+    var g = _soloBeatToGage(b, player, i);
+    if(pool.length){ g._photo = pool[pi % pool.length]; pi++; }
+    G.gagesByLevel[lvl].push(g);
   });
   [1,2,3,4,5].forEach(function(l){
     if(!G.gagesByLevel[l]) G.gagesByLevel[l]=[];
@@ -9282,6 +9329,10 @@ function renderGageCard(gage, player, partner) {
     .replace(/{role_f}/g, '<strong style="color:var(--rose)">'+roleFLabel+'</strong>')
     .replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:var(--gold)">$1</strong>');
   txt = gage._trame ? txt : formatGageBodyHTML(txt);
+  // Illustration de la médiathèque (mode solo) : cliquable pour l'agrandir.
+  if(gage._photo){
+    txt = '<div onclick="soloPhotoZoom()" style="cursor:pointer;width:100%;aspect-ratio:4/3;border-radius:12px;margin-bottom:14px;background:var(--card2) url(\''+gage._photo+'\') center/contain no-repeat;border:1px solid var(--border)"></div>' + txt;
+  }
   var cls = 'gage-card';
   if(gage._ch) cls += ' challenge';
   else if(gage.texte && gage.texte.charAt(0)==='\u2753') cls += ' question';
@@ -11652,12 +11703,24 @@ function renderAdminData(){
   return html;
 }
 function exportAllData(){
+  // Les images (fonds d'écran, médiathèque) vivent en IndexedDB : il faut les inclure
+  // explicitement, elles ne sont plus dans localStorage.
+  Promise.all([ idbGet(BG_IMAGES_KEY), idbGet(MEDIA_KEY) ])
+    .then(function(r){ _doExport(r[0], r[1]); })
+    .catch(function(){ _doExport(null, null); });
+}
+function _doExport(bgIdb, mediaIdb){
   try{
     var data={};
     for(var i=0;i<localStorage.length;i++){
       var k=localStorage.key(i);
       data[k]=localStorage.getItem(k);
     }
+    // Ajout du contenu IndexedDB, sérialisé comme le reste.
+    var bg = bgIdb || customBgImages;
+    var md = mediaIdb || mediaLib;
+    if(bg) data[BG_IMAGES_KEY] = JSON.stringify(bg);
+    if(md) data[MEDIA_KEY] = JSON.stringify(md);
     var payload={app:'Pulsations — Jeu de Couple',exportedAt:new Date().toISOString(),data:data};
     var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     var url=URL.createObjectURL(blob);
@@ -11682,12 +11745,27 @@ function importAllData(file){
       var keys=Object.keys(data);
       if(!keys.length) throw new Error('fichier vide');
       if(!confirm('Importer '+keys.length+' élément(s) ?\n\nCela va REMPLACER les données actuelles de cet appareil (gages perso, pratiques, accessoires, profils, historique...) par celles du fichier. Cette action est irréversible.')) return;
-      var okCount=0;
+      var okCount=0, gros=[];
       keys.forEach(function(k){
+        // Les images repartent en IndexedDB (trop volumineuses pour localStorage).
+        if(k===BG_IMAGES_KEY || k===MEDIA_KEY){ gros.push(k); okCount++; return; }
         try{ localStorage.setItem(k, data[k]); okCount++; }catch(e2){}
       });
-      alert('Import réussi : '+okCount+' élément(s) restauré(s). La page va se recharger.');
-      location.reload();
+      var jobs = gros.map(function(k){
+        var val; try{ val=JSON.parse(data[k]); }catch(e3){ val=null; }
+        if(val===null) return Promise.resolve();
+        return idbSet(k, val).then(function(){
+          try{ localStorage.removeItem(k); }catch(e4){}
+        });
+      });
+      Promise.all(jobs).then(function(){
+        alert('Import réussi : '+okCount+' élément(s) restauré(s). La page va se recharger.');
+        location.reload();
+      }).catch(function(){
+        alert('Import partiel : les images n\'ont pas pu être restaurées (espace insuffisant).');
+        location.reload();
+      });
+      return;
     }catch(err){
       alert('Fichier invalide ou corrompu — import annulé.\n('+err.message+')');
     }
@@ -12605,6 +12683,10 @@ function lbOpen(dossierId, i){
   if(!m) return;
   _lbPhotos = (m.photos||[]).slice();
   _lbIdx = i||0;
+  _lbShow();
+}
+// Création (une seule fois) puis affichage du calque, indépendamment de la source des photos.
+function _lbShow(){
   var ov=document.getElementById('lightbox');
   if(!ov){
     ov=document.createElement('div');
@@ -12635,6 +12717,14 @@ function _lbRender(){
   var im=document.getElementById('lb-img'), ct=document.getElementById('lb-count');
   if(im) im.style.backgroundImage = "url('"+_lbPhotos[_lbIdx]+"')";
   if(ct) ct.textContent = (_lbIdx+1)+' / '+_lbPhotos.length;
+}
+// Agrandit l'illustration de l'étape solo en cours.
+function soloPhotoZoom(){
+  var pool=G.gagesByLevel[G.level]||[];
+  var g=pool[G.gageIdx];
+  if(!g || !g._photo) return;
+  _lbPhotos=[g._photo]; _lbIdx=0;
+  _lbShow();
 }
 function lbNext(){ if(!_lbPhotos.length) return; _lbIdx=(_lbIdx+1)%_lbPhotos.length; _lbRender(); }
 function lbPrev(){ if(!_lbPhotos.length) return; _lbIdx=(_lbIdx-1+_lbPhotos.length)%_lbPhotos.length; _lbRender(); }
