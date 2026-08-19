@@ -3231,16 +3231,172 @@ var PRATIQUES_BASE = {
 }
 
 var ACCESSOIRES_BASE = {
-  "Ambiance":       ["Appareil photo","Bougie","Musique","Plume","Huile de massage","Lubrifiant","Lingerie / sous-vêtements sexy"],
+  "Ambiance":       ["Appareil photo","Bougie","Musique","Plume","Plumeau","Huile de massage","Lubrifiant","Lingerie / sous-vêtements sexy"],
   "Boissons":       ["Champagne","Vin"],
   "Aliments":       ["Chantilly","Fraises","Glaçons","Nutella"],
   "Objets sexuels": ["Gode","Gode anal","Double gode","Gode ceinture","Anneau vibrant","Vibromasseur","Plug anal"],
-  "BDSM":           ["Cravache","Fouet","Menottes","Masque / Bandeau","Pinces à seins","Ruban / foulard de soie"],
+  "BDSM":           ["Cravache","Fouet","Menottes","Masque / Bandeau","Pinces à seins","Ruban / foulard de soie","Masque BDSM","Sangles de contention poignets"],
   "Vidéos":         ["Vidéos porno","Films érotiques"],
   "Sans accessoires":["Aucun"]
 };
 
 var GAGES_BASE = [
+
+
+
+
+
+/* ══════ Contention — gages jouables par la personne attachée ══════ */
+{texte:"{prenom}, poignets sanglés, {partenaire} vient présenter son sexe devant ta bouche. À toi de faire le reste, sans les mains **2 minutes**.", niveau:3,genre:"Femme",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, poignets sanglés, {partenaire} s'installe au-dessus de ton visage. Sers-toi uniquement de ta bouche et de ta langue **2 minutes**.", niveau:3,genre:"Homme",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, attaché(e) et masqué(e), tu ne vois pas venir — mais tu sais quoi faire dès que ça touche tes lèvres **90 secondes**.", niveau:3,genre:"Mixte",pratiques:["oral_actif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, sanglée, {partenaire} contrôle le rythme en tenant ta nuque. Laisse-toi guider **2 minutes**.", niveau:4,genre:"Femme",pratiques:["oral_actif","soumission_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, sanglé, {partenaire} s'assoit sur ton visage et décide seule de la durée **2 minutes**.", niveau:4,genre:"Homme",pratiques:["oral_actif","soumission_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, poignets attachés, fais jouir {partenaire} uniquement avec ta bouche. Tu n'as rien d'autre. Durée libre.", niveau:5,genre:"Mixte",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, attaché(e), tu n'as le droit de t'arrêter que lorsque {partenaire} te le dit.", niveau:4,genre:"Mixte",pratiques:["oral_actif","soumission_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, poignets sanglés au-dessus de la tête, c'est toi qui donnes le rythme avec le bassin **2 minutes**.", niveau:4,genre:"Femme",pratiques:["penetration_f","penetration_h"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, sanglé sur le dos, {partenaire} te chevauche — pousse du bassin autant que tu peux **2 minutes**.", niveau:4,genre:"Homme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, attaché(e), tu ne peux ni toucher ni retenir {partenaire}. Seul ton bassin répond.", niveau:5,genre:"Mixte",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, attaché(e) mais pas réduit(e) au silence : dis à {partenaire} exactement quoi faire, il/elle obéit **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["domination_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, sanglé(e), tu ne peux rien faire de tes mains — alors ordonne. {partenaire} exécute chaque consigne.", niveau:4,genre:"Mixte",pratiques:["domination_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, poignets attachés, décris à voix haute ce que tu veux qu'on te fasse, sans rien omettre **1 minute**.", niveau:2,genre:"Mixte",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, sanglée et masquée, {partenaire} s'occupe de toi avec la bouche. Tu ne peux que subir **2 minutes**.", niveau:3,genre:"Femme",pratiques:["oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé et masqué, {partenaire} s'occupe de toi avec la bouche. Tu ne peux que subir **2 minutes**.", niveau:3,genre:"Homme",pratiques:["oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets attachés, {partenaire} te caresse jusqu'au bord puis s'arrête. Trois fois **2 minutes**.", niveau:4,genre:"Mixte",pratiques:["masturb_passif","masturb_passif_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglée, {partenaire} te pénètre au rythme qu'il choisit. Tu n'as aucun contrôle **2 min 30**.", niveau:4,genre:"Femme",pratiques:["penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé, {partenaire} te chevauche et décide de tout **2 min 30**.", niveau:4,genre:"Homme",pratiques:["penetration_h"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e), {partenaire} explore ton corps sans que tu puisses orienter ses mains **2 minutes**.", niveau:2,genre:"Mixte",pratiques:["masturb_passif","masturb_passif_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e) et masqué(e), un doigt lubrifié s'invite pendant que la bouche continue **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["anal_passif_1","oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets attachés, tu reçois une claque, puis une caresse, sans jamais savoir laquelle vient **90 secondes**.", niveau:3,genre:"Mixte",pratiques:["fetish_passif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e), {partenaire} pose les pinces et décide quand les retirer.", niveau:4,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Sangles de contention poignets","Pinces à seins"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e), {partenaire} règle l'intensité du vibromasseur sur toi. Tu ne peux pas l'arrêter **2 minutes**.", niveau:4,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Sangles de contention poignets","Vibromasseur"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e) et masqué(e), {partenaire} alterne glaçon et bouche sur ta peau **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} fait fondre de la chantilly sur toi et vient la chercher **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["oral_passif"],accessoires:["Sangles de contention poignets","Chantilly"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} t'embrasse partout sauf sur la bouche **1 minute**.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e), {partenaire} te déshabille entièrement à son rythme, sans que tu puisses l'aider.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e) et masqué(e), devine avec quoi {partenaire} te touche. Trois essais.", niveau:2,genre:"Mixte",pratiques:[],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets attachés, tu ne peux pas te couvrir : {partenaire} te regarde en silence **30 secondes**.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e) jusqu'au bout, {partenaire} te fait jouir comme il/elle l'entend. Durée libre.", niveau:5,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e), fais jouir {partenaire} avec ta bouche pendant qu'il/elle te caresse. Durée libre.", niveau:5,genre:"Mixte",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+/* ══════ Contention — anal doux (niv.1-2) et sexe oral ══════ */
+{texte:"{prenom}, poignets sanglés, {partenaire} caresse le bas de ton dos et descend lentement, sans jamais aller plus loin **45 secondes**.", niveau:1,genre:"Mixte",pratiques:["anal_passif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et masse ses fesses lentement, en descendant un peu plus à chaque passage **1 minute**.", niveau:1,genre:"Mixte",pratiques:["anal_actif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé et masqué, {partenaire} promène un doigt lubrifié entre tes fesses, sans entrer **45 secondes**.", niveau:1,genre:"Homme",pratiques:["anal_passif_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglée et masquée, {partenaire} promène un doigt lubrifié entre tes fesses, sans entrer **45 secondes**.", niveau:1,genre:"Femme",pratiques:["anal_passif_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} face au lit et embrasse le bas de son dos, de plus en plus bas **1 minute**.", niveau:1,genre:"Femme",pratiques:["anal_actif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} face au lit et embrasse le bas de son dos, de plus en plus bas **1 minute**.", niveau:1,genre:"Homme",pratiques:["anal_actif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, tu ne peux pas te dérober pendant que {partenaire} te caresse là, du bout du doigt lubrifié **1 minute**.", niveau:2,genre:"Mixte",pratiques:["anal_passif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, mets-lui le masque, et va-y très lentement avec un doigt généreusement lubrifié **90 secondes**.", niveau:2,genre:"Mixte",pratiques:["anal_actif_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé, dis à voix haute quand c'est agréable — {partenaire} s'arrête dès que tu le demandes **90 secondes**.", niveau:2,genre:"Homme",pratiques:["anal_passif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglée, dis à voix haute quand c'est agréable — {partenaire} s'arrête dès que tu le demandes **90 secondes**.", niveau:2,genre:"Femme",pratiques:["anal_passif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et alterne caresse anale et caresse devant, sans prévenir **90 secondes**.", niveau:2,genre:"Femme",pratiques:["anal_actif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et alterne caresse anale et caresse devant, sans prévenir **90 secondes**.", niveau:2,genre:"Homme",pratiques:["anal_actif_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, menotté(e) et masqué(e), tu ne sais pas où le prochain doigt va se poser **1 minute**.", niveau:2,genre:"Mixte",pratiques:["anal_passif_1"],accessoires:["Masque BDSM","Menottes"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, tu ne peux pas guider {partenaire} : sa bouche décide de tout **90 secondes**.", niveau:2,genre:"Mixte",pratiques:["oral_passif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et embrasse-le/la partout, en évitant volontairement l'essentiel **90 secondes**.", niveau:2,genre:"Mixte",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé et masqué, tu ne verras pas venir la bouche de {partenaire} **90 secondes**.", niveau:2,genre:"Homme",pratiques:["oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglée et masquée, tu ne verras pas venir la bouche de {partenaire} **90 secondes**.", niveau:2,genre:"Femme",pratiques:["oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} au lit et prends-le en bouche à ton rythme, en t'arrêtant quand tu veux **2 minutes**.", niveau:3,genre:"Femme",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} au lit et descends entre ses cuisses, en t'arrêtant quand tu veux **2 minutes**.", niveau:3,genre:"Homme",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés au-dessus de la tête, subis la bouche de {partenaire} sans pouvoir la retenir **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["oral_passif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e) et sanglé(e), compte à voix haute chaque fois que {partenaire} s'arrête **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, mets le masque, et alterne bouche et main sans qu'il/elle sache laquelle arrive **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["oral_actif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e) à genoux, tu ne peux utiliser que ta bouche. Les mains sont hors jeu **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et amène-le au bord avec la bouche, trois fois, sans jamais le laisser finir.", niveau:4,genre:"Femme",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et amène-la au bord avec la bouche, trois fois, sans jamais la laisser finir.", niveau:4,genre:"Homme",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e) et masqué(e), interdiction de jouir dans la bouche de {partenaire} sans sa permission.", niveau:4,genre:"Mixte",pratiques:["oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, masque-le/la, et alterne bouche chaude et glaçon **2 minutes**.", niveau:4,genre:"Mixte",pratiques:["oral_actif"],accessoires:["Masque BDSM","Sangles de contention poignets","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} utilise sa bouche jusqu'au bout. Tu ne peux rien faire d'autre que subir.", niveau:5,genre:"Mixte",pratiques:["oral_passif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} une dernière fois et fais-le/la jouir uniquement avec ta bouche. Durée libre.", niveau:5,genre:"Mixte",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e) et sanglé(e) jusqu'à la fin, tu ne verras rien de ce que la bouche de {partenaire} te fait.", niveau:5,genre:"Mixte",pratiques:["oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+/* ══════ BDSM combiné avec les autres accessoires ══════ */
+{texte:"{prenom}, masque sur les yeux de {partenaire}, fais courir la plume sur tout son corps **1 minute**. Il/elle doit deviner où elle passe.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Masque BDSM","Plume"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} te caresse à la plume et tu ne peux pas te dérober **1 minute**.", niveau:2,genre:"Mixte",pratiques:[],accessoires:["Sangles de contention poignets","Plume"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e) et sanglé(e), la plume passe partout sauf là où tu voudrais **90 secondes**.", niveau:3,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Plume"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, masque-le/la, puis alterne plume et main sans prévenir **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["domination_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Plume"],modes:[],solo:false},
+{texte:"{prenom}, masque le regard de {partenaire} et promène le plumeau lentement de la nuque aux chevilles **1 minute**.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Masque BDSM","Plumeau"],modes:[],solo:false},
+{texte:"{prenom}, poignets attachés au-dessus de la tête, subis le plumeau sans bouger **90 secondes**.", niveau:2,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Sangles de contention poignets","Plumeau"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e) et sanglé(e), {partenaire} alterne plumeau et souffle chaud **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Plumeau"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et fais-le/la craquer au plumeau : il/elle doit demander l'arrêt à voix haute.", niveau:4,genre:"Mixte",pratiques:["domination_2"],accessoires:["Sangles de contention poignets","Plumeau"],modes:[],solo:false},
+{texte:"{prenom}, masque sur les yeux de {partenaire}, fais fondre un glaçon sur sa peau sans lui dire où **1 minute**.", niveau:2,genre:"Mixte",pratiques:[],accessoires:["Masque BDSM","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, tu ne peux pas échapper au glaçon que {partenaire} promène sur toi **1 minute**.", niveau:2,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Sangles de contention poignets","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, masque-le/la, puis alterne glaçon et bouche chaude **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["domination_1","oral_actif"],accessoires:["Masque BDSM","Sangles de contention poignets","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, sanglée et masquée, {partenaire} fait descendre un glaçon de ta gorge jusqu'entre tes cuisses.", niveau:3,genre:"Femme",pratiques:["soumission_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, sanglé et masqué, {partenaire} fait descendre un glaçon de ton torse jusqu'en bas.", niveau:3,genre:"Homme",pratiques:["soumission_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et alterne glaçon puis pénétration, sans le/la prévenir du changement **2 min 30**.", niveau:4,genre:"Mixte",pratiques:["domination_2","penetration_h","penetration_f"],accessoires:["Sangles de contention poignets","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, attache les poignets de {partenaire} et dépose de la chantilly sur trois endroits de ton choix.", niveau:2,genre:"Mixte",pratiques:["domination_1"],accessoires:["Sangles de contention poignets","Chantilly"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e) et sanglé(e), {partenaire} lèche la chantilly là où il/elle l'a posée **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["soumission_1","oral_actif"],accessoires:["Masque BDSM","Sangles de contention poignets","Chantilly"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, couvre-le de chantilly et prends tout ton temps pour tout récupérer.", niveau:3,genre:"Femme",pratiques:["domination_1","oral_actif"],accessoires:["Sangles de contention poignets","Chantilly"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, couvre-la de chantilly et prends tout ton temps pour tout récupérer.", niveau:3,genre:"Homme",pratiques:["domination_1","oral_actif"],accessoires:["Sangles de contention poignets","Chantilly"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e), tu ne peux rien faire pendant que {partenaire} finit ce qu'il/elle a commencé.", niveau:4,genre:"Mixte",pratiques:["soumission_2","oral_passif"],accessoires:["Sangles de contention poignets","Chantilly"],modes:[],solo:false},
+{texte:"{prenom}, masque sur les yeux de {partenaire} : il/elle doit deviner ce qu'il/elle goûte. Trois essais.", niveau:2,genre:"Mixte",pratiques:[],accessoires:["Masque BDSM","Fraises"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et fais-lui manger une fraise, très lentement, sans les mains.", niveau:2,genre:"Mixte",pratiques:["domination_1"],accessoires:["Sangles de contention poignets","Fraises"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e) et masqué(e), {partenaire} dépose du Nutella où il/elle veut et vient le chercher.", niveau:3,genre:"Mixte",pratiques:["soumission_1","oral_actif"],accessoires:["Masque BDSM","Sangles de contention poignets","Nutella"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} t'enduit d'huile entièrement, sans jamais te libérer **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Sangles de contention poignets","Huile de massage"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, masque-le/la, et masse-le/la à l'huile en évitant volontairement l'essentiel **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["domination_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Huile de massage"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e) et sanglé(e), tu ne vois pas où la cire tiède va tomber. Ne bouge pas.", niveau:4,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Masque BDSM","Sangles de contention poignets","Bougie"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et fais couler quelques gouttes de cire tiède, en annonçant chaque zone.", niveau:4,genre:"Mixte",pratiques:["domination_2"],accessoires:["Sangles de contention poignets","Bougie"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, masque-le/la, puis alterne cravache et caresse sans prévenir **2 minutes**.", niveau:4,genre:"Mixte",pratiques:["domination_2","fetish_actif_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Cravache"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e) et masqué(e), tu comptes chaque coup de cravache à voix haute. Dix au total.", niveau:4,genre:"Mixte",pratiques:["soumission_2","fetish_actif_1"],accessoires:["Masque BDSM","Sangles de contention poignets","Cravache"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et pose les pinces pendant qu'il/elle ne voit rien. Il/elle dit stop quand c'est trop.", niveau:4,genre:"Mixte",pratiques:["domination_2"],accessoires:["Masque BDSM","Sangles de contention poignets","Pinces à seins"],modes:[],solo:false},
+{texte:"{prenom}, sanglée et masquée, {partenaire} règle l'intensité et tu n'as aucun moyen de l'arrêter **2 minutes**.", niveau:4,genre:"Femme",pratiques:["soumission_2"],accessoires:["Masque BDSM","Sangles de contention poignets","Vibromasseur"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et amène-la trois fois au bord avec le vibromasseur, sans jamais la laisser finir.", niveau:4,genre:"Homme",pratiques:["domination_2"],accessoires:["Sangles de contention poignets","Vibromasseur"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e) et masqué(e), interdiction de jouir tant que {partenaire} n'a pas décidé. Durée libre.", niveau:5,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Masque BDSM","Sangles de contention poignets","Vibromasseur"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et fais-lui boire une gorgée de champagne à la bouche, puis descends.", niveau:3,genre:"Mixte",pratiques:["domination_1","oral_actif"],accessoires:["Sangles de contention poignets","Champagne"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e) et sanglé(e) jusqu'au bout, {partenaire} utilise tout ce qu'il/elle veut sur toi. Durée libre.", niveau:5,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, masque-le/la, et fais-le/la jouir en alternant glaçon et bouche.", niveau:5,genre:"Mixte",pratiques:["domination_2","oral_actif"],accessoires:["Masque BDSM","Sangles de contention poignets","Glaçons"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e), laisse {partenaire} finir avec la plume, la bouche, ou les deux. Tu ne choisis rien.", niveau:5,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Sangles de contention poignets","Plume"],modes:[],solo:false},
+/* ══════ BDSM — Masque + sangles de contention (50 gages) ══════ */
+{texte:"{prenom}, pose le masque sur le visage de {partenaire} et attends **30 secondes** sans rien faire d'autre.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, boucle les sangles autour des poignets de {partenaire} et laisse-le/la s'y habituer **30 secondes**.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masque sur les yeux, décris à voix haute ce que tu imagines que {partenaire} va faire.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} te caresse le visage et le cou **45 secondes**. Tu ne peux pas répondre.", niveau:1,genre:"Homme",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} te caresse la nuque et les épaules **45 secondes**.", niveau:1,genre:"Femme",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masque le regard de {partenaire} et embrasse-le/la là où il/elle ne s'y attend pas.", niveau:1,genre:"Femme",pratiques:[],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, masque le regard de {partenaire} et souffle lentement sur sa peau, sans jamais la toucher **30 secondes**.", niveau:1,genre:"Homme",pratiques:[],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, attache les poignets de {partenaire} dans son dos et fais le tour de lui/elle en le/la regardant.", niveau:1,genre:"Mixte",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sangles aux poignets, demande à {partenaire} la permission avant chaque geste pendant **1 minute**.", niveau:1,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masque et sangles en place, {partenaire} décide seul(e) du prochain geste.", niveau:1,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} te déshabille entièrement à son rythme.", niveau:2,genre:"Mixte",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masque sur les yeux, laisse {partenaire} te caresser où il/elle veut **1 minute**.", niveau:2,genre:"Mixte",pratiques:["masturb_passif","masturb_passif_f"],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, attache les poignets de {partenaire} et caresse-le lentement par-dessus le tissu **1 minute**.", niveau:2,genre:"Femme",pratiques:["masturb_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache les poignets de {partenaire} et caresse-la lentement, sans jamais aller au bout **1 minute**.", niveau:2,genre:"Homme",pratiques:["masturb_actif_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e), devine quelle partie du corps de {partenaire} te touche. Trois essais.", niveau:2,genre:"Mixte",pratiques:[],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, poignets attachés au-dessus de la tête, {partenaire} embrasse ton corps de haut en bas **90 secondes**.", niveau:2,genre:"Femme",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets attachés au-dessus de la tête, {partenaire} embrasse ton torse et descend **90 secondes**.", niveau:2,genre:"Homme",pratiques:[],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masque le regard de {partenaire}, puis alterne caresse et absence totale de contact **1 minute**.", niveau:2,genre:"Mixte",pratiques:["domination_1"],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, sangles et masque en place, {partenaire} t'ordonne de ne pas faire un bruit **1 minute**.", niveau:2,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et prends ton temps pour lui retirer son dernier vêtement.", niveau:2,genre:"Mixte",pratiques:["domination_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés et masqué, laisse {partenaire} s'occuper de toi avec la bouche **2 minutes**.", niveau:3,genre:"Homme",pratiques:["soumission_1","oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés et masquée, laisse {partenaire} s'occuper de toi avec la bouche **2 minutes**.", niveau:3,genre:"Femme",pratiques:["soumission_1","oral_passif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, mets-lui le masque, puis prends-le/la en bouche sans prévenir **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["domination_1","oral_actif"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets attachés, tu ne peux pas guider {partenaire}. Dis-lui seulement à voix haute ce que tu veux.", niveau:3,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masque sur les yeux de {partenaire}, fais-le/la deviner ce que tu utilises pour le/la caresser.", niveau:3,genre:"Mixte",pratiques:["domination_1"],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et amène-le au bord avec la main, puis arrête-toi net **20 secondes**.", niveau:3,genre:"Femme",pratiques:["domination_1","masturb_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et amène-la au bord avec les doigts, puis arrête-toi net **20 secondes**.", niveau:3,genre:"Homme",pratiques:["domination_1","masturb_actif_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masqué(e) et sanglé(e), compte à voix haute chaque caresse que {partenaire} te donne.", niveau:3,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés dans le dos, à genoux, laisse {partenaire} décider de la suite.", niveau:3,genre:"Mixte",pratiques:["soumission_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} au montant du lit et embrasse-le/la partout sauf là où il/elle voudrait **2 minutes**.", niveau:3,genre:"Mixte",pratiques:["domination_1"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et prends-le/la sans lui laisser reprendre le contrôle **2 min 30**.", niveau:4,genre:"Mixte",pratiques:["domination_2","penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masquée et sanglée, tu ne sais pas ce qui vient. {partenaire} mène tout **2 minutes**.", niveau:4,genre:"Femme",pratiques:["soumission_2","penetration_f"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masqué et sanglé, tu ne sais pas ce qui vient. {partenaire} mène tout **2 minutes**.", niveau:4,genre:"Homme",pratiques:["soumission_2","penetration_h"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} face au mur et prends-le/la par derrière **2 min 30**.", niveau:4,genre:"Mixte",pratiques:["domination_2","penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, {partenaire} te fait attendre autant qu'il/elle le décide avant de continuer.", niveau:4,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masque le regard de {partenaire} et alterne trois rythmes différents sans prévenir **2 minutes**.", niveau:4,genre:"Femme",pratiques:["domination_2"],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, masque le regard de {partenaire} et change de position sans la prévenir **2 minutes**.", niveau:4,genre:"Homme",pratiques:["domination_2"],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e) et masqué(e), interdiction de jouir avant que {partenaire} ne l'autorise.", niveau:4,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire}, mets le masque, et donne-lui **10 fessées** comptées à voix haute.", niveau:4,genre:"Mixte",pratiques:["domination_2","fetish_actif_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, garde {partenaire} attaché(e) et amène-le/la trois fois au bord sans jamais le/la laisser finir.", niveau:4,genre:"Mixte",pratiques:["domination_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e) et masqué(e), laisse {partenaire} te faire jouir comme il/elle l'entend. Durée libre.", niveau:5,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} une dernière fois et emmène-le/la jusqu'au bout, sans t'arrêter.", niveau:5,genre:"Mixte",pratiques:["domination_2","penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masquée jusqu'à la fin, tu ne verras rien de ce qui t'arrive. Laisse-toi aller complètement.", niveau:5,genre:"Femme",pratiques:["soumission_2"],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, masqué jusqu'à la fin, tu ne verras rien de ce qui t'arrive. Laisse-toi aller complètement.", niveau:5,genre:"Homme",pratiques:["soumission_2"],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés, jouis sans pouvoir toucher {partenaire} ni toi-même.", niveau:5,genre:"Mixte",pratiques:["soumission_2","masturb_passif","masturb_passif_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, retire le masque de {partenaire} au dernier moment : il/elle finit en te regardant.", niveau:5,genre:"Mixte",pratiques:["domination_2"],accessoires:["Masque BDSM"],modes:[],solo:false},
+{texte:"{prenom}, attache {partenaire} et fais-le/la jouir uniquement avec ta bouche, sans qu'il/elle puisse bouger.", niveau:5,genre:"Mixte",pratiques:["domination_2","oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, garde les sangles jusqu'au bout : {partenaire} décide de tout jusqu'à la dernière seconde.", niveau:5,genre:"Mixte",pratiques:["soumission_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, masque et sangles en place, {partenaire} choisit la position finale. Tu subis, c'est tout.", niveau:5,genre:"Mixte",pratiques:["soumission_2","penetration_h","penetration_f"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, libère {partenaire} de ses liens et finissez ensemble, sans aucune retenue. Durée libre.", niveau:5,genre:"Mixte",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
 
 /* ══════ NIVEAU 1 — SENSUEL ══════
    Questions coquines, caresses, bisous, massages
@@ -7644,6 +7800,7 @@ function launchGame() {
   G.level=1; G.gageIdx=0; G.scores={}; G.usedKama=[]; G.playedTexts=new Set(); G.progressLog=[]; G._kamaShown=0; G._prevGages=[]; G._recentGages=[]; G._sessionSeenGages=[]; G._lastBonusTitle=null;
   G._statRealized=0; G._statChanged=0; G._changedThisSession=[];
   G._pendingBonusCard=null; G._pendingBonusWinner=null; G._bonusChoiceCtx=null;
+  G._contenu=null; // la désignation se refait à chaque partie
   // NB : on ne réinitialise PAS G._rolesChosen / G._storyDuo ici — en mode Histoire ils viennent
   // d'être choisis par le joueur (thème + rôles) et servent au fond d'écran comme aux scènes.
   if(G.mode!=='story'){ G._rolesChosen=false; G._storyDuo=null; }
@@ -7665,7 +7822,9 @@ function launchGame() {
   [1,2,3,4].forEach(function(lvl){
     if((G.gagesByLevel[lvl]||[]).length<2) smallLevels.push(lvl);
   });
-  if(smallLevels.length>0){
+  // En mode Histoire, la trame est fixe et il n'y a aucune pratique à cocher :
+  // cet avertissement n'a pas de sens et propose une action impossible.
+  if(smallLevels.length>0 && G.mode!=='story'){
     var warn=document.createElement('div');
     warn.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(240,128,64,.9);color:#fff;padding:8px 16px;border-radius:10px;font-size:13px;z-index:200;text-align:center;max-width:300px';
     warn.textContent='⚠️ Niv.'+smallLevels.join(', ')+' : peu de gages disponibles. Ajoutez des pratiques pour enrichir.';
@@ -8991,6 +9150,128 @@ function prepareGages() {
       if(G.gagesByLevel[lvl] && G.gagesByLevel[lvl].length>1) G.gagesByLevel[lvl]=interleave(G.gagesByLevel[lvl]);
     });
   }
+  // Règle de contention appliquée EN DERNIER : elle prime sur les gages perso,
+  // les favoris et la curation admin, car elle décrit une contrainte physique.
+  injectContentionIntro();
+  applyContentionRule();
+}
+// Premier gage de la partie : désigner qui porte les sangles pour toute la soirée.
+function injectContentionIntro(){
+  if(!contentionActive()) return;
+  var a = G.players[0], b = G.players[1];
+  var intro = {
+    texte: '🔗 **Qui porte les sangles ce soir ?**\n\n'
+      + 'Choisissez maintenant : la personne désignée gardera les poignets attachés jusqu\'à la fin de la partie. '
+      + 'Elle ne pourra plus agir — c\'est l\'autre qui mènera l\'essentiel des gages.\n\n'
+      + '• ' + a.prenom + '\n• ' + b.prenom,
+    niveau:1, genre:'Mixte', pratiques:[], accessoires:['Sangles de contention poignets'],
+    modes:[], solo:false, _p:a.prenom, _ch:false, _kama:false, _contentionIntro:true
+  };
+  if(!G.gagesByLevel[1]) G.gagesByLevel[1]=[];
+  G.gagesByLevel[1].unshift(intro);
+}
+// Appelé depuis la carte de jeu quand le couple a choisi.
+function setContenu(prenom){
+  G._contenu = prenom;
+  var lvl=G.level;
+  prepareGages();                 // reconstruit en appliquant la contrainte
+  G.level=lvl;
+  // On enchaîne sur le premier vrai gage : le choix est fait, la carte n'a plus lieu d'être.
+  G.gageIdx = ((G.gagesByLevel[lvl]||[])[0]||{})._contentionIntro ? 1 : 0;
+  vibrate(12);
+  autoSaveGame();
+  displayGage();
+}
+
+/* ══════════════ RÈGLE DE CONTENTION ══════════════
+   Si les sangles sont cochées, un joueur est attaché pour toute la partie.
+   Il ne peut plus AGIR : tous les gages qui lui demandent une action sont
+   réattribués à l'autre joueur. Cette règle passe au-dessus de tout le reste. */
+function contentionActive(){
+  return (G.acc||[]).indexOf('Sangles de contention poignets')>=0 && G.players.length===2;
+}
+// Un gage exige-t-il que le joueur désigné agisse ?
+function _gageDemandeAction(g){
+  if(!g) return false;
+  // Être attaché n'est pas être inerte : bouche, bassin et voix restent disponibles.
+  // Les gages marqués `sansMains` sont donc jouables par la personne entravée.
+  if(g.sansMains) return false;
+  if(g._kama) return true;               // position à réaliser : les deux agissent
+  var pr = g.pratiques||[];
+  if(pr.some(function(p){ return p.indexOf('_actif')>=0 || p.indexOf('domination')===0; })) return true;
+  if(pr.some(function(p){ return p.indexOf('_passif')>=0 || p.indexOf('soumission')===0; })) return false;
+  // Sans pratique explicite : seuls les verbes qui exigent VRAIMENT les mains sont
+  // interdits. Embrasser, lécher ou parler restent possibles poignets liés.
+  var t = (g.texte||'').toLowerCase();
+  var besoinDesMains = ['attache','caresse','masse','déshabille','guide','dépose','verse',
+    'promène','installe','plaque','retourne','soulève','mets','claque','tiens','écarte',
+    'branle','doigte','applique','étale','noue','bande'];
+  return besoinDesMains.some(function(v){ return t.indexOf('} '+v)>=0 || t.indexOf(', '+v)>=0; });
+}
+function applyContentionRule(){
+  if(!contentionActive() || !G._contenu) return;
+  var libre = G.players.filter(function(p){ return p.prenom!==G._contenu; })[0];
+  if(!libre) return;
+  [1,2,3,4,5].forEach(function(lvl){
+    var arr = G.gagesByLevel[lvl];
+    if(!arr || !arr.length) return;
+    // 1) Échanger : un gage d'action confié à l'attaché contre un gage passif confié au libre.
+    arr.forEach(function(g, i){  // lvl reste accessible par fermeture
+      if(g._contentionIntro) return;              // la carte de désignation ne se réattribue pas
+      if(g._p!==G._contenu || !_gageDemandeAction(g)) return;
+      for(var j=0;j<arr.length;j++){
+        var o = arr[j];
+        if(o._contentionIntro) continue;          // ni ne sert de monnaie d'échange
+        if(o._p===libre.prenom && !_gageDemandeAction(o)){
+          var tmp = g._p; g._p = o._p; o._p = tmp;   // l'échange préserve les quotas
+          return;
+        }
+      }
+      // 2) Aucun échange possible : on REMPLACE le gage par un gage passif compatible,
+      //    plutôt que de le donner au joueur libre — sinon les quotas se déséquilibrent.
+      var attache = G.players.filter(function(p){ return p.prenom===G._contenu; })[0];
+      var remp = shuffle(allGages().filter(function(x){
+        return x.niveau===lvl && !_gageDemandeAction(x) && gageOk(x, attache, lvl)
+            && !arr.some(function(y){ return y.texte===x.texte; });
+      }))[0];
+      if(remp) arr[i] = Object.assign({}, remp, { _p:G._contenu, _ch:false, _kama:false });
+      else g._p = libre.prenom;   // dernier recours seulement
+    });
+  });
+  enrichirContention();
+}
+/* Quand quelqu'un est attaché, les gages écrits pour la contention doivent dominer la
+   partie — sinon ils se diluent parmi les milliers de gages ordinaires. On remplace donc
+   une partie des gages de la personne entravée par des gages spécifiquement pensés pour elle. */
+function enrichirContention(){
+  var attache = G.players.filter(function(p){ return p.prenom===G._contenu; })[0];
+  if(!attache) return;
+  var candidats = allGages().filter(function(g){
+    return (g.accessoires||[]).indexOf('Sangles de contention poignets')>=0
+        && !_gageDemandeAction(g);
+  });
+  [1,2,3,4,5].forEach(function(lvl){
+    var arr = G.gagesByLevel[lvl];
+    if(!arr || !arr.length) return;
+    var siens = arr.filter(function(g){ return g._p===G._contenu && !g._contentionIntro; });
+    if(!siens.length) return;
+    var voulu = Math.max(1, Math.round(siens.length/2)); // ~la moitié de ses gages
+    var deja = siens.filter(function(g){ return (g.accessoires||[]).indexOf('Sangles de contention poignets')>=0; }).length;
+    if(deja >= voulu) return;
+    var dispo = shuffle(candidats.filter(function(g){
+      return g.niveau===lvl && gageOk(g, attache, lvl)
+          && !arr.some(function(x){ return x.texte===g.texte; });
+    }));
+    var aRemplacer = siens.filter(function(g){ return (g.accessoires||[]).indexOf('Sangles de contention poignets')<0; });
+    for(var k=0; k<aRemplacer.length && deja<voulu && dispo.length; k++){
+      var cible = aRemplacer[k];
+      var idx = arr.indexOf(cible);
+      if(idx<0) continue;
+      var neuf = dispo.shift();
+      arr[idx] = Object.assign({}, neuf, { _p:G._contenu, _ch:false, _kama:false });
+      deja++;
+    }
+  });
 }
 
 // ── DISPLAY GAGE ──
@@ -9379,6 +9660,20 @@ function renderGageCard(gage, player, partner) {
     .replace(/{role_f}/g, '<strong style="color:var(--rose)">'+roleFLabel+'</strong>')
     .replace(/[*][*]([^*]+)[*][*]/g, '<strong style="color:var(--gold)">$1</strong>');
   txt = gage._trame ? txt : formatGageBodyHTML(txt);
+  // Gage de désignation : deux boutons plutôt qu'une consigne à interpréter.
+  if(gage._contentionIntro){
+    var _a=G.players[0], _b=G.players[1];
+    txt = txt.replace(/•[^<]*/g,'')
+      + '<div style="display:flex;gap:9px;margin-top:14px">'
+      + '<button class="btn ghost sm" style="flex:1;margin:0" onclick="setContenu(\''+_a.prenom.replace(/'/g,"\\'")+'\')">🔗 '+_a.prenom+'</button>'
+      + '<button class="btn ghost sm" style="flex:1;margin:0" onclick="setContenu(\''+_b.prenom.replace(/'/g,"\\'")+'\')">🔗 '+_b.prenom+'</button>'
+      + '</div>';
+  }
+  // Rappel permanent : qui est attaché, pour lever toute ambiguïté en cours de partie.
+  if(G._contenu && !gage._contentionIntro){
+    txt = '<div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:5px 10px;background:rgba(216,166,87,.09);border-radius:8px;display:inline-block">🔗 '
+      + G._contenu + ' est attaché(e)</div><br>' + txt;
+  }
   // Vidéo de la médiathèque : bouton de lecture directement dans la partie.
   if(gage._video){
     txt = '<div onclick="vpOpen(\''+gage._video.url.replace(/'/g,"\\'")+'\',\''+(gage._video.desc||'').replace(/'/g,"\\'")+'\')" style="cursor:pointer;display:flex;gap:9px;align-items:center;justify-content:center;background:rgba(var(--accent-rgb,232,67,122),.14);border:1px solid rgba(var(--accent-rgb,232,67,122),.35);border-radius:11px;padding:11px 13px;margin-bottom:12px">'
