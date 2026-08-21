@@ -9202,6 +9202,7 @@ function prepareGages() {
   _ngTextesCache = null;
   injectContentionIntro();
   applyContentionRule();
+  garantirAccessoires();
 }
 // Premier gage de la partie : désigner qui porte les sangles pour toute la soirée.
 function injectContentionIntro(){
@@ -9372,8 +9373,66 @@ function _ngTextes(){
 var _ngTextesCache = null;
 function _gageProtege(g){
   if(!g) return false;
+  // Quand la contention est active, les gages de contention priment sur TOUT le reste
+  // (y compris « Prochaine partie ») : seuls les gages perso 100 % restent intouchables.
+  if(contentionActive() && G._contenu) return !!g._perso100;
   if(g._perso100 || g._custom || g._curated || g._fromNextGame) return true;
   return !!_ngTextes()[g.texte];   // présélection admin « Prochaine partie »
+}
+/* Chaque accessoire coché doit servir au moins une fois dans la partie : sinon on
+   demande au couple de sortir un objet qui ne sera jamais utilisé. On remplace donc
+   un gage ordinaire par un gage utilisant l'accessoire manquant, en respectant le
+   genre du destinataire et, si la contention est active, son état (attaché ou libre). */
+function garantirAccessoires(){
+  if(G.mode==='story' || G.mode==='kamasutra') return;   // trames fixes
+  var accs = (G.acc||[]).filter(function(a){ return a && a!=='Aucun'; });
+  if(!accs.length || G.players.length<1) return;
+  var pool = allGages();
+  accs.forEach(function(acc){
+    // Déjà présent ? on ne touche à rien.
+    var present = false;
+    [1,2,3,4,5].forEach(function(l){
+      (G.gagesByLevel[l]||[]).forEach(function(g){
+        if((g.accessoires||[]).indexOf(acc)>=0) present = true;
+      });
+    });
+    if(present) return;
+    // Cherche un gage utilisant cet accessoire, jouable par l'un des joueurs.
+    var cands = shuffle(pool.filter(function(g){
+      return (g.accessoires||[]).indexOf(acc)>=0 && !g.solo && !g._kama
+          && (g.accessoires||[]).every(function(a){ return (G.acc||[]).indexOf(a)>=0; });
+    }));
+    for(var k=0;k<cands.length;k++){
+      var g = cands[k];
+      var lvl = g.niveau;
+      var arr = G.gagesByLevel[lvl];
+      if(!arr || !arr.length) continue;
+      // Destinataire possible : respecte genre, pratiques et contrainte de contention.
+      var dest = shuffle(G.players.slice()).filter(function(p){
+        if(!gageOk(g, p, lvl)) return false;
+        if(contentionActive() && G._contenu){
+          if(p.prenom===G._contenu && _gageDemandeAction(g)) return false;
+          if(_gageImpossibleSurEntrave(g)) return false;
+        }
+        return true;
+      })[0];
+      if(!dest) continue;
+      // Remplace un gage de ce joueur, jamais un gage protégé ni la carte de désignation.
+      var idx = -1;
+      for(var i=0;i<arr.length;i++){
+        var x = arr[i];
+        if(x._contentionIntro || _gageProtege(x)) continue;
+        if(x._p!==dest.prenom) continue;
+        if((x.accessoires||[]).length) continue;   // ne pas sacrifier un autre accessoire
+        if(arr.some(function(y){ return y.texte===g.texte; })) break;
+        idx = i; break;
+      }
+      if(idx>=0){
+        arr[idx] = Object.assign({}, g, { _p:dest.prenom, _ch:false, _kama:false });
+        return;   // un gage suffit pour cet accessoire
+      }
+    }
+  });
 }
 function enrichirContention(){
   var attache = G.players.filter(function(p){ return p.prenom===G._contenu; })[0];
