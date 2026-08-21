@@ -3246,6 +3246,26 @@ var GAGES_BASE = [
 
 
 
+
+/* ══════ Contention + pénétration (niveaux 4 et 5) ══════ */
+{texte:"{prenom}, sanglée sur le dos, {partenaire} te pénètre lentement et tu ne peux ni le guider ni le retenir **2 min 30**.", niveau:4,genre:"Femme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé sur le dos, {partenaire} s'installe sur toi et prend son rythme. Tu subis **2 min 30**.", niveau:4,genre:"Homme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, poignets sanglés au-dessus de la tête, {partenaire} entre en toi sans prévenir **2 minutes**.", niveau:4,genre:"Mixte",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e) et masqué(e), tu ne sais pas quand la pénétration va commencer **2 minutes**.", niveau:4,genre:"Mixte",pratiques:["penetration_h","penetration_f"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglée sur le dos, c'est toi qui donnes le rythme avec le bassin — {partenaire} ne bouge pas **2 minutes**.", niveau:4,genre:"Femme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, sanglé sur le dos, pousse du bassin autant que tu peux pendant que {partenaire} reste immobile **2 minutes**.", niveau:4,genre:"Homme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, garde {partenaire} sanglé(e) sous toi et alterne trois rythmes différents **2 min 30**.", niveau:4,genre:"Mixte",pratiques:["penetration_h","penetration_f","domination_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, pénètre {partenaire} attaché(e) puis ressors — trois fois, sans jamais finir **2 minutes**.", niveau:4,genre:"Mixte",pratiques:["penetration_h","penetration_f","domination_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglée et masquée, {partenaire} te pénètre pendant qu'un doigt lubrifié s'invite ailleurs **2 minutes**.", niveau:4,genre:"Femme",pratiques:["penetration_h","penetration_f","anal_passif_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé et masqué, {partenaire} te pénètre pendant qu'un doigt lubrifié s'invite ailleurs **2 minutes**.", niveau:4,genre:"Homme",pratiques:["penetration_h","anal_passif_1"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglée jusqu'au bout, {partenaire} te pénètre jusqu'à la fin. Tu n'as aucun contrôle. Durée libre.", niveau:5,genre:"Femme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé jusqu'au bout, {partenaire} te chevauche jusqu'à la fin. Tu n'as aucun contrôle. Durée libre.", niveau:5,genre:"Homme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, attaché(e) et masqué(e), tu finis sans jamais avoir vu venir un seul mouvement. Durée libre.", niveau:5,genre:"Mixte",pratiques:["penetration_h","penetration_f"],accessoires:["Masque BDSM","Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglée, fais-le jouir uniquement avec ton bassin. Tes mains ne serviront à rien. Durée libre.", niveau:5,genre:"Femme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, sanglé, fais-la jouir uniquement avec ton bassin. Tes mains ne serviront à rien. Durée libre.", niveau:5,genre:"Homme",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
+{texte:"{prenom}, garde {partenaire} attaché(e) et emmène-le/la jusqu'au bout sans jamais ralentir. Durée libre.", niveau:5,genre:"Mixte",pratiques:["penetration_h","penetration_f","domination_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, libère {partenaire} de ses sangles au dernier moment et finissez ensemble. Durée libre.", niveau:5,genre:"Mixte",pratiques:["penetration_h","penetration_f"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
+{texte:"{prenom}, sanglé(e), {partenaire} choisit la position finale et te prend jusqu'au bout. Durée libre.", niveau:5,genre:"Mixte",pratiques:["penetration_h","penetration_f","soumission_2"],accessoires:["Sangles de contention poignets"],modes:[],solo:false},
 /* ══════ Contention — gages jouables par la personne attachée ══════ */
 {texte:"{prenom}, poignets sanglés, {partenaire} vient présenter son sexe devant ta bouche. À toi de faire le reste, sans les mains **2 minutes**.", niveau:3,genre:"Femme",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
 {texte:"{prenom}, poignets sanglés, {partenaire} s'installe au-dessus de ton visage. Sers-toi uniquement de ta bouche et de ta langue **2 minutes**.", niveau:3,genre:"Homme",pratiques:["oral_actif"],accessoires:["Sangles de contention poignets"],modes:[],solo:false,sansMains:true},
@@ -8248,6 +8268,32 @@ function pickNonPenKamaGage(player, all5){
   return null;
 }
 
+// ── Niveau 5 — gage 2/2 quand la femme n'a PAS coché « finish » : pénétration.
+// Priorité à la présélection admin « Prochaine partie », puis aux gages Femme, puis Mixte. ──
+function pickPenetrationGage(femmePlayer, all5, excludeTexts){
+  if(!femmePlayer) return null;
+  excludeTexts = excludeTexts || [];
+  var estPen = function(g){
+    return g.pratiques && (g.pratiques.indexOf('penetration_h')>=0 || g.pratiques.indexOf('penetration_f')>=0);
+  };
+  var valide = function(g){
+    return !g.solo && !g._kama && excludeTexts.indexOf(g.texte)<0
+        && (g.genre==='Femme'||g.genre==='Mixte') && gageOk(g, femmePlayer, 5);
+  };
+  // 1) Présélection admin
+  var curated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
+    return r && r.g.niveau===5 && !r.g._kama;
+  }).map(function(r){ return r.g; });
+  var curPen = shuffle(curated.filter(function(g){ return valide(g) && estPen(g); }));
+  if(curPen.length) return curPen[0];
+  // 2) Gages de pénétration du pool
+  var pen = shuffle(all5.filter(function(g){ return valide(g) && estPen(g); }));
+  if(pen.length) return pen[0];
+  // 3) Repli : n'importe quel gage compatible pour clore la partie
+  var autres = shuffle(all5.filter(valide));
+  return autres.length ? autres[0] : null;
+}
+
 // ── Niveau 5, cas "femme finish" — gage 2/2 : Femme → Homme, gage de fin (finish) ──
 function pickFinishGage(femmePlayer, all5){
   if(!femmePlayer) return null;
@@ -9087,16 +9133,17 @@ function prepareGages() {
       return p.pratiques.indexOf('penetration_h')>=0||p.pratiques.indexOf('penetration_f')>=0||p.pratiques.indexOf('kamasutra')>=0;
     });
 
-    if(hommePlayer && femmePlayer && hasFinish){
-      // CAS A — 2 gages, finish toujours en dernier
+    if(hommePlayer && femmePlayer){
+      // Couple homme/femme — TOUJOURS 2 gages, dans cet ordre :
+      //   1) Homme → Femme, jamais de pénétration ni Kâmasûtra
+      //   2) Femme → Homme (ou Mixte) : « finish » si la femme l'a coché, sinon pénétration
       var g1=pickNonPenKamaGage(hommePlayer, all5);
       if(g1) pool5.push(Object.assign({},g1,{_p:hommePlayer.prenom,_ch:false,_kama:false}));
-      var g2=pickFinishGage(femmePlayer, all5);
+      var exclu1 = g1 ? [g1.texte] : [];
+      var g2 = hasFinish
+        ? pickFinishGage(femmePlayer, all5)
+        : pickPenetrationGage(femmePlayer, all5, exclu1);
       if(g2) pool5.push(Object.assign({},g2,{_p:femmePlayer.prenom,_ch:false,_kama:false}));
-    } else if(hommePlayer && femmePlayer && allHavePenKama){
-      // CAS B1 — 1 seul gage mixte, pénétration ou Kâmasûtra
-      var picked5=pickFinale(hommePlayer, G.usedKama, all5);
-      pushFinale(hommePlayer, picked5, pool5);
     } else {
       // CAS B2 — 2 gages, un par joueur, selon leurs pratiques sélectionnées (couvre aussi couples non hétéro / trans / trio)
       // Ordre toujours Homme en premier, puis Femme, puis les autres joueurs (trio/quartet).
@@ -9152,6 +9199,7 @@ function prepareGages() {
   }
   // Règle de contention appliquée EN DERNIER : elle prime sur les gages perso,
   // les favoris et la curation admin, car elle décrit une contrainte physique.
+  _ngTextesCache = null;
   injectContentionIntro();
   applyContentionRule();
 }
@@ -9197,6 +9245,12 @@ function _gageDemandeAction(g){
   // Les gages marqués `sansMains` sont donc jouables par la personne entravée.
   if(g.sansMains) return false;
   if(g._kama) return true;               // position à réaliser : les deux agissent
+  // Auto-stimulation : testée AVANT les pratiques, car un gage marqué « passif » peut
+  // malgré tout demander de se toucher soi-même (edging solo, par exemple).
+  var _t0 = (g.texte||'').toLowerCase();
+  var autoStim0 = ['masturbe-toi','caresse-toi','touche-toi','branle-toi','doigte-toi',
+    'edging solo','stimule-toi','fais-toi jouir'];
+  if(autoStim0.some(function(v){ return _t0.indexOf(v)>=0; })) return true;
   var pr = g.pratiques||[];
   if(pr.some(function(p){ return p.indexOf('_actif')>=0 || p.indexOf('domination')===0; })) return true;
   if(pr.some(function(p){ return p.indexOf('_passif')>=0 || p.indexOf('soumission')===0; })) return false;
@@ -9206,12 +9260,46 @@ function _gageDemandeAction(g){
   var besoinDesMains = ['attache','caresse','masse','déshabille','guide','dépose','verse',
     'promène','installe','plaque','retourne','soulève','mets','claque','tiens','écarte',
     'branle','doigte','applique','étale','noue','bande'];
-  return besoinDesMains.some(function(v){ return t.indexOf('} '+v)>=0 || t.indexOf(', '+v)>=0; });
+  if(besoinDesMains.some(function(v){ return t.indexOf('} '+v)>=0 || t.indexOf(', '+v)>=0; })) return true;
+  // Auto-stimulation : impossible poignets liés, quelle que soit la tournure de la phrase.
+  var autoStim = ['masturbe-toi','caresse-toi','touche-toi','branle-toi','doigte-toi',
+    'edging solo','stimule-toi','fais-toi jouir'];
+  if(autoStim.some(function(v){ return t.indexOf(v)>=0; })) return true;
+  return false;
+}
+/* La personne entravée est allongée (dos ou ventre) : certaines actions sur elle
+   deviennent impossibles selon la position. On écarte celles qui supposent un accès
+   incompatible — fesses offertes, mise à genoux, position debout. */
+function _gageImpossibleSurEntrave(g){
+  if(!g) return false;
+  var t = (g.texte||'').toLowerCase();
+  var incompatibles = ['fesses','levrette','à quatre pattes','a quatre pattes','debout',
+    'à genoux','a genoux','penché','penche-toi','cambre','fessée','fessee','sodomi'];
+  return incompatibles.some(function(k){ return t.indexOf(k)>=0; });
 }
 function applyContentionRule(){
   if(!contentionActive() || !G._contenu) return;
   var libre = G.players.filter(function(p){ return p.prenom!==G._contenu; })[0];
   if(!libre) return;
+  // Écarte d'abord les gages dont la cible est la personne entravée dans une position
+  // qu'elle ne peut pas prendre (le partenaire agit, mais sur un corps immobilisé).
+  var attacheRef = G.players.filter(function(p){ return p.prenom===G._contenu; })[0];
+  [1,2,3,4,5].forEach(function(lvl){
+    var arr = G.gagesByLevel[lvl];
+    if(!arr || !arr.length) return;
+    arr.forEach(function(g, i){
+      if(g._contentionIntro || !_gageImpossibleSurEntrave(g)) return;
+      if(_gageProtege(g)) return;   // gage perso/curaté : on le laisse tel quel
+      var dest = G.players.filter(function(p){ return p.prenom===g._p; })[0] || libre;
+      var remp = shuffle(allGages().filter(function(x){
+        return x.niveau===lvl && !_gageImpossibleSurEntrave(x)
+            && (g._p!==G._contenu || !_gageDemandeAction(x))
+            && gageOk(x, dest, lvl)
+            && !arr.some(function(y){ return y.texte===x.texte; });
+      }))[0];
+      if(remp) arr[i] = Object.assign({}, remp, { _p:g._p, _ch:false, _kama:false });
+    });
+  });
   [1,2,3,4,5].forEach(function(lvl){
     var arr = G.gagesByLevel[lvl];
     if(!arr || !arr.length) return;
@@ -9219,36 +9307,81 @@ function applyContentionRule(){
     arr.forEach(function(g, i){  // lvl reste accessible par fermeture
       if(g._contentionIntro) return;              // la carte de désignation ne se réattribue pas
       if(g._p!==G._contenu || !_gageDemandeAction(g)) return;
+      var attacheP = G.players.filter(function(p){ return p.prenom===G._contenu; })[0];
+      // Au niveau 5, l'ordre est imposé (Homme→Femme puis finish/pénétration) : on ne
+      // permute jamais, on remplace seulement — sinon les deux gages s'inversent.
+      if(lvl===5){
+        var rempl5 = shuffle(allGages().filter(function(x){
+          return x.niveau===5 && !x.solo && !_gageDemandeAction(x) && !_gageImpossibleSurEntrave(x)
+              && gageOk(x, attacheP, 5)
+              && !arr.some(function(y){ return y.texte===x.texte; });
+        }))[0];
+        if(rempl5) arr[i] = Object.assign({}, rempl5, { _p:G._contenu, _ch:false, _kama:false });
+        return;
+      }
       for(var j=0;j<arr.length;j++){
         var o = arr[j];
         if(o._contentionIntro) continue;          // ni ne sert de monnaie d'échange
-        if(o._p===libre.prenom && !_gageDemandeAction(o)){
-          var tmp = g._p; g._p = o._p; o._p = tmp;   // l'échange préserve les quotas
-          return;
-        }
+        if(o._p!==libre.prenom || _gageDemandeAction(o)) continue;
+        // L'échange ne vaut que si CHAQUE gage reste jouable par son nouveau destinataire :
+        // sinon on produit des aberrations (une fellation attribuée à un homme, etc.).
+        if(!gageOk(g, libre, lvl) || !gageOk(o, attacheP, lvl)) continue;
+        var tmp = g._p; g._p = o._p; o._p = tmp;   // l'échange préserve les quotas
+        return;
       }
       // 2) Aucun échange possible : on REMPLACE le gage par un gage passif compatible,
       //    plutôt que de le donner au joueur libre — sinon les quotas se déséquilibrent.
       var attache = G.players.filter(function(p){ return p.prenom===G._contenu; })[0];
       var remp = shuffle(allGages().filter(function(x){
-        return x.niveau===lvl && !_gageDemandeAction(x) && gageOk(x, attache, lvl)
+        return x.niveau===lvl && !_gageDemandeAction(x) && !_gageImpossibleSurEntrave(x)
+            && gageOk(x, attache, lvl)
             && !arr.some(function(y){ return y.texte===x.texte; });
       }))[0];
       if(remp) arr[i] = Object.assign({}, remp, { _p:G._contenu, _ch:false, _kama:false });
-      else g._p = libre.prenom;   // dernier recours seulement
+      else if(gageOk(g, libre, lvl)) g._p = libre.prenom;   // seulement s'il lui est jouable
+      // sinon : on laisse le gage tel quel plutôt que de créer une aberration de genre.
     });
   });
   enrichirContention();
+  // La règle a pu réattribuer des gages : on rétablit l'alternance H/F par niveau,
+  // sinon deux gages du même joueur s'enchaînent.
+  // Niveau 5 exclu : son ordre est imposé (gage Homme→Femme puis finish/pénétration).
+  [1,2,3,4].forEach(function(lvl){
+    if(G.gagesByLevel[lvl] && G.gagesByLevel[lvl].length>1){
+      var intro = G.gagesByLevel[lvl].filter(function(g){ return g._contentionIntro; });
+      var reste = G.gagesByLevel[lvl].filter(function(g){ return !g._contentionIntro; });
+      G.gagesByLevel[lvl] = intro.concat(interleave(reste));  // la désignation reste en tête
+    }
+  });
 }
 /* Quand quelqu'un est attaché, les gages écrits pour la contention doivent dominer la
    partie — sinon ils se diluent parmi les milliers de gages ordinaires. On remplace donc
    une partie des gages de la personne entravée par des gages spécifiquement pensés pour elle. */
+// Un gage perso ou présélectionné en admin est prioritaire : tant qu'il reste jouable
+// dans le contexte de contention, on ne le remplace jamais.
+function _ngTextes(){
+  if(_ngTextesCache) return _ngTextesCache;
+  var s = {};
+  (nextGamePool[G_duration]||[]).forEach(function(k){
+    var r = _ngLookup(k);
+    if(r && r.g && r.g.texte) s[r.g.texte] = true;
+  });
+  _ngTextesCache = s;
+  return s;
+}
+var _ngTextesCache = null;
+function _gageProtege(g){
+  if(!g) return false;
+  if(g._perso100 || g._custom || g._curated || g._fromNextGame) return true;
+  return !!_ngTextes()[g.texte];   // présélection admin « Prochaine partie »
+}
 function enrichirContention(){
   var attache = G.players.filter(function(p){ return p.prenom===G._contenu; })[0];
   if(!attache) return;
   var candidats = allGages().filter(function(g){
     return (g.accessoires||[]).indexOf('Sangles de contention poignets')>=0
-        && !_gageDemandeAction(g);
+        && !_gageDemandeAction(g)
+        && !_gageImpossibleSurEntrave(g);   // ne pas réintroduire ce qu'on vient d'écarter
   });
   [1,2,3,4,5].forEach(function(lvl){
     var arr = G.gagesByLevel[lvl];
@@ -9262,7 +9395,9 @@ function enrichirContention(){
       return g.niveau===lvl && gageOk(g, attache, lvl)
           && !arr.some(function(x){ return x.texte===g.texte; });
     }));
-    var aRemplacer = siens.filter(function(g){ return (g.accessoires||[]).indexOf('Sangles de contention poignets')<0; });
+    var aRemplacer = siens.filter(function(g){
+      return (g.accessoires||[]).indexOf('Sangles de contention poignets')<0 && !_gageProtege(g);
+    });
     for(var k=0; k<aRemplacer.length && deja<voulu && dispo.length; k++){
       var cible = aRemplacer[k];
       var idx = arr.indexOf(cible);
