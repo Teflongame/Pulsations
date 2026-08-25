@@ -11514,6 +11514,7 @@ var adminGageSubTab = 'form';
 // Le bouton du bas remonte d'un niveau dans l'admin (formulaire → fiche → liste),
 // et ne quitte vers l'accueil que depuis le premier niveau. Évite de perdre un formulaire.
 function adminBack(){
+  if(typeof _mediaPickMode!=='undefined' && _mediaPickMode){ mediaPickCancel(); return; }
   if(typeof _mediaEdit!=='undefined' && _mediaEdit){
     if(!confirm('Quitter sans enregistrer les modifications ?')) return;
     _mediaEdit=null; adminTab('media',null); return;
@@ -11530,9 +11531,11 @@ function _adminBackLabel(){
   if(!b) return;
   var interne = (typeof _mediaEdit!=='undefined' && _mediaEdit)
              || (typeof _mediaView!=='undefined' && _mediaView)
+             || (typeof _mediaPickMode!=='undefined' && _mediaPickMode)
              || (typeof _stEdit!=='undefined' && _stEdit);
   b.textContent = interne ? '← Retour à la liste' : '← Retour';
 }
+var _lastAdminTab = null;
 function adminTab(tab, btn) {
   document.querySelectorAll('.admin-tab').forEach(function(b){ b.classList.remove('active'); });
   if(btn) btn.classList.add('active');
@@ -11549,8 +11552,14 @@ function adminTab(tab, btn) {
   else if(tab==='nextgame') { cnt.innerHTML = renderAdminNextGame(); renderCustomGagePicker(); renderNextGamePicker(); }
   else if(tab==='bgimages') { cnt.innerHTML = renderAdminBgTab(); }
   else if(tab==='stories') { cnt.innerHTML = renderAdminStories(); }
-  else if(tab==='media') { cnt.innerHTML = renderAdminMedia(); }
+  else if(tab==='media') {
+    // Un filtre choisi lors d'une visite précédente de l'onglet ne doit jamais rester
+    // actif silencieusement : on le réinitialise à chaque nouvelle entrée dans l'onglet.
+    if(!_mediaEdit && !_mediaView && _lastAdminTab!=='media') _mediaFilter={q:'',cat:'',tag:'',vue:'tout'};
+    cnt.innerHTML = renderAdminMedia();
+  }
   _adminBackLabel();
+  _lastAdminTab = tab;
 }
 
 function renderAdminGages() {
@@ -12943,6 +12952,11 @@ var _stEdit = null; // id en cours d'édition, ou '__new__'
 // Bibliothèque de liens : rien n'est téléchargé ni aspiré — on stocke l'adresse de la page
 // officielle, ce qui garde les vues aux créatrices et évite tout contenu copié localement.
 var MEDIA_KEY = 'media_lib_v28';
+// Date.now() seul a une résolution d'1 ms : deux entrées créées la même milliseconde
+// (double-tap, import rapide) obtenaient le même identifiant et s'écrasaient l'une
+// l'autre. On y ajoute un compteur, garanti unique même en cas de créations rapprochées.
+var _mediaIdSeq = 0;
+function _mediaNewId(){ return 'm_'+Date.now()+'_'+(_mediaIdSeq++); }
 // Échappement des chaînes saisies : sans lui, un tag contenant < & ou " casse le HTML
 // de la liste et rend les filtres inopérants.
 function _esc(s){
@@ -13324,7 +13338,7 @@ function mediaSave(){
   if(url && !/^https?:\/\//i.test(url)) url='https://'+url;
   var isNew = _mediaEdit==='__new__';
   var obj = {
-    id: isNew ? ('m_'+Date.now()) : _mediaEdit,
+    id: isNew ? _mediaNewId() : _mediaEdit,
     nom: nom,
     url: url,
     cat: v('media-cat'),
@@ -13557,6 +13571,49 @@ function lbNext(){ if(!_lbPhotos.length) return; _lbIdx=(_lbIdx+1)%_lbPhotos.len
 function lbPrev(){ if(!_lbPhotos.length) return; _lbIdx=(_lbIdx-1+_lbPhotos.length)%_lbPhotos.length; _lbRender(); }
 function lbClose(){ var ov=document.getElementById('lightbox'); if(ov) ov.style.display='none'; }
 var _mediaView = null; // id du dossier ouvert en consultation
+// ── Sélection de photos multi-dossiers pour créer un nouveau dossier ──
+var _mediaPickMode = false;
+var _mediaPicked = [];   // {src, from} — src = data/lien de l'image, from = nom du dossier source
+function mediaPickStart(){
+  _mediaPickMode = true;
+  _mediaPicked = [];
+  adminTab('media', null);
+}
+function mediaPickCancel(){
+  _mediaPickMode = false;
+  _mediaPicked = [];
+  adminTab('media', null);
+}
+function mediaPickToggle(src, fromNom){
+  var i = _mediaPicked.findIndex(function(p){ return p.src===src; });
+  if(i>=0) _mediaPicked.splice(i,1);
+  else _mediaPicked.push({src:src, from:fromNom});
+  // Rafraîchit juste le compteur et les cases, sans tout re-render (garde le scroll).
+  var bar = document.getElementById('media-pick-bar');
+  if(bar) bar.textContent = _mediaPicked.length+' photo(s) sélectionnée(s)';
+  var box = document.querySelectorAll('[data-pick-src]');
+  box.forEach(function(el){
+    var on = _mediaPicked.some(function(p){ return p.src===el.getAttribute('data-pick-src'); });
+    el.style.outline = on ? '3px solid var(--gold)' : 'none';
+    el.style.opacity = on ? '1' : '.75';
+  });
+}
+function mediaPickCreateFolder(){
+  if(!_mediaPicked.length){ alert('Sélectionne au moins une photo.'); return; }
+  var nom = prompt('Nom du nouveau dossier :', 'Sélection du '+new Date().toLocaleDateString('fr-FR'));
+  if(!nom) return;
+  var obj = {
+    id:_mediaNewId(), nom:nom.trim(), url:'', cat:'', tags:[], notes:'',
+    note:0, afaire:false, thumb:_mediaPicked[0].src,
+    videos:[], photos:_mediaPicked.map(function(p){ return p.src; }),
+    ajout:Date.now()
+  };
+  mediaLib.push(obj);
+  saveMediaLib();
+  _mediaPickMode = false; _mediaPicked = [];
+  adminTab('media', null);
+  mediaOpen(obj.id);
+}
 function mediaOpen(id){ _mediaView=id; adminTab('media',null); }
 function mediaCloseView(){ _mediaView=null; adminTab('media',null); }
 function _renderMediaView(){
@@ -13597,7 +13654,28 @@ function _renderMediaView(){
   h += '<div class="btn-row" style="margin-top:16px"><button class="btn ghost" onclick="mediaEdit(\''+m.id+'\')">✏️ Modifier</button><button class="btn ghost" onclick="mediaCloseView()">Fermer</button></div>';
   return h;
 }
+function _renderMediaPicker(){
+  var h = '<div style="position:sticky;top:0;background:var(--bg,#1a1216);z-index:5;padding-bottom:10px;margin:-4px 0 10px">'
+    + '<div style="font-size:14px;font-weight:700;margin-bottom:4px">🗂️ Choisis les photos du nouveau dossier</div>'
+    + '<div id="media-pick-bar" style="font-size:12px;color:var(--gold);margin-bottom:8px">'+_mediaPicked.length+' photo(s) sélectionnée(s)</div>'
+    + '<div class="btn-row" style="margin:0"><button class="btn ghost" onclick="mediaPickCancel()">Annuler</button><button class="btn success" onclick="mediaPickCreateFolder()">✓ Créer le dossier</button></div>'
+    + '</div>';
+  var avecPhotos = mediaLib.filter(function(m){ return (m.photos||[]).length; });
+  if(!avecPhotos.length) return h+'<p style="font-size:12.5px;color:var(--muted)">Aucune photo dans la médiathèque.</p>';
+  avecPhotos.forEach(function(m){
+    h += '<div style="font-size:12px;font-weight:700;color:var(--gold);margin:14px 0 6px">'+_esc(m.nom)+'</div>';
+    h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+    (m.photos||[]).forEach(function(p){
+      var on = _mediaPicked.some(function(x){ return x.src===p; });
+      var srcAttr = p.replace(/"/g,'&quot;');
+      h += '<div data-pick-src="'+srcAttr+'" data-nom="'+_esc(m.nom).replace(/"/g,'&quot;')+'" onclick="mediaPickToggle(this.getAttribute(\'data-pick-src\'), this.getAttribute(\'data-nom\'))" style="cursor:pointer;aspect-ratio:1;border-radius:8px;border:1px solid var(--border);background:var(--card2) url(\''+p+'\') center/contain no-repeat;outline:'+(on?'3px solid var(--gold)':'none')+';opacity:'+(on?'1':'.75')+'"></div>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
 function renderAdminMedia(){
+  if(_mediaPickMode) return _renderMediaPicker();
   if(_mediaView) return _renderMediaView();
   if(_mediaEdit) return _renderMediaForm();
   var cats=_mediaCats(), tags=_mediaTags();
@@ -13638,9 +13716,47 @@ function renderAdminMedia(){
     }
     html += '</div>';
   }
-  html += '<div style="font-size:10.5px;color:var(--muted);margin:12px 0 8px">'+mediaLib.length+' entrée(s) au total</div>';
+  var _nAffiches = _mediaFiltered().length;
+  var _filtreActif = !!(_mediaFilter.cat || _mediaFilter.tag || _mediaFilter.q || _mediaFilter.vue!=='tout');
+  if(_filtreActif && _nAffiches<mediaLib.length){
+    // Bandeau impossible à manquer : sans lui, un filtre oublié donne l'impression
+    // que des entrées ont disparu — c'est le bug qu'on vient de corriger.
+    html += '<div style="background:rgba(216,166,87,.14);border:1px solid var(--gold);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px">'
+      + '<span style="font-size:12px;color:var(--gold)">⚠️ Filtre actif — '+_nAffiches+' / '+mediaLib.length+' affichée(s)</span>'
+      + '<button type="button" onclick="mediaResetFilters()" style="background:var(--gold);color:#1a1216;border:none;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap">Tout afficher</button>'
+      + '</div>';
+  }
+  html += '<div style="font-size:10.5px;color:var(--muted);margin:'+(_filtreActif?'0':'12px')+' 0 8px">'+_nAffiches+' / '+mediaLib.length+' entrée(s) affichée(s)</div>';
+  // Lecture en continu : reprend exactement les entrées visibles selon les filtres actifs.
+  var _nPhotos = _mediaFiltered().reduce(function(s,m){ return s+(m.photos||[]).length; }, 0);
+  if(_nPhotos>0){
+    html += '<div style="display:flex;gap:8px;margin-bottom:12px">'
+      + '<button class="btn ghost sm" style="flex:1;margin:0;padding:8px" onclick="mediaPlayAll(false)">▶️ Lire à la suite ('+_nPhotos+')</button>'
+      + '<button class="btn ghost sm" style="flex:1;margin:0;padding:8px" onclick="mediaPlayAll(true)">🔀 Aléatoire</button>'
+      + '</div>';
+  }
+  if(mediaLib.some(function(m){ return (m.photos||[]).length; })){
+    html += '<button class="btn ghost sm" style="width:100%;margin:0 0 12px" onclick="mediaPickStart()">🗂️ Créer un dossier depuis des photos existantes</button>';
+  }
   html += '<div id="media-list">'+_mediaListHTML()+'</div>';
   return html;
+}
+// Construit la file de lecture à partir de TOUTES les photos des entrées actuellement
+// visibles (donc déjà passées par les filtres tag/catégorie/recherche/vue en cours).
+function mediaPlayAll(alea){
+  var photos = [];
+  _mediaFiltered().forEach(function(m){
+    (m.photos||[]).forEach(function(p){ photos.push(p); });
+  });
+  if(!photos.length) return;
+  if(alea) photos = shuffle(photos);
+  _lbPhotos = photos;
+  _lbIdx = 0;
+  _lbShow();
+}
+function mediaResetFilters(){
+  _mediaFilter = {q:'', cat:'', tag:'', vue:'tout'};
+  adminTab('media', null);
 }
 function _renderMediaForm(){
   var isNew=_mediaEdit==='__new__';
