@@ -8341,17 +8341,20 @@ function pushFinale(player, picked, pool5) {
 function pickNonPenKamaGage(player, all5){
   if(!player) return null;
   var excluded = ['penetration_h','penetration_f','kamasutra'];
-  // Présélection admin "Prochaine partie" niveau 5, en priorité si elle contient un gage valide.
+  var okContention = function(g){
+    if(!contentionActive() || !G._contenu) return true;
+    return !_gagePrenomEstEntrave(g) || player.prenom===G._contenu;
+  };
   var curated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
     return r && r.g.niveau===5 && !r.g._kama;
   }).map(function(r){ return r.g; });
   var curatedValid = shuffle(curated.filter(function(g){
-    return !g.solo && gageOk(g, player, 5) &&
+    return !g.solo && gageOk(g, player, 5) && okContention(g) &&
       !(g.pratiques && g.pratiques.some(function(p){ return excluded.indexOf(p)>=0; }));
   }));
   if(curatedValid.length) return curatedValid[0];
   var base = all5.filter(function(g){
-    return !g.solo && !g._kama && gageOk(g, player, 5) &&
+    return !g.solo && !g._kama && gageOk(g, player, 5) && okContention(g) &&
       !(g.pratiques && g.pratiques.some(function(p){ return excluded.indexOf(p)>=0; }));
   });
   var oral = shuffle(base.filter(function(g){
@@ -8375,9 +8378,13 @@ function pickPenetrationGage(femmePlayer, all5, excludeTexts){
   var estPen = function(g){
     return g.pratiques && (g.pratiques.indexOf('penetration_h')>=0 || g.pratiques.indexOf('penetration_f')>=0);
   };
+  var okContention = function(g){
+    if(!contentionActive() || !G._contenu) return true;
+    return !_gagePrenomEstEntrave(g) || femmePlayer.prenom===G._contenu;
+  };
   var valide = function(g){
     return !g.solo && !g._kama && excludeTexts.indexOf(g.texte)<0
-        && (g.genre==='Femme'||g.genre==='Mixte') && gageOk(g, femmePlayer, 5);
+        && (g.genre==='Femme'||g.genre==='Mixte') && gageOk(g, femmePlayer, 5) && okContention(g);
   };
   // 1) Présélection admin
   var curated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
@@ -8397,27 +8404,28 @@ function pickPenetrationGage(femmePlayer, all5, excludeTexts){
 function pickFinishGage(femmePlayer, all5){
   if(!femmePlayer) return null;
   var spermePrats = ['sperme_gout_1','sperme_gout_2','finish_corps'];
-  // Présélection admin "Prochaine partie" niveau 5, en priorité si elle contient un gage
-  // "finish" valide (la règle "finish toujours en dernier" reste respectée dans tous les cas).
+  var okContention = function(g){
+    if(!contentionActive() || !G._contenu) return true;
+    return !_gagePrenomEstEntrave(g) || femmePlayer.prenom===G._contenu;
+  };
   var curated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){
     return r && r.g.niveau===5 && !r.g._kama;
   }).map(function(r){ return r.g; });
   var curatedFinish = shuffle(curated.filter(function(g){
     return !g.solo && (g.genre==='Femme'||g.genre==='Mixte') &&
       g.pratiques && g.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; }) &&
-      gageOk(g, femmePlayer, 5);
+      gageOk(g, femmePlayer, 5) && okContention(g);
   }));
   if(curatedFinish.length) return curatedFinish[0];
   var cands = shuffle(all5.filter(function(g){
     return !g.solo && !g._kama && g.genre==='Femme' &&
       g.pratiques && g.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; }) &&
-      gageOk(g, femmePlayer, 5);
+      gageOk(g, femmePlayer, 5) && okContention(g);
   }));
   if(cands.length) return cands[0];
-  // Filet de sécurité : élargir aux gages Mixte contenant une pratique finish
   var fallback = shuffle(all5.filter(function(g){
     return !g.solo && !g._kama && (g.genre==='Femme'||g.genre==='Mixte') &&
-      g.pratiques && g.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; }) &&
+      g.pratiques && g.pratiques.some(function(p){ return spermePrats.indexOf(p)>=0; }) && okContention(g) &&
       gageOk(g, femmePlayer, 5, true);
   }));
   return fallback.length ? fallback[0] : null;
@@ -9370,6 +9378,23 @@ function _gageDemandeAction(g){
 /* La personne entravée est allongée (dos ou ventre) : certaines actions sur elle
    deviennent impossibles selon la position. On écarte celles qui supposent un accès
    incompatible — fesses offertes, mise à genoux, position debout. */
+function _gagePrenomEstEntrave(g){
+  if(!g) return false;
+  var acc = g.accessoires||[];
+  if(acc.indexOf('Sangles de contention poignets')<0 && acc.indexOf('Masque BDSM')<0) return false;
+  var t = (g.texte||'').toLowerCase();
+  var motsEntrave = /sangl|menott|attaché|attachée|masqué|masquée|entravé|entravée/g;
+  var posPartenaire = t.indexOf('{partenaire}');
+  var m, avantPartenaire = false, apresPartenaire = false;
+  motsEntrave.lastIndex = 0;
+  while((m = motsEntrave.exec(t))){
+    if(posPartenaire<0 || m.index<posPartenaire) avantPartenaire = true;
+    else apresPartenaire = true;
+  }
+  if(!avantPartenaire && !apresPartenaire) return false;
+  if(apresPartenaire && !avantPartenaire) return false;
+  return true;
+}
 function _gageImpossibleSurEntrave(g){
   if(!g) return false;
   var t = (g.texte||'').toLowerCase();
@@ -9381,9 +9406,30 @@ function applyContentionRule(){
   if(!contentionActive() || !G._contenu) return;
   var libre = G.players.filter(function(p){ return p.prenom!==G._contenu; })[0];
   if(!libre) return;
-  // Écarte d'abord les gages dont la cible est la personne entravée dans une position
-  // qu'elle ne peut pas prendre (le partenaire agit, mais sur un corps immobilisé).
   var attacheRef = G.players.filter(function(p){ return p.prenom===G._contenu; })[0];
+  [1,2,3,4,5].forEach(function(lvl){
+    var arr = G.gagesByLevel[lvl];
+    if(!arr || !arr.length) return;
+    arr.forEach(function(g, i){
+      if(g._contentionIntro || g._p===G._contenu) return;
+      if(!_gagePrenomEstEntrave(g)) return;
+      if(_gageProtege(g)) return;
+      for(var j=0;j<arr.length;j++){
+        var o = arr[j];
+        if(o._contentionIntro || o._p!==G._contenu) continue;
+        if(_gagePrenomEstEntrave(o)) continue;
+        if(!gageOk(g, attacheRef, lvl) || !gageOk(o, libre, lvl)) continue;
+        var tmp=g._p; g._p=o._p; o._p=tmp;
+        return;
+      }
+      var remp = shuffle(allGages().filter(function(x){
+        return x.niveau===lvl && !_gagePrenomEstEntrave(x) && gageOk(x, libre, lvl)
+            && !arr.some(function(y){ return y.texte===x.texte; });
+      }))[0];
+      if(remp) arr[i] = Object.assign({}, remp, { _p:libre.prenom, _ch:false, _kama:false });
+    });
+  });
+  var attacheRef2 = attacheRef;
   [1,2,3,4,5].forEach(function(lvl){
     var arr = G.gagesByLevel[lvl];
     if(!arr || !arr.length) return;
@@ -9394,6 +9440,7 @@ function applyContentionRule(){
       var remp = shuffle(allGages().filter(function(x){
         return x.niveau===lvl && !_gageImpossibleSurEntrave(x)
             && (g._p!==G._contenu || !_gageDemandeAction(x))
+            && (dest.prenom===G._contenu || !_gagePrenomEstEntrave(x))
             && gageOk(x, dest, lvl)
             && !arr.some(function(y){ return y.texte===x.texte; });
       }))[0];
@@ -9520,6 +9567,7 @@ function equilibrerAccessoires(){
         if(contentionActive() && G._contenu){
           if(p.prenom===G._contenu && _gageDemandeAction(g)) return false;
           if(_gageImpossibleSurEntrave(g)) return false;
+          if(_gagePrenomEstEntrave(g) && p.prenom!==G._contenu) return false;
         }
         return true;
       })[0];
@@ -13577,6 +13625,7 @@ var _mediaPicked = [];   // {src, from} — src = data/lien de l'image, from = n
 function mediaPickStart(){
   _mediaPickMode = true;
   _mediaPicked = [];
+  _mediaPickNom = '';
   adminTab('media', null);
 }
 function mediaPickCancel(){
@@ -13598,21 +13647,30 @@ function mediaPickToggle(src, fromNom){
     el.style.opacity = on ? '1' : '.75';
   });
 }
+var _mediaPickNom = '';
 function mediaPickCreateFolder(){
-  if(!_mediaPicked.length){ alert('Sélectionne au moins une photo.'); return; }
-  var nom = prompt('Nom du nouveau dossier :', 'Sélection du '+new Date().toLocaleDateString('fr-FR'));
-  if(!nom) return;
+  var champ = document.getElementById('media-pick-nom');
+  var nom = (champ ? champ.value : _mediaPickNom || '').trim();
+  _mediaPickNom = nom;   // conservé si on doit réafficher l'écran suite à une erreur
+  if(!_mediaPicked.length){ alert('Sélectionne au moins une photo avant de créer le dossier.'); return; }
+  if(!nom){
+    alert('Donne un nom au dossier avant de le créer.');
+    if(champ) champ.focus();
+    return;
+  }
   var obj = {
-    id:_mediaNewId(), nom:nom.trim(), url:'', cat:'', tags:[], notes:'',
+    id:_mediaNewId(), nom:nom, url:'', cat:'', tags:[], notes:'',
     note:0, afaire:false, thumb:_mediaPicked[0].src,
     videos:[], photos:_mediaPicked.map(function(p){ return p.src; }),
     ajout:Date.now()
   };
   mediaLib.push(obj);
-  saveMediaLib();
-  _mediaPickMode = false; _mediaPicked = [];
-  adminTab('media', null);
-  mediaOpen(obj.id);
+  saveMediaLib(function(ok){
+    if(!ok){ alert('⚠️ Le dossier n\'a pas pu être enregistré (stockage plein ou indisponible).'); return; }
+    _mediaPickMode = false; _mediaPicked = []; _mediaPickNom = '';
+    adminTab('media', null);
+    mediaOpen(obj.id);
+  });
 }
 function mediaOpen(id){ _mediaView=id; adminTab('media',null); }
 function mediaCloseView(){ _mediaView=null; adminTab('media',null); }
@@ -13655,10 +13713,14 @@ function _renderMediaView(){
   return h;
 }
 function _renderMediaPicker(){
-  var h = '<div style="position:sticky;top:0;background:var(--bg,#1a1216);z-index:5;padding-bottom:10px;margin:-4px 0 10px">'
-    + '<div style="font-size:14px;font-weight:700;margin-bottom:4px">🗂️ Choisis les photos du nouveau dossier</div>'
+  // Pas de position:sticky (peu fiable selon le conteneur parent) ni de window.prompt()
+  // (souvent silencieusement désactivé dans une PWA ajoutée à l'écran d'accueil iOS) :
+  // tout se passe dans un bandeau normal, avec un vrai champ de saisie.
+  var h = '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px">'
+    + '<div style="font-size:14px;font-weight:700;margin-bottom:8px">🗂️ Nouveau dossier</div>'
+    + '<input type="text" id="media-pick-nom" placeholder="Nom du dossier" value="'+_esc(_mediaPickNom||'')+'" style="margin-bottom:8px">'
     + '<div id="media-pick-bar" style="font-size:12px;color:var(--gold);margin-bottom:8px">'+_mediaPicked.length+' photo(s) sélectionnée(s)</div>'
-    + '<div class="btn-row" style="margin:0"><button class="btn ghost" onclick="mediaPickCancel()">Annuler</button><button class="btn success" onclick="mediaPickCreateFolder()">✓ Créer le dossier</button></div>'
+    + '<div class="btn-row" style="margin:0"><button class="btn ghost" onclick="mediaPickCancel()">Annuler</button><button class="btn success" id="media-pick-create-btn" onclick="mediaPickCreateFolder()">✓ Créer le dossier</button></div>'
     + '</div>';
   var avecPhotos = mediaLib.filter(function(m){ return (m.photos||[]).length; });
   if(!avecPhotos.length) return h+'<p style="font-size:12.5px;color:var(--muted)">Aucune photo dans la médiathèque.</p>';
