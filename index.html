@@ -736,9 +736,9 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
       <span class="icon">🎲</span><div class="label">Classique</div><div class="sub">Vos pratiques uniquement</div>
       <span class="mode-badge free">✓ Niv.1-2 gratuits</span>
     </div>
-    <div class="mode-card" id="mc-solo" onclick="selectMode('solo')" style="position:relative">
-      <span class="icon">🎯</span><div class="label">Solo</div><div class="sub">Exploration en solo</div>
-      <span class="mode-badge free">✓ Niv.1-2 gratuits</span>
+    <div class="mode-card" id="mc-kamasutra" onclick="selectMode('kamasutra')" style="position:relative">
+      <span class="icon">🪷</span><div class="label">Kâmasûtra</div><div class="sub">Explorez les positions, sans pratiques à cocher</div>
+      <span class="mode-badge free">✓ Gratuit</span>
     </div>
     <div class="mode-card mode-premium" id="mc-decouverte" onclick="selectMode('decouverte')" style="position:relative">
       <span class="mode-lock" id="lock-decouverte">🔒</span>
@@ -755,9 +755,9 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
       <span class="icon">🎭</span><div class="label">Histoire</div><div class="sub">Rôles, mise en scène, votre histoire</div>
       <span class="mode-badge premium">✦ Premium</span>
     </div>
-    <div class="mode-card" id="mc-kamasutra" onclick="selectMode('kamasutra')" style="position:relative">
-      <span class="icon">🪷</span><div class="label">Kâmasûtra</div><div class="sub">Explorez les positions, sans pratiques à cocher</div>
-      <span class="mode-badge free">✓ Gratuit</span>
+    <div class="mode-card" id="mc-solo" onclick="selectMode('solo')" style="position:relative;grid-column:1 / -1;justify-self:center;width:calc(50% - 5px)">
+      <span class="icon">🎯</span><div class="label">Solo</div><div class="sub">Exploration en solo</div>
+      <span class="mode-badge free">✓ Niv.1-2 gratuits</span>
     </div>
   </div>
   <div class="btn-row">
@@ -7337,6 +7337,7 @@ function goToPlayersFromNb() {
 }
 
 function renderPlayerPage() {
+  _catOpen = {};   // chaque joueur repart avec toutes les catégories repliées
   var isDisc = G.mode === 'brise_glace' || G.mode === 'decouverte';
   var isSolo = G.nb === 1;
   // Profile preload for this player slot
@@ -8193,6 +8194,7 @@ var MODE_SCENES = (function(){
     classique:[['#2a1c12','#08060a','#ffc27a'],['#2d1a12','#08060a','#ffa95a'],['#301812','#09050a','#ff8f5a'],['#33141a','#09040a','#ff6f6a'],['#3a1020','#0a030a','#ff4f7a']],
     pimente:[['#2a0610','#0a0206','#ff5a3a'],['#32060e','#0a0206','#ff4a3a'],['#3a0510','#0a0206','#ff3a3a'],['#42041a','#0a0208','#ff2a5a'],['#4a0426','#0a0210','#ff1a7a']],
     competition:[['#0c1230','#05060f','#ffd24a'],['#0e1238','#05060f','#ffc03a'],['#14123e','#06050f','#ffae3a'],['#1c1038','#07050f','#ff8f3a'],['#2a0e30','#08040e','#ff6a3a']],
+    decouverte:[['#3a1018','#0c0408','#ff9a7a'],['#40101c','#0c0408','#ff8a7a'],['#46102a','#0c0310','#ff7a9a'],['#4a1038','#0c0316','#ff6ab0'],['#50104a','#0c0220','#ff5ac8']],
     kamasutra:[['#0f1c2e','#04070d','#6fd6c0'],['#1a1a3a','#05060f','#c9a2ff'],['#2a1838','#080510','#e8b04a'],['#38142a','#0a040a','#ff8a5a'],['#42101e','#0a0306','#ff5a6a']]
   };
   function classique(l){ var c=P.classique[l-1]; return svg(c[0],c[1], rg('o',c[2])+rg('w',c[2]),
@@ -8205,21 +8207,24 @@ var MODE_SCENES = (function(){
       +[0,1,2,3,4].map(function(i){ var x=20+i*85, w=80+((i*37)%30), h=260+((i*53)%140); return '<path d="M'+(x)+' 820 Q'+(x-w*.5)+' '+(820-h*.5)+' '+(x+w*.1)+' '+(820-h)+' Q'+(x+w*.7)+' '+(820-h*.45)+' '+(x+w)+' 820Z" fill="url(#f)" opacity=".55" style="transform-origin:'+(x+w/2)+'px 820px"><animateTransform attributeName="transform" type="scale" values="1 1;.94 1.12;1.04 .92;.97 1.08;1 1" dur="'+(1.6+i*.3).toFixed(1)+'s" begin="-'+(i*.4)+'s" repeatCount="indefinite" additive="sum"/></path>'; }).join('')
       +rise(14,'g',2,5,5,10,.9,24,830,300)+rise(7,'o',34,70,14,24,.16,30,840,100)+'<rect width="400" height="800" fill="#000" opacity=".1"/>'); }
   function competition(l){ var c=P.competition[l-1]; return svg(c[0],c[1], rg('o',c[2]),
-      '<path d="M0 0 L120 0 L330 800 L-60 800Z" fill="'+c[2]+'" opacity=".10"><animateTransform attributeName="transform" type="rotate" values="-10 60 0;12 60 0;-10 60 0" dur="9s" repeatCount="indefinite"/></path>'
-      +'<path d="M400 0 L280 0 L70 800 L460 800Z" fill="#fff" opacity=".07"><animateTransform attributeName="transform" type="rotate" values="12 340 0;-12 340 0;12 340 0" dur="11s" repeatCount="indefinite"/></path>'
-      +[0,1].map(function(i){ return '<circle cx="200" cy="470" r="30" fill="none" stroke="'+c[2]+'" stroke-width="3" opacity="0">'+an('r','30;260',4,i*2)+an('opacity','.7;0',4,i*2)+'</circle>'; }).join('')
-      +'<ellipse cx="200" cy="820" rx="300" ry="200" fill="url(#o)" opacity=".45">'+an('opacity','.3;.55;.3',3)+'</ellipse>'
-      +(function(){ var s='',cols=[c[2],'#ffffff','#ff4a8a','#4ac8ff']; for(var i=0;i<22;i++){ var x=(i*61)%400,d=7+((i*13)%8),b=-((i*29)%100)/100*d; s+='<rect x="'+x+'" width="6" height="11" fill="'+cols[i%4]+'" opacity=".6"><animate attributeName="y" from="-20" to="820" dur="'+d+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" values="0 '+(x+3)+' 0;360 '+(x+3)+' 0" dur="'+(2+i%3)+'s" repeatCount="indefinite"/></rect>'; } return s; })()
-      +'<rect width="400" height="800" fill="#000" opacity=".14"/>'); }
-  function kamasutra(l){ var c=P.kamasutra[l-1]; var petals=function(n){ var s=''; for(var i=0;i<n;i++){ var x=(i*67)%400,d=16+((i*11)%12),b=-((i*37)%100)/100*d; s+='<ellipse rx="5" ry="10" fill="'+c[2]+'" opacity=".5"><animate attributeName="cy" from="-20" to="820" dur="'+d+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/><animate attributeName="cx" values="'+x+';'+(x+30)+';'+x+';'+(x-30)+';'+x+'" dur="'+(d/2.5).toFixed(1)+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" values="0;360" dur="'+(4+i%4)+'s" repeatCount="indefinite"/></ellipse>'; } return s; };
-    var ring=function(n,r,rx,ry,op){ var s=''; for(var i=0;i<n;i++) s+='<ellipse cx="200" cy="'+(400-r)+'" rx="'+rx+'" ry="'+ry+'" fill="none" stroke="'+c[2]+'" stroke-width="1.4" opacity="'+op+'" transform="rotate('+(i*360/n)+' 200 400)"/>'; return s; };
+      '<path d="M0 0 L120 0 L330 800 L-60 800Z" fill="'+c[2]+'" opacity=".07"><animateTransform attributeName="transform" type="rotate" values="-6 60 0;8 60 0;-6 60 0" dur="18s" repeatCount="indefinite"/></path>'
+      +'<ellipse cx="200" cy="820" rx="300" ry="200" fill="url(#o)" opacity=".4">'+an('opacity','.3;.5;.3',8)+'</ellipse>'
+      +'<rect width="400" height="800" fill="#000" opacity=".2"/>'); }
+  function decouverte(l){ var c=P.decouverte[l-1];
+    var wave=function(y,amp,d,op,col,b){ return '<path d="M-50 '+y+' Q50 '+(y-amp)+' 150 '+y+' T350 '+y+' T550 '+y+' V900 H-50Z" fill="'+col+'" opacity="'+op+'"><animateTransform attributeName="transform" type="translate" values="0 0;-100 '+(amp*.4)+';0 0" dur="'+d+'s" begin="'+(b||0)+'s" repeatCount="indefinite"/></path>'; };
+    return svg(c[0],c[1], rg('o',c[2])+rg('w','#ff8a5a')+'<linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+c[2]+'" stop-opacity=".5"/><stop offset="1" stop-color="'+c[2]+'" stop-opacity="0"/></linearGradient>',
+      '<circle cx="200" cy="560" r="300" fill="url(#w)" opacity=".5">'+an('r','280;330;280',6)+an('opacity','.35;.6;.35',6)+'</circle>'
+      +wave(470,50,12,.18,'url(#s)')+wave(560,60,15,.22,'url(#s)',-4)+wave(660,70,18,.28,'url(#s)',-8)+wave(750,50,10,.35,'url(#s)',-2)
+      +'<ellipse cx="90" cy="250" rx="140" ry="220" fill="url(#o)" opacity=".28">'+an('opacity','.15;.38;.15',7)+'</ellipse>'
+      +'<ellipse cx="330" cy="150" rx="120" ry="190" fill="url(#o)" opacity=".22">'+an('opacity','.35;.12;.35',9)+'</ellipse>'
+      +rise(22,'w',2,6,7,14,.8,18,830,120)+rise(6,'o',40,80,16,26,.14,26,860,100)+'<rect width="400" height="800" fill="#000" opacity=".1"/>'); }
+  function kamasutra(l){ var c=P.kamasutra[l-1];
+    var ring=function(n,r,rx,ry,op){ var t=''; for(var i=0;i<n;i++) t+='<ellipse cx="200" cy="'+(400-r)+'" rx="'+rx+'" ry="'+ry+'" fill="none" stroke="'+c[2]+'" stroke-width="1.2" opacity="'+op+'" transform="rotate('+(i*360/n)+' 200 400)"/>'; return t; };
     return svg(c[0],c[1], rg('o',c[2]),
-      '<circle cx="200" cy="400" r="330" fill="url(#o)" opacity=".28">'+an('opacity','.2;.38;.2',8)+'</circle>'
-      +'<g><animateTransform attributeName="transform" type="rotate" from="0 200 400" to="360 200 400" dur="140s" repeatCount="indefinite"/>'+ring(12,150,26,95,.5)+ring(12,230,34,130,.3)+'<circle cx="200" cy="400" r="62" fill="none" stroke="'+c[2]+'" stroke-width="1.5" opacity=".6"/></g>'
-      +'<g><animateTransform attributeName="transform" type="rotate" from="360 200 400" to="0 200 400" dur="90s" repeatCount="indefinite"/>'+ring(8,95,18,62,.55)+'<circle cx="200" cy="400" r="150" fill="none" stroke="'+c[2]+'" stroke-width="1" stroke-dasharray="4 10" opacity=".5"/></g>'
-      +'<circle cx="200" cy="400" r="14" fill="'+c[2]+'" opacity=".8">'+an('opacity','.5;1;.5',4)+'</circle>'
-      +petals(12)+rise(5,'o',30,60,18,28,.15,20,840,200)+'<rect width="400" height="800" fill="#000" opacity=".12"/>'); }
-  return {classique:classique,pimente:pimente,competition:competition,kamasutra:kamasutra};
+      '<circle cx="200" cy="400" r="320" fill="url(#o)" opacity=".22">'+an('opacity','.16;.28;.16',10)+'</circle>'
+      +'<g opacity=".7"><animateTransform attributeName="transform" type="rotate" from="0 200 400" to="360 200 400" dur="240s" repeatCount="indefinite"/>'+ring(12,150,26,95,.35)+'<circle cx="200" cy="400" r="62" fill="none" stroke="'+c[2]+'" stroke-width="1.2" opacity=".4"/></g>'
+      +'<rect width="400" height="800" fill="#000" opacity=".2"/>'); }
+  return {classique:classique,pimente:pimente,competition:competition,decouverte:decouverte,kamasutra:kamasutra};
 })();
 function modeSceneBg(mode, lvl){
   var f = MODE_SCENES[mode]; if(!f) return '';
@@ -8229,6 +8234,19 @@ function modeSceneBg(mode, lvl){
   return 'linear-gradient(rgba(5,5,8,.28), rgba(5,5,8,.5)), url("data:image/svg+xml;utf8,'+encodeURIComponent(s)+'") center/cover no-repeat';
 }
 
+
+function confettiBurst(){
+  try{
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if(!document.getElementById('cf-style')){ var st=document.createElement('style'); st.id='cf-style';
+      st.textContent='@keyframes cfFall{0%{transform:translate3d(0,-10vh,0) rotate(0);opacity:1}100%{transform:translate3d(var(--dx),110vh,0) rotate(var(--rot));opacity:.9}}#cf-layer{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}#cf-layer i{position:absolute;top:0;width:9px;height:14px;border-radius:2px;animation:cfFall var(--d) cubic-bezier(.2,.6,.4,1) forwards}';
+      document.head.appendChild(st); }
+    var L=document.getElementById('cf-layer'); if(!L){ L=document.createElement('div'); L.id='cf-layer'; document.body.appendChild(L); }
+    var cols=['#ffd24a','#ff4a8a','#4ac8ff','#ffffff','#7aff9a','#ff8f3a'], h='';
+    for(var i=0;i<48;i++){ h+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;background:'+cols[i%6]+';--dx:'+Math.round(Math.random()*160-80)+'px;--rot:'+Math.round(360+Math.random()*720)+'deg;--d:'+(2.2+Math.random()*1.8).toFixed(2)+'s;animation-delay:'+(Math.random()*.5).toFixed(2)+'s"></i>'; }
+    L.innerHTML=h; clearTimeout(L._t); L._t=setTimeout(function(){ L.innerHTML=''; },4800);
+  }catch(e){}
+}
 function setAppBackground(bgValue){
   var layer = document.getElementById('app-bg-layer');
   if(!layer){
@@ -10285,6 +10303,7 @@ function displayGage() {
       _bgValue = modeSceneBg(G.mode, G.level);   // fond animé intégré (niveau = couleur plus chaude)
     }
     setAppBackground(_bgValue);
+    if(G.mode==='competition') confettiBurst();
   }
   updateVoiceToggleBtn();
   updateAutoPlayBtn();
