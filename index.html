@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?famialy=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2790,6 +2790,261 @@ function saveCustomStories(){
   try{ localStorage.setItem(STORIES_KEY, JSON.stringify(customStories)); }catch(e){}
   rebuildStoryDuos();
 }
+function _B(scene,qui,rep,iH,iF,d){ var b={scene:scene,replique:{qui:qui,texte:rep},intention:{H:iH,F:iF}}; if(d) b.duree=d; return b; }
+var STORY_BRANCHES = {};
+STORY_BRANCHES.detenu_policiere = {
+ A:{q:"{F} tient encore la clé de la cellule. Qu'en fait-elle ?", o:["Elle la glisse dans sa poche, il est à elle","Elle la lui tend : à lui de décider s'il reste"],
+  b:[_B("La clé disparaît dans la poche de l'uniforme. {F} s'adosse à la porte, bras croisés, et le regarde comme un dossier qu'elle compte étudier longtemps.","F","Personne ne sort d'ici avant que j'aie fini.","Laisse-la mener. Réponds seulement quand elle te touche.","Tourne autour de lui. Effleure, recule, recommence — fais-le attendre.",90),
+     _B("{F} pose la clé dans la paume de {H}, referme ses doigts dessus. La porte est ouverte. Il ne bouge pas, et le silence en dit plus que n'importe quel aveu.","F","Tu peux partir. Je ne te retiens pas.","Garde la clé. Rapproche-toi d'elle sans la lâcher des yeux, et décide à ta façon.","Reste immobile. Laisse-le venir à toi, et ne lui facilite rien.",90)]},
+ B:{q:"Le couloir résonne d'un pas, au loin. Que font-ils ?", o:["Ils continuent, plus bas, plus serrés","Ils s'arrêtent, retiennent leur souffle, et reprennent encore plus fort"],
+  b:[_B("Les pas s'éloignent sans s'arrêter. Ils n'ont pas bougé d'un millimètre — mais ce qui suit se fait en silence, bouche contre la peau pour étouffer chaque bruit.","H","Chut. Pas un son.","Étouffe-la d'une main ou d'un baiser. Ne ralentis pas.","Mords ton poignet, ta lèvre, son épaule — mais ne t'arrête pas.",150),
+     _B("Le pas s'arrête devant la cellule. Ils se figent, corps emboîtés, souffle suspendu. Puis il repart — et l'urgence qui les saisit alors n'a plus rien de mesuré.","F","Maintenant. Avant qu'il revienne.","Reprends-la sans attendre, sans douceur, à pleine force.","Ne cache plus rien. Dis-lui ce que tu veux, à voix basse.",150)]},
+ C:{q:"Le matin approche, le néon faiblit. Comment finit la nuit ?", o:["Jusqu'au bout, sans retenue","Lentement, face à face, en prenant tout leur temps","Les rôles s'inversent une dernière fois"]},
+ fins:[_B("Le néon grésille une dernière fois. {H} la prend dans ses bras, la porte jusqu'au lit de camp, et ils s'y étendent face à face. Plus de hâte : seulement des gestes lents, appuyés, et leurs regards qui ne se quittent plus.","F","Reste. Encore un peu.","Fais-lui l'amour doucement, front contre front, sans jamais baisser les yeux.","Garde-le contre toi. Respire à son rythme jusqu'à ce que tout se relâche."),
+       _B("{F} retire son ceinturon et le laisse tomber. Pour la dernière fois ce soir, c'est elle qui est dos au mur — puis lui, puis elle encore. Ils ne savent plus qui poursuit qui, ni qui est enfermé.","H","Qui est le prisonnier, maintenant ?","Prends-la, puis laisse-la prendre le dessus, autant de fois qu'il le faut.","Alterne autorité et abandon. Tu mènes, puis tu cèdes — jusqu'au bout ensemble.")],
+ epi:["Au matin, le procès-verbal est resté à moitié rempli sur la table. Personne ne lui demandera jamais pourquoi.","Le néon s'est éteint avant l'aube. Ils sont restés enlacés sur le lit de camp, à écouter le couloir se remplir de pas qui ne les concernaient plus.","Aucun des deux n'a su dire, au matin, qui avait gardé la clé. La porte de la cellule est restée ouverte, et personne n'a voulu y voir un signe de liberté."]};
+STORY_BRANCHES.chevalier_princesse = {
+ A:{q:"La princesse lui tend sa main à baiser. Que fait le chevalier ?", o:["Il s'agenouille et baise lentement sa main, puis son poignet","Il la saisit par la taille et l'embrasse sans demander"],
+  b:[_B("{H} met un genou à terre et pose les lèvres sur la main de {F}, puis sur le poignet, puis sur la peau fine du bras. Elle retient son souffle : c'est un hommage, et il est bien trop long pour n'être que cela.","F","Relevez-vous, chevalier. Pas encore. Continuez.","Remonte le long de son bras en baisers lents, sans jamais te presser.","Laisse-le faire. Ne dis pas un mot de plus qu'un ordre murmuré.",90),
+     _B("{H} ignore le protocole. Il l'attire contre sa cotte de mailles froide et l'embrasse comme on prend une forteresse : sans prévenir, sans se retourner.","F","Vous oubliez qui je suis…","Tiens-la serrée, embrasse sa bouche, son cou, sans lui laisser le temps de protester.","Fais semblant de te débattre une seconde, puis rends-toi complètement.",90)]},
+ B:{q:"Un bruit de pas dans l'escalier de la tour. Que décident-ils ?", o:["Ils éteignent les chandelles et continuent dans le noir","Ils verrouillent la porte, et {F} l'attire sur le lit à baldaquin"],
+  b:[_B("Les chandelles s'éteignent d'un souffle. Dans le noir de la tour, il n'y a plus que les mains, les bouches et la peau — chaque caresse découverte à l'aveugle.","H","Je n'ai pas besoin de lumière pour vous trouver.","Explore-la sans rien voir, lentement, du bout des doigts puis de la bouche.","Guide ses mains. Dis-lui, tout bas, où tu veux qu'il aille.",150),
+     _B("La clé tourne deux fois. {F} le tire par la cotte vers le grand lit à baldaquin, les rideaux se referment autour d'eux comme une alcôve secrète.","F","Ici, c'est moi qui commande, chevalier.","Laisse-la te déshabiller, pièce d'armure par pièce d'armure, et obéis à chacun de ses gestes.","Prends le commandement. Chevauche-le, ordonne, prends ton plaisir sans demander la permission.",150)]},
+ C:{q:"L'aube pointe aux meurtrières. Comment s'achève leur nuit dans la tour ?", o:["Passion sans retenue, comme dans les ballades","Un dernier serment, lent, au creux du lit","Elle prend le commandement du royaume, et de lui"]},
+ fins:[_B("L'aube dessine des fenêtres de cathédrale sur les draps. {H} fait à {F} un dernier serment, à voix basse, et le scelle lentement, sans hâte, corps contre corps, jusqu'à ce que le serment tienne dans un seul soupir.","H","Je reviendrai chaque nuit, sur ma vie.","Fais-lui l'amour lentement, en la regardant. Chaque mouvement est une promesse.","Accroche-toi à lui. Murmure ton propre serment, et tiens-le jusqu'à la fin."),
+       _B("{F} le pousse sur le dos, grimpe sur lui et s'installe en reine. Ce n'est plus lui qui défend la tour : c'est elle qui le possède, ordonne chaque rythme, jusqu'à ce qu'il rende les armes.","F","Cette nuit, c'est moi qui dicte les lois.","Rends les armes. Laisse-la tout diriger et dis-lui ce que ça te fait.","Chevauche-le à ton rythme. Ne t'arrête que quand tu es rassasiée.")],
+ epi:["Au matin, les gardes ont trouvé la tour verrouillée de l'intérieur. Personne n'a osé frapper avant midi.","L'aube a trouvé le chevalier endormi, la tête contre le ventre de la princesse. Les cloches du château ont sonné trois fois avant qu'aucun des deux n'ouvre les yeux.","Le royaume dira plus tard que la princesse a été bien gardée cette nuit-là. Le chevalier ne contredira jamais personne — mais il n'a pas reparu sur les remparts avant le soir."]};
+STORY_BRANCHES.infirmiere_patient = {
+ A:{q:"La température de {H} est montée. Que propose {F} ?", o:["Elle le rafraîchit avec une serviette humide, très lentement","Elle prétend devoir l'examiner plus complètement"],
+  b:[_B("{F} humecte une serviette et la passe sur le front, la gorge, le torse de {H}. La fièvre n'est plus tout à fait celle du virus, et elle le sait très bien.","F","Restez tranquille, c'est pour votre bien.","Laisse-toi soigner. Respire plus fort à chaque passage de la serviette.","Prends ton temps. Descends la serviette millimètre par millimètre, jusqu'à ce qu'il tressaille.",90),
+     _B("{F} tire le rideau et sort son stéthoscope. L'auscultation commence au cœur — qu'elle écoute bien plus longtemps que nécessaire — puis descend.","F","Respirez… plus profondément. Encore.","Obéis à chaque consigne. Ne dis rien d'autre que « oui, madame ».","Ausculte-le à ta façon : mains, oreille, lèvres. Sois précise et très lente.",90)]},
+ B:{q:"Le couloir s'est tu, la veilleuse clignote. Qui décide de la suite ?", o:["{F} verrouille la porte et prend les commandes","{H} se redresse, lui prend le poignet et inverse le soin"],
+  b:[_B("La porte de la chambre 204 se verrouille d'un clic discret. {F} remonte le drap, s'assoit à califourchon sur {H} : le protocole de nuit vient d'être remplacé par le sien.","F","Ordre du médecin : ne bouge plus.","Reste allongé. Laisse-la te chevaucher ou te toucher, à son rythme.","Mène le soin comme tu le sens, sans jamais lui laisser l'initiative.",150),
+     _B("{H} attrape le poignet de {F} avant qu'elle n'ait le temps de reculer. Il la tire sur le lit, lui retire sa blouse, et le patient prend l'initiative sans aucune ordonnance.","H","C'est moi qui vous soigne, maintenant.","Prends l'initiative. Déshabille-la, embrasse-la, mène tout.","Laisse-toi faire. Résiste une seconde pour le plaisir de céder.",150)]},
+ C:{q:"Le petit matin approche, la relève arrive bientôt. Comment finit la garde ?", o:["Jusqu'au bout, sans penser à la relève","Une dernière étreinte lente, sous les draps","Le patient soigne l'infirmière une dernière fois"]},
+ fins:[_B("{F} éteint la veilleuse et se glisse sous le drap. Ils n'ont plus que quelques minutes, qu'ils font durer : un dernier échange de caresses lentes, front contre front, sans un mot d'infirmière ni de patient.","F","Cinq minutes avant la relève. Rien que pour nous.","Ralentis le temps. Câline-la, fais-lui l'amour doucement jusqu'à la dernière seconde.","Reste silencieuse. Savoure chaque seconde qu'il te donne."),
+       _B("{H} se lève, la prend par la taille et l'allonge à sa place. Il a décidé de lui rendre toutes les attentions de la nuit : bouche, mains, patience. L'infirmière reçoit enfin le soin qu'elle donne à tout le monde.","H","Cette fois, c'est vous la patiente.","Occupe-toi d'elle jusqu'à ce qu'elle ne puisse plus parler.","Laisse-toi soigner. Ne retiens rien — tu as bien mérité qu'on s'occupe de toi.")],
+ epi:["Au changement d'équipe, la chambre 204 était impeccable, le lit refait. Seule la tension du patient, relevée à 6 heures, a étonné son médecin.","Le jour s'est levé sur la chambre 204. L'infirmière de la relève a trouvé le lit vide, le drap soigneusement plié, et un seul mot sur la table de chevet : « guéri ».","L'infirmière a signé son rapport avec un sourire qu'elle n'a pas réussi à effacer. Le patient, lui, est sorti le lendemain en promettant de revenir pour un contrôle."]};
+STORY_BRANCHES.doctorant_professeure = {
+ A:{q:"La soutenance blanche est terminée, l'amphi est vide. Comment {F} l'évalue-t-elle ?", o:["Elle l'interroge à voix basse, en se rapprochant à chaque question","Elle ferme les rideaux de la salle et le laisse parler sans filtre"],
+  b:[_B("{F} s'assoit sur le bord du bureau et pose ses questions une à une, de plus en plus près. Chaque bonne réponse est récompensée d'un effleurement, chaque hésitation d'un silence qui pèse.","F","Argumentez. Convainquez-moi vraiment.","Réponds sans trembler. Plus tu t'approches, plus tu perds le fil.","Interroge, puis récompense. Fais-lui comprendre que l'évaluation est loin d'être finie.",90),
+     _B("Les rideaux tombent, la porte de la salle se verrouille. {F} s'assoit au premier rang, jambes croisées. « Dites-moi franchement ce que vous pensez de moi. »","F","Pas la thèse. Moi.","Dis-lui tout ce que tu n'as jamais osé. Rapproche-toi à chaque phrase.","Écoute, sans l'aider. Souris. Fais-le venir jusqu'à toi.",90)]},
+ B:{q:"Son mémoire est resté ouvert sur le bureau. Qu'en fait-elle ?", o:["Elle le referme et l'attire contre elle","Elle le lit à voix haute, lentement, en lui retirant ses lunettes"],
+  b:[_B("{F} referme le mémoire d'un geste net. Le silence tombe sur la salle. Elle se lève, s'approche, et passe un doigt sous sa cravate comme on cherche une page précise.","F","Ça suffit pour le mémoire. Passons à autre chose.","Laisse-la prendre le contrôle. Ne dis rien, tends seulement les mains.","Défais sa cravate lentement, déboutonne, prends tout ton temps.",150),
+     _B("{F} lit à voix haute, mot après mot, un passage qui n'a rien d'académique — une phrase qu'il a écrite pour elle, cachée en page 83. Elle le regarde par-dessus ses lunettes en lisant.","F","« Je voudrais la déshabiller du regard. » Page 83. Vous avez du talent.","Avoue. Prends-la dans tes bras et prouve que tu n'as pas exagéré.","Continue à lire, puis reprends-le au mot près, à la lettre, exactement comme écrit.",150)]},
+ C:{q:"Le campus est endormi, la lumière du bureau est la seule allumée. Comment finit la soutenance ?", o:["Jusqu'au bout, sur le bureau","Lentement, sur le canapé de la salle des profs","Il lui présente sa conclusion à elle"]},
+ fins:[_B("Ils quittent l'amphi pour le vieux canapé de la salle des professeurs. La nuit est longue, la lumière basse, et ils font durer ce qui aurait pu être précipité : caresses, murmures, un dernier baiser d'un long soupir.","H","Je n'ai plus de question.","Fais-lui l'amour doucement, en la regardant. Chaque seconde compte.","Prends-le contre toi. Garde la lenteur jusqu'au bout."),
+       _B("{H} se redresse, se plante devant elle et déroule sa dernière thèse, à voix basse puis par les gestes : une conclusion personnelle, qu'elle devra défendre elle-même, à bout de souffle.","H","Voici ma conclusion. Défendez-la.","Mène-la à la fin, avec toute la rigueur d'un doctorant ambitieux.","Réponds à chaque argument par un gémissement, jusqu'à ne plus pouvoir argumenter.")],
+ epi:["Le procès-verbal de la soutenance blanche porte une mention : « excellent travail, à reprendre en séance privée ». Personne n'a jamais su de quelle séance il s'agissait.","Le concierge a trouvé la salle le lendemain : rideaux tirés, mémoire ouvert à la page 83. Il a tout remis en place sans rien lire.","La professeure a donné la meilleure note de sa carrière à une soutenance qui n'a jamais eu lieu. Le doctorant, lui, n'a jamais demandé de rattrapage."]};
+STORY_BRANCHES.client_danseuse = {
+ A:{q:"La danseuse s'approche du fauteuil. Que fait le client ?", o:["Il reste sagement assis, mains sur les accoudoirs","Il l'attire sur ses genoux malgré le règlement"],
+  b:[_B("{H} garde les mains sur les accoudoirs, comme exigé. {F} tourne autour du fauteuil, effleure sa nuque, ses épaules, son col — et le règlement n'a jamais été aussi frustrant.","F","Les mains sur les accoudoirs. Vous êtes un bon client.","Ne bouge pas. Laisse-la danser autour de toi jusqu'à n'en plus pouvoir.","Joue de la lenteur. Frôle, recule, laisse-le te supplier du regard.",90),
+     _B("{H} la saisit par la taille et la fait asseoir sur lui. La musique couvre le reste. {F} n'a même pas la force de feindre l'indignation.","F","Interdit de toucher… et pourtant.","Tiens-la contre toi. Prends son cou, sa taille, sa bouche — plus rien n'est interdit.","Joue la danseuse offusquée une seconde, puis rends-toi, souriante.",90)]},
+ B:{q:"Le rideau du salon privé se referme. Quel genre de soirée choisit-elle ?", o:["Un strip-tease lent, où il ne peut que regarder","Une danse où chacun est complice, mains libres"],
+  b:[_B("{F} retire une pièce à la fois, au rythme de la musique, sans jamais détourner les yeux. {H} n'a le droit de rien faire d'autre que de regarder — ce qui est une torture douce.","F","Regarde bien. Tu n'auras pas droit au bis.","Regarde sans toucher. Serre les accoudoirs, et dis-lui ce que ça te fait.","Prends ton temps. Sois lente, sois sûre de toi. Tu règnes sur la pièce.",150),
+     _B("La danse se transforme en corps à corps. {F} guide les mains de {H} sur elle, chaque geste rythmé par la basse qui vibre dans les murs. Plus de client, plus de danseuse : seulement deux corps qui se cherchent.","F","Danse avec moi, cette fois.","Suis son rythme. Touche, embrasse, laisse-toi emporter.","Mène la danse et le désir. Laisse-le venir, puis reprends-le en main.",150)]},
+ C:{q:"La musique boucle encore, le club est vide. Comment finit la nuit ?", o:["À fond, comme si le club n'avait jamais existé","Une dernière danse lente, à deux, sans hâte","Elle lui offre un final dont il se souviendra"]},
+ fins:[_B("La musique change : un slow, doux, presque absurde dans ce salon feutré. {F} et {H} dansent serrés, front contre front, avant de glisser sur le canapé en continuant à danser, à peine, à leur propre rythme.","F","Une dernière danse. Pas de prix.","Danse avec elle, puis fais-lui l'amour doucement, sans quitter ses yeux.","Laisse-toi bercer. Respire contre son cou jusqu'à la fin."),
+       _B("{F} le fait asseoir et lui offre son final : une danse qui n'a rien d'une danse, à califourchon, sans retenue, sans règlement, sans aucune facture. C'est elle qui le mène à l'extase, et elle compte bien qu'il s'en souvienne.","F","Ce soir, c'est la maison qui offre.","Abandonne-toi. Laisse-la te mener, et dis-lui ce que tu ressens.","Conduis chaque mouvement. Regarde-le perdre pied, et savoure-le.")],
+ epi:["Au matin, la gérante a retrouvé le salon privé en parfait état, la facture annulée, et un seul verre posé sur la table. Elle n'a posé aucune question.","La dernière chanson s'est terminée depuis longtemps. Ils sont restés enlacés dans le canapé, au milieu d'un club vide, sans parler.","Le client est reparti avec la certitude qu'il reviendrait. La danseuse, elle, a effacé son nom de la liste des réservations."]};
+STORY_BRANCHES.masseur_cliente = {
+ A:{q:"La cliente est allongée sur la table, serviette sur le dos. Par où commence le masseur ?", o:["Par la nuque et les épaules, très lentement","Par les pieds, en remontant doucement le long des jambes"],
+  b:[_B("{H} fait chauffer l'huile entre ses paumes et pose les mains sur la nuque de {F}. Pression ferme, puis douce, puis plus rien que des cercles qui descendent le long de la colonne.","H","Dites-moi si c'est trop fort.","Masse sans hâte. Écoute ses soupirs, ajuste la pression à chacun.","Ferme les yeux. Laisse-toi aller, et fais-lui sentir quand c'est exactement ce qu'il faut.",90),
+     _B("{H} s'empare d'un pied, puis de l'autre, pouce dans la voûte plantaire. Il remonte à la cheville, au mollet, au creux du genou, sans jamais laisser la tension retomber.","H","Les jambes aussi portent beaucoup de choses.","Remonte lentement, hésite un peu plus haut à chaque passage.","Laisse tes jambes s'ouvrir un peu plus à chaque minute. Ne dis rien, ou presque.",90)]},
+ B:{q:"La serviette glisse sur la table. Que fait le masseur ?", o:["Il fait comme s'il n'avait rien vu","Il la retire lui-même, avec un regard interrogatif"],
+  b:[_B("La serviette glisse, découvrant bien plus de peau qu'il n'était prévu. {H} garde son sérieux de professionnel — mais ses mains, elles, ralentissent, et ses doigts s'attardent.","H","Je n'ai rien remarqué, madame.","Continue le massage comme si de rien n'était, mais laisse tes mains parler.","Ne la remets pas. Provoque-le en silence, d'un souffle plus profond.",150),
+     _B("{H} saisit le bord de la serviette et attend son accord d'un seul regard. {F} hoche la tête. La serviette tombe, et le massage change de nature.","H","Dites-moi stop quand vous voulez.","Masse tout le corps à l'huile, sans oublier une seule zone — mais prends ton temps.","Laisse-le faire. Guide ses mains d'un soupir ou d'un geste.",150)]},
+ C:{q:"Le dernier rendez-vous touche à sa fin. Que reste-t-il du massage ?", o:["Plus rien de professionnel, jusqu'à l'extase","Un dernier massage lent, tout en tendresse","Elle reprend la table et masse à son tour"]},
+ fins:[_B("L'huile a chauffé la pièce entière. {H} ralentit encore, enlace {F} sur la table et lui fait l'amour dans une lenteur qui tient du massage : mouvements amples, souffle long, mains qui n'oublient aucune vertèbre.","H","Je ne suis pas pressé. Et vous ?","Fais-lui l'amour lentement, comme un massage profond. Laisse-lui le dernier mot.","Respire dans son rythme. Dis-lui de ne surtout pas s'arrêter."),
+       _B("{F} se redresse, enjambe la table, saisit le flacon d'huile. Le rôle s'inverse : c'est elle qui masse maintenant, d'abord le dos du masseur, puis chaque muscle qu'elle trouve à sa portée.","F","Votre tour. Allongez-vous.","Laisse-toi faire. Allonge-toi, ferme les yeux, et rends les armes.","Masse-le à l'huile. Prends la même lenteur qu'il a eue, et un peu plus d'audace.")],
+ epi:["Au matin, le planning du salon indiquait « dernier rendez-vous : 21 h ». La table de massage, elle, n'a été désinfectée qu'à midi.","Il restait trois bougies allumées quand ils se sont arrêtés. Le masseur les a éteintes une à une sans dire un mot, et la cliente a rattaché ses cheveux en souriant.","La cliente est repartie détendue comme jamais. Le masseur, lui, s'est assis un long moment sur le bord de la table, les mains vides."]};
+STORY_BRANCHES.livreur_cliente = {
+ A:{q:"{F} ouvre la porte en peignoir. Que dit-elle ?", o:["« Posez le colis dans l'entrée, je finis de me préparer »","« Entrez, il faut que je signe là où ça vous arrange »"],
+  b:[_B("{H} pose le colis, mais {F} disparaît dans la chambre sans refermer la porte. Elle revient une minute plus tard, peignoir dénoué, et pose le stylo sur la table.","F","Il faut que vous me montriez où signer.","Reste planté là. Laisse tes yeux faire le travail, avant tes mains.","Prends ton temps. Passe devant lui sans le regarder, puis fais volte-face.",90),
+     _B("Elle le fait entrer, referme derrière lui, et se plante contre la porte. Le colis tombe sur le parquet. Le bon de livraison n'a plus aucune importance.","F","Signez ici. Et ici. Et là, aussi.","Fais-lui comprendre à ton regard que tu n'es pas là que pour le colis.","Plaque-le contre la porte. Mène la danse dès le premier baiser.",90)]},
+ B:{q:"Le colis s'ouvre : à l'intérieur, quelque chose qu'elle n'a pas commandé. Que fait-elle ?", o:["Elle ne dit rien, mais le sort du carton, lentement","Elle éclate de rire et le lui tend : « C'est pour vous, alors »"],
+  b:[_B("{F} soulève un voile de papier de soie. Ce qu'elle découvre n'est pas dans son bon de commande. Elle le contemple, puis lève les yeux vers {H}, lentement, sans rien dire.","F","Qui a commandé ça pour moi ?","Hausse les épaules, sourire en coin. Laisse-la décider du reste.","Utilise l'objet, ou ce qu'il t'inspire. Fais-lui savoir que tu as très bien compris.",150),
+     _B("{F} tend le contenu à {H}, hilare. Le rire dure à peine : leurs doigts se frôlent sur le papier de soie, et le jeu devient autre chose, plus intime, plus brûlant.","F","Alors ce cadeau est pour vous. Il faut le tester.","Essaie, ou fais-lui essayer. Fais de la surprise une complicité.","Rends la surprise à ta manière. Profites-en jusqu'au bout.",150)]},
+ C:{q:"La nuit tombe sur le palier, aucun des deux ne songe à repartir. Que fait-elle de sa dernière signature ?", o:["Elle signe sur lui, partout","Elle lui offre un café… puis le reste de la soirée","Elle le laisse repartir, mais pas sans un dernier baiser contre la porte"]},
+ fins:[_B("Elle remplit deux tasses de café, qu'ils laissent refroidir. Le canapé, la lampe basse, la tournée oubliée : ils font l'amour lentement, comme deux personnes qui ont tout leur temps — ce qui n'est jamais le cas d'un livreur.","F","Votre tournée peut attendre, non ?","Prends-la sans te presser. Savoure le canapé, la lampe, le silence.","Garde-le contre toi. Respire, rit, recommence."),
+       _B("Il remet sa casquette, elle le retient par le col, le plaque contre la porte fermée. Un dernier baiser, lent, profond, d'une intensité qui ne devrait pas tenir dans un palier. Puis le dernier arrêt de la nuit.","H","Il faut vraiment que j'y aille…","Ne laisse pas la porte s'ouvrir. Embrasse-la jusqu'à ce qu'elle te lâche, ou pas.","Retiens-le. Donne-lui une dernière raison de revenir demain.")],
+ epi:["Le suivi de colis indique « livré à 18 h 42 ». Le livreur, lui, n'a repris sa tournée qu'à l'aube.","La dernière livraison de la journée a pris trois heures. Le client suivant n'a jamais été prévenu.","Le lendemain, un nouveau colis est arrivé à la même adresse. Il n'y avait rien dedans, seulement un mot : « signature attendue »."]};
+STORY_BRANCHES.inconnus_bar = {
+ A:{q:"Il lui propose un deuxième verre. Que répond-elle ?", o:["« Seulement si vous me dites votre vrai nom »","« Seulement si vous ne dites plus rien »"],
+  b:[_B("{F} fait glisser le verre vers lui et attend, menton calé dans la main. Il hésite, puis donne un prénom, un seul, qui n'est probablement pas le sien. Elle sourit : le jeu peut commencer.","F","C'est un début. Continuez.","Invente-toi une vie. Chaque mensonge est une invitation.","Écoute-le, rends-lui la monnaie de sa pièce, et garde ton vrai prénom pour plus tard.",90),
+     _B("Il se tait. Elle le regarde, il la regarde. Le silence entre eux dure plus qu'une chanson, et la main de {F} finit par se poser, sans un mot, sur la cuisse de {H}.","F","(Un silence. Un sourire. Rien d'autre.)","Ne dis rien. Réponds par des gestes, lents, évidents.","Mène sans paroles. Ta main parle à ta place.",90)]},
+ B:{q:"Le barman éteint la moitié des lumières. Où vont-ils ?", o:["Au fond du bar, dans l'angle sombre","Dans le taxi, vers chez elle, sans un mot"],
+  b:[_B("Dans l'angle du fond, la banquette en velours est cachée par un pilier. {F} l'y entraîne, ils s'assoient serrés, et le monde du bar disparaît derrière leurs corps.","H","On est vus ?","Embrasse-la sans retenue. Laisse ta main remonter lentement sous la table.","Ose. Détache un bouton, laisse-le deviner, et rappelle-lui qu'on pourrait vous surprendre.",150),
+     _B("Le taxi démarre, la ville défile, la banquette est étroite. Aucun des deux ne dit l'adresse deux fois. Le chauffeur ne regarde pas dans le rétroviseur — enfin, presque.","F","Plus vite, ou je ne réponds plus de rien.","Prends-lui la main, embrasse son poignet, son cou. Laisse monter l'impatience.","Fais durer le trajet. Chuchote-lui ce qui l'attend à l'arrivée.",150)]},
+ C:{q:"Jamais ils ne se reverront peut-être. Comment finit cette nuit sans nom ?", o:["Sans retenue, comme si c'était la dernière fois","Doucement, en prenant le temps de se connaître un peu","Elle part avant l'aube, laissant seulement un souvenir"]},
+ fins:[_B("Ils ne parlent plus de noms ni de villes. Seulement de ce qu'ils aiment, lentement, un détail à la fois : un grain de peau, une habitude, un souffle. Ils font l'amour en se découvrant, et la découverte dure.","H","Raconte-moi quelque chose de vrai.","Fais-lui l'amour en la regardant. Pose-lui des questions. Écoute les réponses.","Réponds, sincèrement. Garde-le contre toi, et laisse l'instant durer."),
+       _B("À l'aube, {F} se glisse hors du lit sans bruit, rassemble ses affaires, et laisse un dernier baiser sur le front de {H} endormi. Elle part sans laisser de nom, de numéro, de promesse. Seulement le souvenir.","F","(Un dernier baiser, très léger, sans un mot.)","Fais semblant de dormir, ou ne le fais pas. Savoure ce qui reste d'elle sur les draps.","Prends tout avec toi : son odeur, son regard. Pars sans te retourner.")],
+ epi:["Le barman n'a rien dit en voyant les deux verres vides sur la banquette. Il en a l'habitude : certains soirs, un bar n'est qu'une salle d'attente.","Ils ne se sont jamais redemandé leur nom. Parfois, le hasard est la plus belle forme de rendez-vous.","Au matin, il restait sur l'oreiller un parfum et une note : « Ne me cherche pas. Mais si tu repasses au bar, je ne dis pas non. »"]};
+STORY_BRANCHES.pompier_voisine = {
+ A:{q:"{H} la porte hors de l'appartement enfumé. Que fait-il ?", o:["Il la dépose délicatement sur le canapé du palier","Il la garde dans ses bras un peu plus longtemps que nécessaire"],
+  b:[_B("Il l'installe sur le canapé du palier, enroule une couverture autour de ses épaules. Elle tremble, de froid ou d'autre chose. {H} s'agenouille pour vérifier son pouls, et ses doigts s'y attardent.","H","Respirez. Vous êtes en sécurité.","Reste professionnel. Laisse tes mains trahir ce que ta voix cache.","Laisse-le s'inquiéter. Attrape sa main, garde-la contre ta joue.",90),
+     _B("Il ne la repose pas tout de suite. Ses bras sont chauds, le contraste avec l'air froid de l'escalier est presque insupportable. Elle ne demande pas à descendre.","F","Encore une minute. Je suis encore un peu étourdie.","Garde-la contre toi. Respire son odeur de fumée et de peau.","Niche-toi contre son torse. Pose les lèvres dans son cou, à peine.",90)]},
+ B:{q:"Les secours ont quitté l'immeuble. Que se passe-t-il chez elle ?", o:["Elle l'invite à prendre une douche, c'est le moins qu'elle puisse faire","Elle sort une bouteille et deux verres : « Il faut fêter ça »"],
+  b:[_B("{F} ouvre la porte de la salle de bain, lui tend une serviette. La vapeur envahit l'appartement. L'eau coule déjà, et le pompier n'a plus que sa veste à retirer, puis le reste.","F","Il y a assez de place pour deux. Si ça ne vous dérange pas.","Entre sous la douche avec elle. Laisse l'eau chaude effacer la fumée.","Déshabille-le lentement, puis laisse-le te rendre la politesse.",150),
+     _B("Deux verres, une bouteille, le canapé. Ils trinquent sans rien dire, puis rient, puis ne rient plus. Elle pose son verre, lui retire sa chemise, et la soirée change de température.","F","À votre santé, sauveur.","Laisse-la mener. Dis-lui ce que ça fait d'être enfin au calme.","Remercie-le à ta façon, en prenant tout le temps qu'il faudra.",150)]},
+ C:{q:"Le jour se lève sur l'immeuble fumant. Comment finit cette nuit ?", o:["Une étreinte brûlante, comme le feu qu'il vient d'éteindre","Un dernier câlin tranquille, sous la couverture","Elle le sauve à son tour, à sa manière"]},
+ fins:[_B("Ils s'endorment sur le canapé, la couverture sur les jambes, le calme enfin retombé. Un dernier baiser lent, très doux, avant que le sommeil ne les emporte : l'après du feu n'a pas besoin de flammes.","F","Reste. Encore cinq minutes.","Serre-la contre toi. Dis-lui, tout bas, ce qui t'a fait entrer dans l'appartement sans réfléchir.","Pose ta tête sur son torse. Écoute son cœur ralentir."),
+       _B("{F} le pousse doucement sur le canapé, grimpe sur lui. « Vous m'avez sauvé la vie. Je vous dois bien ça. » Elle prend son temps, ses mains, sa bouche. Il n'a qu'à se laisser faire, pour une fois.","F","Maintenant, c'est moi qui m'occupe de vous.","Laisse-la te sauver à son tour. Ne retiens rien.","Prends tout en main. Ne te presse pas : il a mérité du repos, et du plaisir.")],
+ epi:["L'enquête a conclu à un court-circuit dans la cuisine. Personne n'a su expliquer pourquoi le pompier de garde n'était pas rentré à la caserne avant midi.","Les voisins ont remarqué que la fenêtre de la voisine est restée éclairée jusqu'à l'aube. Ils ont mis ça sur le compte du choc.","Elle lui a laissé son numéro sur un carton de pizza, avec une note : « Pour la prochaine fois qu'un feu se déclare. »"]};
+STORY_BRANCHES.moniteur_eleve = {
+ A:{q:"La dernière descente de la journée. Que lui propose-t-il ?", o:["Un dernier virage, bien serrés l'un contre l'autre","Une pause chocolat chaud au refuge, avant la nuit"],
+  b:[_B("{H} se place derrière {F}, lui prend les hanches pour corriger l'axe. Les skis glissent, les respirations se synchronisent, et la neige n'a jamais paru aussi bruyante dans le silence du soir.","H","Ne résiste pas à la pente. Laisse-toi guider.","Colle-toi à elle sans jamais perdre l'équilibre. Chuchote-lui les consignes.","Appuie-toi contre lui à chaque virage. Fais durer la descente.",90),
+     _B("Le refuge est vide, le poêle ronronne. Deux chocolats chauds, une couverture, un banc devant la fenêtre qui s'embue. Ils se réchauffent d'abord les mains, puis tout le reste.","H","Tu trembles encore. Viens là.","Réchauffe-la : mains, souffle, lèvres. Prends ton temps.","Laisse-le te réchauffer. Ose la première caresse sous son pull.",90)]},
+ B:{q:"La tempête de neige les bloque dans le chalet. Que décident-ils ?", o:["Allumer la cheminée et se mettre à l'aise devant le feu","Se glisser sous la couette pour se réchauffer"],
+  b:[_B("Le feu crépite. {H} jette une couverture sur le tapis, {F} s'y étend. Les flammes dessinent leur peau, et les vêtements mouillés s'étalent, l'un après l'autre, devant la cheminée.","H","Il faut absolument se réchauffer.","Déshabille-la devant le feu, lentement, comme si les flammes te regardaient.","Laisse la chaleur monter. Prends-le à ton tour, sans la moindre honte.",150),
+     _B("Sous la couette en duvet, il fait chaud, trop chaud. Un seul corps contre l'autre, la chaleur circule, le chalet est un monde clos. Dehors, la tempête hurle. Dedans, ils n'entendent plus rien.","F","Ici, plus de piste. Que du hors-piste.","Glisse-toi contre elle. Laisse ta peau parler en premier.","Pose les mains où tu veux, sans te demander la permission.",150)]},
+ C:{q:"La tempête s'est calmée, le ciel s'éclaircit. Comment finit leur séjour au chalet ?", o:["Sans retenue, dans la chaleur du matin","Au lever du soleil, une étreinte lente devant la fenêtre","Elle prend le rôle de moniteur pour une dernière leçon"]},
+ fins:[_B("Les premiers rayons éclairent la neige poudreuse dehors. {H} et {F} se tiennent devant la grande baie vitrée, enlacés, et font l'amour debout, lentement, devant un paysage entièrement blanc et silencieux.","H","Regarde. Tout est à nous.","Prends-la contre la vitre, doucement. Que le monde entier, s'il existait, devienne flou.","Garde les yeux ouverts. Savoure le paysage et lui à la fois."),
+       _B("{F} enfile la veste de moniteur, claque une paire de skis imaginaire et lance : « Dernière leçon. » Elle le plaque sur le tapis, lui donne ses instructions une à une, et le fait descendre sa pente à elle.","F","Fléchis les genoux. Plus bas. Voilà.","Suis chaque consigne. Elle est la meilleure monitrice de la montagne.","Mène la leçon avec autorité et humour, jusqu'à la dernière descente.")],
+ epi:["Au matin, la neige avait tout recouvert. Les traces de pas menant au chalet avaient disparu, et la liste des élèves du jour ne portait qu'un seul nom barré.","Le chasse-neige est passé à 9 h. Le chalet, lui, ne s'est ouvert qu'à midi.","Elle est repartie avec un forfait inutilisé et un moniteur qui lui a promis de la reprendre dès l'année prochaine, pour des cours très, très particuliers."]};
+STORY_BRANCHES.tatoueur_cliente = {
+ A:{q:"Où {F} veut-elle son tatouage ?", o:["Au creux des reins, là où personne ne regarde","Sur la cuisse, juste au bord de ce qu'on peut montrer"],
+  b:[_B("{F} s'allonge sur le ventre, relève son haut. {H} nettoie la peau du creux des reins, la trace du bout du doigt avant d'y poser le pochoir. L'aiguille n'a pas encore commencé, et elle frissonne déjà.","H","Ne bouge pas. Respire.","Dessine lentement. Fais durer chaque trait, chaque souffle.","Laisse-le faire. Cambre-toi imperceptiblement à chaque passage d'aiguille.",90),
+     _B("Sur le haut de la cuisse, {H} dessine le contour à main levée. Plus il remonte, plus le dessin s'approche d'une zone que ni lui ni elle ne font semblant d'ignorer.","H","Un peu plus haut. Vous permettez ?","Remonte le trait. Regarde-la réagir. Ajuste le dessin à son souffle.","Écarte à peine la jambe. Laisse-le avancer d'un centimètre à la fois.",90)]},
+ B:{q:"La douleur monte. Comment {H} la fait-il oublier ?", o:["En l'embrassant dans le cou pendant qu'il tatoue","En faisant une pause, et en la soignant autrement"],
+  b:[_B("{H} garde l'aiguille d'une main et, de l'autre, soulève ses cheveux. Il dépose un baiser dans sa nuque. La douleur devient autre chose, un vertige qui ne vient pas de l'encre.","H","Je tiens l'aiguille. Toi, tu tiens bon.","Alterne le trait et les baisers dans le cou. Garde les mains précises.","Abandonne-toi. Laisse le plaisir et la brûlure se mélanger.",150),
+     _B("L'aiguille se tait. {H} pose la machine, prend le baume et déroule ses gestes : massage lent autour du motif, souffle, caresse. Il n'y a plus de séance, juste du soin, et ce soin a de moins en moins de limite.","H","Pause. On soigne d'abord.","Masse-la autour du tatouage, de plus en plus large. Prends tout le temps.","Laisse-le faire. Tourne-toi, offre-lui plus de ta peau.",150)]},
+ C:{q:"Le tatouage est fini, il reste à fixer le souvenir. Comment finit la séance ?", o:["Sans retenue, sur la table, au milieu des flashs","Une dernière caresse lente, autour de l'œuvre","Elle lui laisse sa propre signature"]},
+ fins:[_B("{H} pose un film transparent sur l'encre fraîche, puis la prend dans ses bras. Ils ne font l'amour qu'avec précaution : lent, tendre, en évitant la zone sensible. La lenteur du geste est la plus belle des signatures.","H","Ne bouge pas, fais attention à l'encre.","Fais-lui l'amour lentement, en gardant la zone fraîche hors de portée.","Serre-le contre toi. Fais durer, fais attention, savoure."),
+       _B("{F} se redresse, attrape une machine à tatouer débranchée et le fait asseoir. « À moi de signer. » Elle trace sur son torse, du doigt, un motif imaginaire, puis l'efface de ses lèvres, jusqu'à ce qu'il oublie son propre nom.","F","Je laisse ma signature, moi aussi.","Laisse-la te marquer de ses baisers. Ne retiens aucun soupir.","Signe-le à ta façon : bouche, mains, un trait invisible et durable.")],
+ epi:["Au matin, {F} a regardé le tatouage dans le miroir : encore un peu rouge, déjà superbe. Le tatoueur n'a jamais su, en l'effaçant de l'agenda, s'il parlait du tatouage ou de la nuit.","La nuit a laissé deux marques : l'une à l'encre sur sa peau, l'autre invisible, dans la mémoire de {H}.","Le salon a rouvert à 10 h. {H} a affiché « fermé » sur la porte pour une heure de plus. Personne ne s'en est plaint."]};
+STORY_BRANCHES.pilote_hotesse = {
+ A:{q:"L'escale est imprévue, l'hôtel est complet. Où passent-ils la nuit ?", o:["Dans le cockpit, sous les étoiles","Dans la dernière suite libre de l'hôtel, sans trop se poser de questions"],
+  b:[_B("Le cockpit est vide, les cadrans éteints, la verrière dessine un ciel immense. {H} règle le siège, {F} s'assoit sur ses genoux, face aux étoiles. Pour une nuit, ils sont seuls au monde, à dix mille mètres du protocole.","H","Zone de silence radio. Personne ne nous entend.","Embrasse-la dans la lumière des instruments. Laisse tes mains explorer l'uniforme.","Défais-lui la cravate, déboutonne, penche-toi vers lui sans jamais lâcher le ciel des yeux.",90),
+     _B("La suite est unique, le lit est immense. {F} laisse tomber sa valise, {H} sa casquette. « Un lit pour deux. Règlement de la compagnie. » Ils n'en ont jamais autant aimé les règles.","F","Il n'y a qu'un lit. Ça pose un problème ?","Joue l'innocent. Laisse-la décider de qui dort où, et comment.","Choisis ton côté du lit, puis traverse-le. Prends la place qu'il t'a laissée.",90)]},
+ B:{q:"Une turbulence imaginaire les secoue. Qui prend le contrôle ?", o:["{H}, qui reprend les commandes comme un vrai capitaine","{F}, l'hôtesse qui sait comment rassurer ses passagers"],
+  b:[_B("{H} se redresse, pose les mains sur elle comme sur un manche. Il pilote, évalue, ajuste. Chaque mouvement est précis, calme, assuré, et pourtant elle sent ses jambes trembler.","H","Ceintures attachées. Je prends les commandes.","Prends l'initiative, sans te presser. Guide chaque mouvement avec assurance.","Laisse-le piloter. Tiens bon, et dis-lui quand ça tangue.",150),
+     _B("{F} le fait asseoir, s'installe à califourchon. Elle connaît le protocole de rassurance : une voix douce, des mains calmes, une proximité qui n'a rien de réglementaire.","F","Respirez avec moi. Tout va bien se passer.","Laisse-la te rassurer, un geste à la fois. Rends-lui ses caresses.","Prends-le doucement. Fais monter l'altitude, puis ralentis, puis recommence.",150)]},
+ C:{q:"L'avion décolle à l'aube. Comment s'achève l'escale ?", o:["Une dernière turbulence, sans ceinture","Un atterrissage tout en douceur, bras dans les bras","Elle signe le carnet de vol à sa façon"]},
+ fins:[_B("L'aube se lève sur le tarmac. {H} et {F} s'allongent côte à côte, regardent le ciel pâlir, et font l'amour dans une lenteur d'atterrissage : descente progressive, contact doux, roulage lent.","H","Atterrissage en douceur. Autorisation accordée.","Fais-lui l'amour doucement, en prenant bien soin de ne rien précipiter.","Laisse monter le plaisir lentement. Ne cherche pas la piste, savoure le vol."),
+       _B("{F} attrape le carnet de vol, y griffonne quelques lignes, puis le jette sur le siège. « Mention spéciale ». Elle le plaque contre le tableau de bord et l'embrasse comme on signe un contrat à vie.","F","Mention spéciale du commandant de bord.","Laisse-la inscrire sa marque. Ne cache aucun frisson.","Appose ta signature à ta façon : bouche, mains, jusqu'à ce qu'il en perde le cap.")],
+ epi:["Au matin, le vol est parti à l'heure. Dans le carnet de bord, une annotation inhabituelle : « retard de 8 minutes, motif : turbulences personnelles ».","L'équipage a remarqué que le commandant souriait pendant tout le trajet. L'hôtesse, elle, a juste mis ses lunettes de soleil.","À l'atterrissage, elle lui a glissé son numéro dans la poche de sa veste. Le prochain vol commun était dans trois semaines, mais ils n'ont pas eu la patience d'attendre."]};
+STORY_BRANCHES.musicien_fan = {
+ A:{q:"Dans les coulisses, que lui demande-t-elle en premier ?", o:["Un autographe… sur elle","Un morceau rien que pour elle, à la guitare"],
+  b:[_B("{F} lui tend un feutre, puis soulève son haut. « Ici. » {H} signe lentement, du bout du stylo, puis du bout des doigts, puis du bout des lèvres, jusqu'à ce que la signature disparaisse sous les baisers.","F","Signe bien, que ça ne parte pas au lavage.","Signe longuement. Prends ton temps. Remplace l'encre par ta bouche.","Cambre-toi. Fais-lui comprendre que la dédicace peut aller plus bas.",90),
+     _B("{H} reprend sa guitare, s'assoit sur le flight case. Il joue un morceau lent, à elle seule, sans micro. Elle s'agenouille devant lui, dans le silence qui suit chaque accord.","H","Celui-là n'est sur aucun album.","Joue pour elle, les yeux dans les siens. Chaque note, une caresse.","Écoute, bouge à peine. Laisse la musique faire le premier pas.",90)]},
+ B:{q:"Le tour manager frappe à la porte. Que décident-ils ?", o:["Ils se cachent dans la penderie, retenant leur souffle","Ils verrouillent et montent le volume pour couvrir les bruits"],
+  b:[_B("La penderie sent le cuir et la lessive. Ils s'y serrent, front contre front, tandis que quelqu'un fouille la loge. Il suffit d'un souffle pour tout trahir, et tout ce qu'ils font, ils le font à voix éteinte.","H","Chut. Pas un bruit.","Plaque-la contre le mur, main sur sa bouche, et fais-lui oublier le danger.","Mords ta lèvre. Ose, sans un soupir, et fais durer.",150),
+     _B("{H} verrouille, branche la sono. La musique couvre tout. {F} enjambe les câbles, se jette dans ses bras, et le rythme de la basse devient celui de leurs corps.","F","Plus fort. Personne n'entendra rien.","Laisse-toi emporter par la basse. Prends-la contre l'ampli, sans réserve.","Danse contre lui, puis sur lui. Libère ta voix, ce soir elle est couverte.",150)]},
+ C:{q:"Le public est parti, les lumières s'éteignent. Comment finit le concert privé ?", o:["En rappel, sans retenue","Un dernier morceau lent, comme une berceuse","Elle monte sur scène à sa place"]},
+ fins:[_B("Les lumières de scène sont éteintes. Seule une petite lampe éclaire le canapé de la loge. {H} gratte une dernière mélodie à voix basse, {F} pose sa tête sur son torse, et ils finissent la nuit tendrement, sans jamais élever la voix.","H","C'est ma berceuse pour ce soir.","Fais-lui l'amour doucement, comme on joue un morceau lent.","Laisse la mélodie te bercer. Respire contre son cou."),
+       _B("{F} le prend par la main, le conduit sur scène, éteint toutes les lumières sauf une. Elle s'installe sur le tabouret de batterie, le fait asseoir devant elle, et prend la direction du dernier set.","F","Ce soir, c'est moi la tête d'affiche.","Laisse-la mener le dernier rappel. Regarde-la, applaudis-la en silence.","Dirige le concert. Fais monter l'intensité au gré de tes envies.")],
+ epi:["Le roadie a retrouvé la loge à 6 h, guitare au sol, feutre sans capuchon. Il a tout rangé en silence, avec le sourire de ceux qui ont déjà vu ça.","Au petit matin, la salle était vide, mais quelqu'un jouait encore, très bas, un morceau jamais enregistré.","Le lendemain, sur la tournée, un nouveau titre a figuré dans le set. {F} était au premier rang, un feutre dans la poche, un sourire qui ne trompait personne."]};
+STORY_BRANCHES.photographe_modele = {
+ A:{q:"{F} s'installe devant l'objectif. Quelle première pose demande-t-il ?", o:["Une pose sage, mais le regard direct","Une pose lascive, à moitié couchée sur le fond blanc"],
+  b:[_B("{F} se tient droite, les mains le long du corps. Seul son regard, planté dans l'objectif, laisse deviner autre chose. {H} appuie sur le déclencheur, une fois, deux fois, puis baisse l'appareil.","H","Ne regarde pas l'objectif. Regarde-moi.","Dirige-la d'une voix basse. Chaque cliché est une provocation à retenir.","Tiens le regard. Défie-le sans jamais sourire.",90),
+     _B("Elle s'allonge à moitié sur le fond blanc, une jambe repliée, une épaule dénudée. {H} s'agenouille pour ajuster la lumière, et ses doigts, au lieu du réflecteur, effleurent sa cheville.","H","Plus bas. Voilà. Ne bouge plus.","Photographie, ajuste, touche. Chaque correction est un prétexte.","Reste immobile. Laisse-le venir te corriger, encore et encore.",90)]},
+ B:{q:"{H} propose un jeu de lumière. Lequel ?", o:["Un seul projecteur, qui dessine ses courbes dans l'ombre","Des bougies, et plus de flash du tout"],
+  b:[_B("Un seul spot, dans la pénombre du studio. La lumière découpe chaque courbe, chaque ombre. {H} dirige la lumière comme une caresse, et {F} se découvre au rythme du faisceau.","H","Reste dans le cercle de lumière. Ne sors pas.","Promène le spot sur elle, puis ta main sur le chemin du spot.","Laisse la lumière te caresser, puis la main qui la porte.",150),
+     _B("{H} éteint les flashs, allume trois bougies. La lumière vacille, la peau de {F} dorée par les flammes. Plus de pose : juste des mouvements lents, des silences, et l'appareil photo posé sur un coin de table.","F","Ici, plus personne ne regarde.","Pose l'appareil. Tourne autour d'elle, sans rien dire, puis touche enfin.","Danse devant les flammes. Laisse-le te regarder, puis te toucher.",150)]},
+ C:{q:"La dernière photo de la séance. Qu'est-ce qu'elle montre ?", o:["Leurs deux corps enlacés, sans retenue","Un seul regard, tendre, dans la pénombre","Elle prend l'appareil et le photographie, lui"]},
+ fins:[_B("{H} règle le retardateur, pose l'appareil sur le trépied, et vient s'asseoir près de {F} sur le fond blanc. Le flash éclaire une seule fois la pièce. La photo, floue, restera cachée à jamais. Le reste de la nuit sera tout aussi doux, tout aussi lent.","H","Dix secondes. Ça nous laisse le temps.","Enlace-la pour la photo. Reste enlacé, après.","Garde-le contre toi. Profite de la lenteur de la fin de séance.",0),
+       _B("{F} attrape l'appareil, le braque sur lui. « Mon tour. » Elle le dirige, le fait poser, retire sa chemise, l'embrasse entre deux clichés. Le photographe devient modèle, avec plus de timidité qu'il ne voudrait l'admettre.","F","Ne bouge pas. Je cadre.","Laisse-la te dicter chaque pose. Rends-lui chaque regard.","Dirige-le. Photographie, touche, déshabille — ordre libre.")],
+ epi:["La séance a duré toute la nuit. Sur la carte mémoire, 312 clichés, dont une poignée seulement ont été retouchés. Le reste est resté, à jamais, un secret entre eux deux.","Au matin, le studio avait gardé l'odeur des bougies. Sur le fond blanc, une empreinte légère, comme un souvenir de lumière.","Le magazine n'a jamais reçu les photos. Le photographe a expliqué qu'elles n'étaient pas à vendre. Le modèle, elle, a trouvé que c'était la meilleure raison du monde."]};
+STORY_BRANCHES.coach_cliente = {
+ A:{q:"L'échauffement commence. Que lui propose le coach ?", o:["Des étirements lents, très guidés","Un défi : 10 pompes contre un baiser"],
+  b:[_B("{H} s'agenouille derrière elle sur le tapis, lui prend les poignets, les étire au-dessus de sa tête. Il guide chaque posture de ses mains, sans hâte, comme si l'échauffement était la vraie séance.","H","Respirez. Allongez-vous encore un peu.","Guide-la dans chaque posture. Corrige avec les mains, pas avec les mots.","Cède à chaque étirement. Laisse-le sentir à quel point tu es souple.",90),
+     _B("« Dix pompes, un baiser. Vingt pompes, deux. » {F} relève le défi, {H} compte lentement, et chaque baiser dure un peu plus que le précédent. À la dixième, elle ne se relève plus du tout.","H","Encore une. Tu y es presque.","Compte, récompense, encourage. Prends ton temps à chaque baiser.","Fais traîner le défi. Rends-lui chaque baiser, plus longuement.",90)]},
+ B:{q:"La séance s'intensifie. Qu'ajoute-t-il ?", o:["Une séance au sol, très physique, à deux","Un massage de récupération, anticipé"],
+  b:[_B("Au sol, sur le tapis, {H} la fait travailler les gainages, les appuis, les équilibres. Le contact est constant, la chaleur monte, et bientôt, il n'y a plus de séance — seulement des corps qui s'appuient l'un sur l'autre.","H","Plus de force. Tiens la position.","Soutiens-la, guide-la, corrige. Chaque posture te rapproche d'elle.","Tiens bon, puis lâche prise. Ose tout ce que l'exercice autorise.",150),
+     _B("« Récupération. » {H} lui fait signe de s'allonger sur le banc. Ses mains plongent dans ses muscles raides, remontent le long du dos, des hanches, des cuisses. Elle ferme les yeux, et la récupération prend un autre sens.","H","Détends-toi. Laisse-moi faire.","Masse en profondeur, lentement, et laisse l'huile et la chaleur faire le reste.","Laisse-le faire. Souffle, soupire, et guide ses mains plus haut.",150)]},
+ C:{q:"La salle est vide, le gymnase à eux seuls. Comment finit la séance ?", o:["Une dernière série, à bout de souffle","Une douche à deux, lente et chaude","Elle devient la coach, il devient l'élève"]},
+ fins:[_B("L'eau chaude coule dans les vestiaires, la vapeur envahit tout. {H} et {F} se savonnent lentement, puis cessent de se savonner. Ils finissent la séance sous la douche, front contre front, souffles mêlés, et l'eau qui tombe.","H","Séance terminée. Étirements sous l'eau.","Fais-lui l'amour sous la douche. Prends ton temps, savoure chaque seconde.","Appuie-toi contre le carrelage. Dis-lui, à l'oreille, ce que tu veux.",0),
+       _B("{F} lui montre le tapis du doigt. « À moi de te faire travailler. » Elle compte, dirige, corrige. Le coach s'exécute, docile, à chaque injonction, jusqu'à ce qu'il oublie complètement qui est l'entraîneur.","F","Un, deux. Plus bas. Plus lentement.","Obéis à chaque consigne. Dis-lui, à la fin, qu'elle est la meilleure coach.","Prends le rôle de la coach. Impose le rythme, ne lâche rien.")],
+ epi:["Au matin, le planning du coach affichait « séance de 21 h : annulée ». La salle, elle, avait gardé la chaleur de la nuit.","Le gardien a coupé la lumière à 2 h. Il a croisé deux silhouettes dans le couloir, essoufflées et radieuses, et s'est bien gardé de commenter.","Elle a renouvelé son abonnement pour un an, avec une seule condition : toutes ses séances en nocturne, et en privé."]};
+STORY_BRANCHES.ecrivain_muse = {
+ A:{q:"La page est toujours blanche. Que lui souffle la muse ?", o:["Une première phrase, murmurée à son oreille","Rien : elle prend la plume et écrit sur sa peau à lui"],
+  b:[_B("{F} se penche, lui souffle une phrase à l'oreille : le début d'un chapitre qui n'est pas dans le roman. {H} l'écrit mot à mot, sans la regarder, et plus la phrase avance, plus sa main hésite.","F","Écris. Ne t'arrête pas.","Écris ce qu'elle te dicte, et laisse ta main trembler.","Dicte lentement, à voix basse. Fais-lui sentir chaque mot dans le cou.",90),
+     _B("{F} lui prend le stylo, ouvre sa chemise, et écrit sur son torse, lentement, un mot à la fois. L'encre est froide, la plume chaude. Chaque lettre est un frisson.","F","Lis-moi ce que j'écris, sans te tromper.","Lis les mots sur ta peau, à voix haute. Réponds à chacun d'un souffle.","Écris sur lui, puis efface avec les lèvres. Recommence plus bas.",90)]},
+ B:{q:"Le chapitre devient brûlant. Comment {H} le met-il en scène ?", o:["Il lit à voix haute ce qu'il vient d'écrire","Il écrit à la machine, pendant qu'elle le distrait"],
+  b:[_B("{H} lit à haute voix le passage qu'il vient d'écrire : une scène brûlante dont les personnages sont facilement reconnaissables. À chaque phrase, {F} s'approche un peu plus.","H","« Elle s'approcha, sans un mot, et lui prit la main… »","Lis lentement. À chaque phrase, rapproche-toi d'elle, jusqu'à la toucher.","Réagis à chaque mot. Rejoue la scène telle qu'elle est écrite.",150),
+     _B("Il tape sur sa vieille machine à écrire, {F} assise sur le bureau devant lui, jambes croisées. Il écrit une ligne, elle en défait une autre. La phrase n'est plus jamais finie.","F","Concentre-toi. Si tu y arrives.","Écris, malgré tout, même si ça devient impossible. Chaque virgule est un défi.","Distrais-le, au contact, au souffle, au geste. Rends l'écriture impossible.",150)]},
+ C:{q:"Le jour se lève, le chapitre est enfin terminé. Comment s'achève-t-il ?", o:["Une scène finale sans retenue","Un point final tendre, du bout des lèvres","Elle écrit la dernière page, à sa façon"]},
+ fins:[_B("La dernière phrase se dérobe au milieu de la page. {H} pose la plume, {F} referme le carnet, et ils laissent le dernier paragraphe à l'imagination, lentement, dans le silence du matin, sur le canapé encombré de brouillons.","H","Je n'écrirai pas ce passage. Je le vivrai.","Fais-lui l'amour tendrement, comme on corrige une dernière page.","Garde-le contre toi. Murmure-lui ce que tu voulais lui dire depuis le début."),
+       _B("{F} s'empare du carnet, s'installe à son bureau, écrit la dernière page, elle-même. Puis elle se retourne, lui fait signe, et la mise en scène commence, mot pour mot, geste pour geste, exactement comme elle l'a écrite.","F","J'ai terminé le roman. Il ne reste qu'à le jouer.","Lis, puis exécute. Chaque ligne est une instruction, chaque instruction un plaisir.","Dirige la scène. Tu es l'autrice, et il n'a qu'à obéir.")],
+ epi:["Le roman est paru six mois plus tard. Les critiques ont salué une écriture « d'une sensualité rare ». Seule la dédicace — « à ma muse » — a laissé certains lecteurs rêveurs.","Au matin, la page blanche portait une seule ligne, tracée d'une écriture tremblante : « Suite au prochain chapitre. »","L'éditeur a reçu le manuscrit avec un post-it : « Il manque quelques pages. Elles ne sont pas à vendre. »"]};
+STORY_BRANCHES.garde_celebrite = {
+ A:{q:"La suite est silencieuse, le protocole ne s'applique plus. Que lui dit-elle ?", o:["« Vous pouvez enlever votre oreillette. »","« Vous pouvez me tutoyer. Et plus encore. »"],
+  b:[_B("{H} retire l'oreillette, la pose sur le guéridon. Pour la première fois, il n'écoute plus que la voix de {F}. Ses épaules se détendent, son regard change, et la distance de sécurité se réduit à rien.","F","Voilà. Maintenant, on est seuls.","Garde le silence. Laisse-la s'approcher, sans trahir ton trouble.","Rapproche-toi de lui, pas à pas, au rythme d'un protocole que tu viens de rayer.",90),
+     _B("« Tutoie-moi. » Il n'ose pas. Elle répète, plus doucement, plus près. Et le tutoiement, murmuré contre ses lèvres, devient le plus grand des privilèges.","F","Redis-le, mais sans le « madame ».","Tutoie-la, hésite, puis ose. Chaque mot te rapproche d'elle.","Guide-le d'une voix douce. Dis-lui qu'il peut tout se permettre, ce soir.",90)]},
+ B:{q:"Un bruit dans le couloir : un paparazzi, peut-être. Que fait-il ?", o:["Il l'entraîne dans la chambre et ferme les rideaux","Il la plaque contre le mur, bras tendus, comme un bouclier"],
+  b:[_B("{H} l'attrape par la main, la guide jusqu'à la chambre, tire les rideaux. Il vérifie l'obscurité du regard, puis revient vers elle, avec cette précision de professionnel que plus rien ne retient.","H","Personne ne vous verra. Je veille.","Prends la direction de la nuit. Déshabille-la pièce par pièce, protège-la de tout.","Laisse-toi faire. Aime l'idée d'être entièrement entre ses mains.",150),
+     _B("Il la plaque contre le mur, de son corps, bras de chaque côté de sa tête. La menace n'existe plus que dans l'imaginaire, mais la proximité est bien réelle, et la chaleur de sa poitrine contre la sienne est indéniable.","H","Ne bougez pas. Je vous couvre.","Garde-la contre le mur, contre toi, sans l'embrasser tout de suite.","Provoque-le. Souffle contre sa bouche. Ose, la première, briser la distance.",150)]},
+ C:{q:"La soirée est officiellement terminée. Comment finit la nuit ?", o:["Une passion sans protocole, jusqu'au bout","Un dernier moment de tendresse, loin du monde","Elle reprend le pouvoir : c'est elle qui donne les ordres"]},
+ fins:[_B("Loin des flashs, des caméras et des agendas, {H} et {F} s'endorment dans un lit défait, blottis l'un contre l'autre. Il pose, sur son épaule, un dernier baiser, très doux, très long, et la ville entière peut bien attendre.","H","Dormez. Je veille. Comme toujours.","Serre-la contre toi. Garde-la en sécurité dans tes bras jusqu'au matin.","Pose ta tête sur son torse. Pour une fois, personne ne te regarde."),
+       _B("{F} s'assoit au bord du lit, lui fait signe d'approcher, et lui donne ses ordres, un à un. Pour la première fois, c'est lui qui obéit, et elle savoure chacune des secondes de son contrôle.","F","Ce soir, c'est moi qui donne les consignes.","Obéis à chacun de ses ordres. Prends plaisir à céder le contrôle.","Dirige-le sans hésiter. Précise, lente, absolument sûre de toi.")],
+ epi:["Le lendemain, la presse n'a rien su. Les journaux parlaient d'une soirée de gala. Pas un mot sur ce qui s'était passé après.","Le garde du corps a repris son poste à 7 h, impeccable, comme si de rien n'était. Seul son regard, un peu trop doux, trahissait la nuit.","Elle a changé de garde du corps dans la semaine… pour garder le même. À sa demande exclusive, et à toute heure."]};
+STORY_BRANCHES.chauffeur_passagere = {
+ A:{q:"Dans le rétroviseur, leurs regards se croisent. Que fait-elle ?", o:["Elle se penche en avant pour lui murmurer une adresse… autre","Elle baisse la vitre de séparation, lentement"],
+  b:[_B("{F} se penche, lèvres contre son oreille. « Changez d'itinéraire. » Elle donne une adresse que ni l'un ni l'autre n'a jamais visitée. {H} serre les mains sur le volant, puis tourne.","F","Prenez le temps. Rien ne presse.","Conduis lentement, concentré, malgré son souffle sur ta nuque.","Pose la main sur son épaule, sa nuque. Guide-le par des gestes, sans paroles.",90),
+     _B("La vitre de séparation glisse, le silence se resserre. L'habitacle devient un monde clos, éclairé par les néons de la ville qui balaient leurs visages, un à un.","F","On est plus proches, comme ça.","Garde les yeux sur la route. Laisse ta voix grave faire le reste.","Passe la main sur son épaule, puis plus bas. Joue avec sa patience.",90)]},
+ B:{q:"Le feu est rouge, le temps s'étire. Que décide-t-elle ?", o:["Elle passe à l'avant, à ses côtés","Elle l'embrasse par-dessus le siège, depuis l'arrière"],
+  b:[_B("{F} se faufile entre les sièges, s'installe sur le siège passager. Elle pose la main sur sa cuisse, lentement, tandis que le feu reste rouge — étrangement, très, très longtemps.","F","Gardez les yeux sur la route, chauffeur.","Garde les mains sur le volant. Laisse-la te toucher, résiste le plus longtemps possible.","Caresse-le comme on explore. Observe sa mâchoire se contracter.",150),
+     _B("Elle reste à l'arrière, mais se redresse, passe les bras autour de ses épaules, l'embrasse dans le cou, la joue, la bouche, par-dessus le dossier. Le baiser est maladroit, intense, et impossible à interrompre.","F","N'arrêtez pas la voiture. Pas encore.","Garde la voiture sur la route, mais rends-lui son baiser dès que le feu passe au vert.","Prends son visage entre tes mains. Embrasse-le sans lui laisser le temps de respirer.",150)]},
+ C:{q:"La voiture s'arrête enfin sur un parking désert. Comment finit la course ?", o:["Sur la banquette arrière, sans retenue","À l'avant, tendrement, front contre front","Elle ouvre sa portière et l'attire dehors, sous la pluie"]},
+ fins:[_B("Il coupe le moteur. Ils restent un instant sans bouger, front contre front, à l'avant, à écouter la pluie tomber sur le toit. Puis un baiser très lent, très doux, qui dure autant que la pluie, et que personne n'a envie d'interrompre.","H","On est arrivés. Mais je ne veux pas descendre.","Fais-lui l'amour doucement, sur le siège avant, dans la pénombre.","Garde-le tout contre toi. Respire. Prends ton temps jusqu'au bout."),
+       _B("La pluie tombe, froide, drue. {F} ouvre la portière, entraîne {H} dehors, et sous l'averse, il n'y a plus de chauffeur ni de passagère, seulement deux corps trempés qui se cherchent contre la carrosserie encore chaude.","F","Viens. On est déjà trempés de toute façon.","Plaque-la contre la voiture. Embrasse-la sous la pluie, ne cherche pas d'abri.","Entraîne-le. Laisse l'eau tout effacer : ton rôle, ton rang, ta retenue.")],
+ epi:["Au matin, le compteur indiquait 214 kilomètres. La course, elle, n'a jamais été facturée.","Le parking était vide quand le soleil s'est levé. Il restait sur la vitre arrière deux empreintes de mains, légèrement embuées.","Elle a demandé à la compagnie de VTC de ne plus lui assigner que ce même chauffeur. Réponse du service client : « Nous prenons note de votre satisfaction. »"]};
+STORY_BRANCHES.chef_critique = {
+ A:{q:"{H} lui sert un dernier plat, rien que pour elle. Lequel ?", o:["Un dessert tiède au chocolat, qu'il lui fait goûter à la cuillère","Un plat épicé, qu'elle doit manger les yeux fermés"],
+  b:[_B("{H} approche une cuillère de ses lèvres. Le chocolat est chaud, la tension aussi. Elle goûte, ferme les yeux, et lui laisse sa cuillère entre les doigts, suspendue entre eux.","H","Dites-moi. Sincèrement. Qu'en pensez-vous ?","Fais-la goûter, à la cuillère, puis du doigt, puis du baiser.","Savoure sans te presser. Donne ton avis à voix très basse.",90),
+     _B("{F} ferme les yeux, comme exigé. {H} la nourrit, bouchée après bouchée, d'un plat dont elle ne connaît pas la composition. Le piment monte, la chaleur aussi, et elle réclame de l'eau, puis autre chose.","H","N'ouvrez pas les yeux. Concentrez-vous.","Nourris-la sans un mot. Guette chaque réaction sur ses lèvres.","Garde les yeux fermés. Décris à voix haute ce que tu ressens, goût et chaleur.",90)]},
+ B:{q:"La cuisine est chaude, le service est terminé. Où les mène la suite ?", o:["Sur le plan de travail en inox, entre les casseroles","Dans la chambre froide, pour se rafraîchir"],
+  b:[_B("{H} balaye le plan de travail d'un geste, l'y fait asseoir. L'inox est froid, sa peau est brûlante. Il se glisse entre ses jambes comme dans un plat qui réclame d'être achevé.","H","Je n'ai jamais travaillé sur un plan aussi beau.","Prends-la sur le plan de travail, sans hâte, avec la précision d'un chef.","Cambre-toi sur l'inox. Laisse-le te cuisiner à feu doux, puis à feu vif.",150),
+     _B("La porte de la chambre froide se referme derrière eux. La température chute, les corps se rapprochent. Pour se réchauffer, ils n'ont que leur propre chaleur, et ils ne s'en privent pas.","F","Il fait froid. Heureusement qu'on est deux.","Réchauffe-la. Mains, souffle, peau contre peau, dans la vapeur de ton haleine.","Colle-toi à lui. Laisse la chaleur monter doucement dans l'air glacé.",150)]},
+ C:{q:"Le service est fini, la dernière assiette est sur le passe. Comment s'achève la soirée ?", o:["Jusqu'au dernier souffle, sans retenue","Un dernier baiser, lent, au goût de chocolat","Elle prend le tablier et le fait servir à son tour"]},
+ fins:[_B("Il éteint les feux un par un. Dans la lueur du fond de cuisine, {H} et {F} partagent la dernière bouchée, la dernière gorgée, le dernier baiser. Le goût du chocolat reste sur leurs lèvres, très longtemps après que la lumière s'est éteinte.","H","Dernier service de la soirée. Rien que pour toi.","Embrasse-la lentement, comme on goûte un grand cru. Fais durer.","Garde son goût sur tes lèvres. Reste serrée contre lui."),
+       _B("{F} détache le tablier de {H}, le noue autour de sa propre taille et ne garde que cela. Elle le pousse sur le tabouret : « Cette fois, c'est moi qui sers. » Et le service dure jusqu'à ce que le chef ne tienne plus debout.","F","Je prends la direction de la cuisine, maintenant.","Laisse-toi servir. Reste assis, et dis-lui ce qui est parfait.","Sers-le comme un grand menu : lentement, chaque plat plus intense que le précédent.")],
+ epi:["Le restaurant a ouvert à 18 h, comme d'habitude. Aucune critique n'est parue dans le guide — la rédaction a jugé « n'avoir rien à ajouter ».","Au matin, la cuisine était impeccable. Une seule trace : une cuillère, posée sur le passe, et une serviette en papier avec un numéro de téléphone.","L'article de la critique a fait la une du magazine : « Une soirée inoubliable ». Pas un mot sur les cuisines. Rien que cinq étoiles, sans justification."]};
+STORY_BRANCHES.bibliothecaire_lectrice = {
+ A:{q:"La bibliothèque ferme, {F} ne bouge pas. Que fait le bibliothécaire ?", o:["Il lui propose un dernier livre, choisi par lui","Il s'assoit à côté d'elle et lit par-dessus son épaule"],
+  b:[_B("{H} grimpe à l'échelle, choisit un livre rarement ouvert, le lui tend. Elle l'ouvre à la première page : une phrase soulignée, au crayon. Elle lève les yeux vers lui.","F","C'est vous qui l'avez souligné ?","Hausse les épaules. Laisse-la comprendre toute seule.","Lis la phrase à voix haute. Approche-toi, ose le regard.",90),
+     _B("{H} s'assoit, si près que leurs épaules se touchent. Il lit en silence avec elle, page par page, jusqu'à ce que leurs mains se retrouvent, par hasard, sur le même coin de livre.","H","Vous lisez vite. Ou alors vous ne lisez plus.","Reste immobile. Ne retire pas ta main.","Pose ta main sur la sienne, tourne la page à deux, et ne la retire plus.",90)]},
+ B:{q:"Les lumières s'éteignent une à une. Où vont-ils se cacher ?", o:["Entre les rayonnages, dans le rayon le plus reculé","Dans la salle de lecture, sous la lampe verte"],
+  b:[_B("Entre les rayonnages, la poussière danse dans un rayon de lune. {H} la plaque doucement contre les livres, un volume de poésie tombe, personne ne le ramasse. L'odeur du vieux papier se mêle à celle de leur peau.","H","Chut. C'est une bibliothèque.","Embrasse-la contre les rayonnages. Étouffe chaque bruit de ta bouche.","Laisse tomber les livres, un à un. Ne retiens plus rien.",150),
+     _B("Sous la lampe verte, le grand bureau de chêne. {F} s'y assoit, jambes pendantes, {H} se place entre elles, une main sur le registre, l'autre sur sa taille. Les livres attendent, la nuit aussi.","F","Fermez le registre. Il est tard.","Ferme le registre d'un geste lent. Défais ses boutons un à un.","Guide-le à ton rythme. Dis-lui doucement ce que tu veux lire sur sa peau.",150)]},
+ C:{q:"Le dernier chapitre s'écrit à voix basse. Comment finit la nuit à la bibliothèque ?", o:["Un chapitre final sans retenue, sur le bureau","Un dernier chapitre lent, sur le tapis de la salle de lecture","Elle ferme la bibliothèque elle-même, avec lui à l'intérieur"]},
+ fins:[_B("Sur le grand tapis de la salle de lecture, sous une couverture trouvée dans les réserves, ils s'étendent côte à côte. Il lit un poème à voix basse, elle l'écoute, les yeux fermés, puis les mots s'arrêtent et il ne reste que le silence et leurs deux souffles.","H","Un dernier chapitre. Il se lit lentement.","Fais-lui l'amour doucement, en murmurant des vers entre deux baisers.","Écoute, ferme les yeux, laisse-toi emporter par sa voix, puis par ses mains."),
+       _B("{F} prend les clés accrochées à sa ceinture, ferme la porte principale à double tour, et les glisse dans son décolleté. « Maintenant, vous ne pouvez plus sortir. » Elle l'entraîne vers le fond de la salle, où la nuit va durer jusqu'à l'ouverture.","F","Aucune sortie avant 8 h. Ce sont les règles.","Obéis. Suis-la, laisse-la diriger chacune des heures qui viennent.","Prends la clé, prends la nuit, prends-le tout entier, à ton rythme.")],
+ epi:["À l'ouverture, 8 h pile, la bibliothèque était impeccable. Seul un livre de poésie, laissé ouvert sur la table de lecture, trahissait un passage nocturne.","Le registre des prêts portait une ligne inhabituelle : « 1 lectrice, 1 bibliothécaire, retour prévu : jamais. »","Elle est revenue le lendemain, avec un livre à rendre. Le bibliothécaire a fait semblant de chercher la fiche pendant vingt minutes."]};
+
+/* ── Embranchements : 2 choix supplémentaires par histoire + 3 fins possibles ── */
+function applyStoryBranches(){
+  STORY_DUOS_BASE.forEach(function(duo){
+    var br = STORY_BRANCHES[duo.id]; if(!br || duo._br || !duo.trame) return;
+    var T = duo.trame;
+    function plain(b){ return !b.choix && !b.si; }
+    function lastIdx(acte, not){ for(var i=T.length-1;i>=0;i--){ if(T[i].acte===acte && plain(T[i]) && i!==not) return i; } return -1; }
+    function firstIdx(acte, not){ for(var i=0;i<T.length;i++){ if(T[i].acte===acte && plain(T[i]) && i!==not) return i; } return -1; }
+    var bC = T[lastIdx(4)] || T[lastIdx(3)];
+    var bA = T[lastIdx(2)] || T[lastIdx(3)];
+    if(bA===bC) bA = T[firstIdx(2)] || T[firstIdx(1)];
+    var bB = T[firstIdx(4)];
+    if(!bB || bB===bC || bB===bA){ var l3=lastIdx(3); bB = (l3>=0 && T[l3]!==bA && T[l3]!==bC) ? T[l3] : null; }
+    if(!bA || !bC) return;
+    var ins = [];
+    function mk(b, cle, q, opts, vals, newBeats){
+      b.choix = {cle:cle, question:q, options:opts, valeurs:vals};
+      (newBeats||[]).forEach(function(nb,k){ ins.push({after:b, beat:Object.assign({acte:b.acte, si:(function(o){o[cle]=vals[k];return o;})({})}, nb)}); });
+    }
+    mk(bA,'ba',br.A.q,br.A.o,['x','y'],br.A.b);
+    if(bB) mk(bB,'bb',br.B.q,br.B.o,['x','y'],br.B.b);
+    // Fins : les beats de l'acte 5 d'origine = fin n°1 ; deux fins alternatives ajoutées.
+    T.forEach(function(b){ if(b.acte===5){ b.si = Object.assign({}, b.si||{}, {fin:'1'}); } });
+    bC.choix = {cle:'fin', question:br.C.q, options:br.C.o, valeurs:['1','2','3']};
+    ins.forEach(function(x){ T.splice(T.indexOf(x.after)+1, 0, x.beat); });
+    br.fins.forEach(function(f,k){ T.push(Object.assign({acte:5, si:{fin:String(k+2)}}, f)); });
+    duo.epilogues = [duo.epilogue, br.epi[1], br.epi[2]];
+    duo._br = true;
+  });
+}
+applyStoryBranches();
+
 var STORY_DUOS = [];
 function rebuildStoryDuos(){
   var out = [];
@@ -5894,6 +6149,54 @@ var GAGES_BASE = [
 {texte:"{prenom} et {partenaire}, le **dé** choisit le nombre de positions du Kâmasûtra à essayer ce soir.",niveau:3,genre:"Mixte",pratiques:["kamasutra"],accessoires:[],modes:["story"],solo:false},
 {texte:"{prenom}, doigte {partenaire} vaginalement et analement en même temps **1 min 30**",                  niveau:3,genre:"Femme",pratiques:["masturb_actif_f","anal_actif_1"],accessoires:["Lubrifiant"],modes:[],orientations:["lesbian"],solo:false},
 {texte:"{prenom}, choix: **A** doigte {partenaire} vaginalement **1 min 30**, ou **B** doigte-le/la analement avec du lubrifiant **1 min 30**",niveau:3,genre:"Femme",pratiques:["masturb_actif_f","anal_actif_1"],accessoires:["Lubrifiant"],modes:[],orientations:["lesbian"],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, plonge les doigts écartés dans les cheveux de {partenaire}, à la naissance du front, et fais de petits cercles lents en remontant vers le sommet du crâne **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, place la pulpe de tes dix doigts sur le cuir chevelu de {partenaire} et fais bouger la peau sur le crâne, sans frotter les cheveux, **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse les tempes de {partenaire} avec les pouces en cercles très doux, les yeux fermés, **45 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, passe lentement tes doigts en peigne de l'avant vers l'arrière de la tête de {partenaire}, du front jusqu'à la nuque, **5 fois**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse l'arrière du crâne de {partenaire} à la base de la tête, avec les pouces, en cercles fermes mais lents **45 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, tapote le cuir chevelu de {partenaire} du bout des doigts, comme une pluie fine qui descend sur toute la tête **30 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, place tes mains de chaque côté de la tête de {partenaire} et fais de légers mouvements circulaires pour détendre tout le cuir chevelu **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, saisis une mèche de cheveux de {partenaire} à la racine et tire très doucement, mèche après mèche, sur toute la tête **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse derrière les oreilles de {partenaire} avec l'index et le majeur en petits cercles lents, puis redescends sur la nuque **45 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, termine par un effleurement très léger des doigts sur tout le cuir chevelu de {partenaire}, presque sans toucher, **30 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, fais glisser tes pouces du milieu du front de {partenaire} vers les tempes, puis remonte dans les cheveux, **6 fois** lentement",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse la ligne de la nuque de {partenaire}, là où commencent les cheveux, avec le bout des doigts en cercles tranquilles **45 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse le cuir chevelu de {partenaire} avec les ongles très doucement, en traînées lentes qui descendent jusqu'à la nuque, **1 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, enfonce les doigts dans les cheveux de {partenaire}, serre légèrement la poignée et tire en arrière sans brusquerie pour dégager la nuque, puis embrasse-la **30 sec**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse le crâne de {partenaire} en cercles profonds, puis descends sur la nuque et souffle doucement dessus **1 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, alterne pressions fermes des paumes sur le crâne de {partenaire} et caresses très légères du bout des ongles sur le cuir chevelu **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, place-toi derrière {partenaire}, la tête contre ton ventre, et masse tout le cuir chevelu lentement en parlant à voix basse **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse les tempes puis le crâne de {partenaire} yeux fermés, et glisse ensuite les doigts le long de la nuque jusqu'aux épaules **1 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, fais glisser lentement tes ongles sur le cuir chevelu de {partenaire} de l'avant vers l'arrière, puis embrasse sa nuque à chaque passage, **5 fois**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, enroule une poignée de cheveux de {partenaire} autour de ta main et fais de petits tirages doux, tout en massant la base du crâne de l'autre main, **1 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse le cuir chevelu de {partenaire} avec les pouces, puis dépose un baiser sur la tempe, derrière l'oreille et dans le cou, **1 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, allonge {partenaire} la tête sur tes cuisses et masse tout le cuir chevelu, du front à la nuque, en silence, **2 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, masse la tête de {partenaire} en alternant cercles lents et frictions vives pour réveiller la peau, puis termine en effleurant la nuque **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage cuir chevelu: {prenom}, plonge les mains dans les cheveux de {partenaire}, masse la racine avec la pulpe des doigts et ralentis peu à peu jusqu'à l'immobilité **1 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse la main de {partenaire} : pouce dans la paume en cercles, puis étire chaque doigt un à un, **1 min** par main",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse un bras de {partenaire} de la main à l'épaule avec la paume, en glissant lentement, puis change de bras, **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse les mollets de {partenaire} en remontant de la cheville vers le genou avec les deux mains, **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse les pieds de {partenaire} : pouce sur la voûte plantaire, cercles lents, puis étire doucement les orteils **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse la nuque et les épaules de {partenaire} avec les deux mains en pétrissage lent **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse le ventre de {partenaire} à plat de la main, en grands cercles lents dans le sens des aiguilles d'une montre **45 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse les cuisses de {partenaire} du genou vers la hanche avec les paumes, pression douce et régulière **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse le haut du torse de {partenaire} : paumes à plat sur la poitrine, glisse vers les épaules et reviens **45 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, fais glisser tes mains sur les flancs de {partenaire}, des hanches vers les aisselles, en un geste ample et lent, **6 fois**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse les chevilles et le dessus des pieds de {partenaire} avec les pouces en petits cercles **45 sec**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse l'intérieur des avant-bras de {partenaire} avec les pouces, du poignet vers le coude **1 min**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse tout le corps de {partenaire} d'un geste continu : épaules, bras, dos, jambes, en laissant les mains glisser sans jamais les lever **1 min 30**",niveau:1,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse lentement l'intérieur des cuisses de {partenaire}, en remontant puis en redescendant, sans jamais aller plus loin **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse le bas du dos et les hanches de {partenaire}, puis fais glisser les mains sur les fesses en gestes amples **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse le ventre de {partenaire} en cercles, puis remonte entre les seins/pectoraux et redescends très lentement **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse les jambes de {partenaire} des chevilles jusqu'en haut des cuisses, en frôlant l'aine à chaque passage **2 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse le creux des reins de {partenaire}, puis le haut des fesses, avec les paumes à plat, pression profonde et lente **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse le torse de {partenaire} avec les deux mains en ouvrant vers les côtés, puis remonte sur la gorge et la nuque **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse les fesses de {partenaire} en les pétrissant l'une après l'autre, puis ensemble, avec la paume entière **1 min 30**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse tout le corps de {partenaire} avec les avant-bras en longs glissements, des épaules jusqu'aux pieds **2 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse les pieds de {partenaire} puis remonte lentement le long des mollets et des cuisses, en prenant ton temps **2 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse les épaules, le dos puis les hanches de {partenaire}, et termine par un baiser dans le creux des reins **2 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, glisse tes mains le long du corps de {partenaire}, de la nuque jusqu'aux chevilles, en un seul mouvement lent, **4 fois**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
+{texte:"🎓 Guide massage corps: {prenom}, masse le corps de {partenaire} comme si tu cherchais chaque point de tension, puis apaise chacun d'un baiser **2 min**",niveau:2,genre:"Mixte",pratiques:["massage_actif","massage_passif"],accessoires:[],modes:[],solo:false},
 ];
 
 /* ENGINE */
@@ -6259,6 +6562,33 @@ var ADMIN_ON = false; // Session uniquement : se réactive via le ❤ + code, se
 var customPrat     = loadCustom(KEYS.prat)   || {Homme:{},Femme:{}};
 var customAcc      = loadCustom(KEYS.acc)    || {};
 var hiddenBaseGages= loadCustom(KEYS.hidden) || [];
+/* Genre modifié (Mixte / Homme / Femme) sur un gage de base, depuis l'admin : conservé par index. */
+var GENRE_OV_KEY = 'gage_genre_ov_v33';
+var gageGenreOv = loadCustom(GENRE_OV_KEY) || {};
+Object.keys(gageGenreOv).forEach(function(k){ var g=GAGES_BASE[parseInt(k,10)]; if(g && ['Mixte','Homme','Femme'].indexOf(gageGenreOv[k])>=0){ if(!g._g0) g._g0=g.genre; g.genre=gageGenreOv[k]; } });
+function gGenreSeg(src, ref, cur){
+  cur = cur||'Mixte';
+  var opts=[['Mixte','⚧ Mixte'],['Homme','👨 Homme'],['Femme','👩 Femme']];
+  return '<span class="g-seg" style="display:inline-flex;gap:3px;vertical-align:middle">'+opts.map(function(o){
+    var on = cur===o[0];
+    return '<button type="button" onclick="event.preventDefault();event.stopPropagation();gSetGenre(\''+src+'\','+ref+',\''+o[0]+'\')" style="border:1px solid '+(on?'var(--gold)':'var(--border)')+';background:'+(on?'rgba(240,192,96,.18)':'var(--card)')+';color:'+(on?'var(--gold)':'var(--muted)')+';border-radius:8px;padding:5px 8px;font-size:11px;cursor:pointer;line-height:1.1">'+o[1]+'</button>';
+  }).join('')+'</span>';
+}
+function gSetGenre(src, ref, genre){
+  if(['Mixte','Homme','Femme'].indexOf(genre)<0) return;
+  if(src==='base'){
+    var g=GAGES_BASE[ref]; if(!g) return;
+    if(!g._g0) g._g0=g.genre;
+    g.genre=genre;
+    if(genre===g._g0) delete gageGenreOv[ref]; else gageGenreOv[ref]=genre;
+    saveCustom(GENRE_OV_KEY, gageGenreOv);
+  } else {
+    var c=customGages[ref]; if(!c) return;
+    c.genre=genre; saveCustomGages();
+  }
+  if(document.getElementById('gage-list-items') && typeof filterGages==='function') filterGages();
+  if(document.getElementById('ng-list-items') && typeof ngRenderList==='function') ngRenderList();
+}
 var customKama     = loadCustom(KEYS.kama)   || {}; // clé = nom de la position ; {name,pose,difficulty,niveau,desc,image,_new,_deleted}
 
 function saveCustom(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
@@ -7739,6 +8069,81 @@ function confirmStorySetup(){
 }
 // Calque de fond plein écran : couvre tout l'écran, y compris les zones hors du conteneur
 // de page, tout en restant DERRIÈRE le contenu (les boutons et textes gardent leurs couleurs).
+/* ── Décors d'ambiance intégrés pour le mode Histoire (SVG, sans personnages) ── */
+var STORY_SCENES = (function(){
+  function W(t,b,inner,extra){ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+t+'"/><stop offset="1" stop-color="'+b+'"/></linearGradient><radialGradient id="h" cx=".5" cy=".3" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><filter id="bl"><feGaussianBlur stdDeviation="9"/></filter></defs><rect width="400" height="800" fill="url(#g)"/>'+inner+'<rect width="400" height="800" fill="url(#h)"/></svg>'; }
+  function R(x,y,w,h,f,o,r){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+f+'"'+(o!=null?' opacity="'+o+'"':'')+(r?' rx="'+r+'"':'')+'/>'; }
+  function C(x,y,r,f,o,bl){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+f+'"'+(o!=null?' opacity="'+o+'"':'')+(bl?' filter="url(#bl)"':'')+'/>'; }
+  function P(d,f,o,s){ return '<path d="'+d+'" fill="'+(f||'none')+'"'+(o!=null?' opacity="'+o+'"':'')+(s?' stroke="'+s+'" stroke-width="3"':'')+'/>'; }
+  function bricks(c,o){ var s=''; for(var y=0;y<800;y+=40){ s+=R(0,y,400,2,c,o); for(var x=(y/40%2)*40;x<400;x+=80) s+=R(x,y,2,40,c,o);} return s; }
+  function shelves(c1,c2,y0,y1){ var s=''; for(var y=y0;y<y1;y+=90){ s+=R(0,y+80,400,8,c1); for(var x=6;x<394;x+=14+((x*7)%11)){ var h=40+((x*13)%34); s+=R(x,y+80-h,10,h,c2[(x/14|0)%c2.length],.9);} } return s; }
+  var S={};
+  S.detenu_policiere = W('#2a3140','#0c0f16', bricks('#000',.25)+R(0,600,400,200,'#10131a')+R(130,80,140,110,'#0a0d14')+(function(){var s='';for(var x=145;x<270;x+=22)s+=R(x,80,6,110,'#4a5262');return s;})()+P('M130 190 L40 600 L360 600 L270 190Z','#e8eefc',.12)+R(20,380,150,14,'#3a4150')+R(20,470,150,14,'#3a4150')+R(24,380,6,220,'#2a303c')+R(160,380,6,220,'#2a303c')+R(250,540,60,60,'#222831',1,8)+(function(){var s='';for(var x=0;x<400;x+=28)s+=R(x,0,6,800,'#566073',.55);return s;})());
+  S.chevalier_princesse = W('#241a33','#07050c', bricks('#000',.35)+P('M120 520 L120 220 Q200 90 280 220 L280 520Z','#05030a')+P('M140 520 L140 230 Q200 120 260 230 L260 520Z','#1a2550')+C(205,230,26,'#f6f0cf',.9)+R(198,170,4,350,'#05030a')+R(140,340,120,4,'#05030a')+C(50,260,40,'#ff9a2e',.55,1)+R(46,270,8,50,'#3a2410')+P('M50 232 Q36 262 50 270 Q64 262 50 232Z','#ffb43c')+C(350,260,40,'#ff9a2e',.55,1)+R(346,270,8,50,'#3a2410')+P('M350 232 Q336 262 350 270 Q364 262 350 232Z','#ffb43c')+R(0,640,400,160,'#0c0912')+P('M0 700 L400 700',null,null,'#1a1424'));
+  S.infirmiere_patient = W('#c9dde6','#4e6b7a', R(0,560,400,240,'#a9bcc4')+R(250,80,120,170,'#0c1a30')+R(250,80,120,170,'none')+R(308,80,4,170,'#d8e6ec')+R(250,162,120,4,'#d8e6ec')+C(280,120,3,'#fff')+C(340,200,2,'#fff')+R(30,420,230,110,'#f5f8fa',1,10)+R(30,400,60,60,'#e4edf1',1,12)+R(30,520,10,70,'#7e909a')+R(250,520,10,70,'#7e909a')+R(40,455,210,30,'#cfe0e8',1,6)+R(290,330,70,56,'#10181f',1,6)+P('M296 360 L312 360 L320 344 L330 376 L338 360 L352 360',null,null,'#3dff9a')+R(322,386,6,140,'#8a9aa3')+R(305,520,40,6,'#8a9aa3')+R(60,160,4,260,'#9bb0ba')+R(40,160,44,6,'#9bb0ba')+R(46,175,32,50,'#d9f0ff',.8,8)+R(0,0,400,70,'#fff',.2));
+  S.doctorant_professeure = W('#2b2118','#0d0906', R(0,0,400,500,'#1b140e')+shelves('#4a3220',['#7a2b2b','#2b4a7a','#4a6b2b','#8a6a2b','#5a2b6b'],10,400)+R(200,430,180,16,'#5a3a22')+R(220,446,12,150,'#4a2f1b')+R(350,446,12,150,'#4a2f1b')+R(0,600,400,200,'#1a110b')+C(110,420,70,'#ffcf6a',.5,1)+P('M95 460 L125 460 L135 430 L85 430Z','#2e6b4a')+R(108,460,4,40,'#222')+R(250,400,70,30,'#d8d0bd')+R(255,405,60,20,'#f5efe0')+C(70,150,30,'#e8d9a8',.9)+R(70,150,30,3,'#222',1)+R(60,150,2,16,'#222'));
+  S.client_danseuse = W('#3a0a1e','#0b0207', R(0,0,90,800,'#6d0f2e',.85)+R(310,0,90,800,'#6d0f2e',.85)+(function(){var s='';for(var x=10;x<90;x+=18)s+=R(x,0,3,800,'#000',.25);for(var x=320;x<400;x+=18)s+=R(x,0,3,800,'#000',.25);return s;})()+P('M130 0 L270 0 L360 640 L40 640Z','#ffd7e8',.14)+R(194,60,12,540,'#c8c8d4')+C(200,640,70,'#ff3b7a',.25,1)+'<ellipse cx="200" cy="640" rx="90" ry="22" fill="#2a0a18"/>'+R(0,700,400,100,'#12050b')+R(30,680,150,70,'#4a0f26',1,12)+R(230,690,140,60,'#4a0f26',1,12)+R(300,610,28,60,'#e8c8a0',.7,3)+P('M300 610 L328 610 L322 580 L306 580Z','#cfa968',.8));
+  S.masseur_cliente = W('#3b2a22','#0e0907', R(0,0,400,520,'#2a1d17')+R(40,430,320,60,'#e9dcc8',1,10)+R(60,490,16,180,'#5a3a22')+R(324,490,16,180,'#5a3a22')+R(40,420,320,16,'#f6efe2',1,8)+R(0,670,400,130,'#150e0a')+(function(){var s='',xs=[70,130,260,330];for(var i=0;i<4;i++){s+=C(xs[i],370,36,'#ffb347',.45,1)+R(xs[i]-9,370,18,40,'#f5e9d0',1,3)+P('M'+xs[i]+' 346 Q'+(xs[i]-8)+' 366 '+xs[i]+' 372 Q'+(xs[i]+8)+' 366 '+xs[i]+' 346Z','#ffc65a');}return s;})()+R(140,380,40,24,'#7a8a86',1,10)+R(190,388,30,20,'#566',1,10)+R(80,120,70,200,'#f1e7d6',.9,4)+R(90,120,50,6,'#a77',1)+P('M300 90 Q340 60 380 90 Q340 130 300 90Z','#2e5a3a'));
+  S.livreur_cliente = W('#2a2a3a','#0a0a10', R(110,160,180,460,'#3a2b22')+R(124,176,152,200,'#2d2119')+R(124,396,152,200,'#2d2119')+C(262,400,8,'#d4a84a')+C(200,110,26,'#ffe29a',.55,1)+R(190,96,20,24,'#ffe9b0',1,4)+R(120,610,160,14,'#6b6b78')+R(150,640,100,30,'#442',1)+R(40,630,80,70,'#b78a52',1,3)+R(40,630,80,10,'#8f6a3c')+R(60,632,40,6,'#e8d8b0')+R(300,650,70,50,'#a47a46',1,3)+R(0,720,400,80,'#0c0c12')+R(90,300,20,16,'#555'));
+  S.inconnus_bar = W('#2a1030','#07030a', R(0,80,400,300,'#1a0a20')+(function(){var s='';for(var r=0;r<2;r++){s+=R(20,160+r*100,360,5,'#4a3320');for(var i=0;i<12;i++){var x=34+i*29,h=34+((i*7)%3)*8;s+=R(x,160+r*100-h,14,h,['#d68b3a','#3a8bd6','#9a3ad6','#3ad69a'][i%4],.85,3);}}return s;})()+R(60,40,280,34,'#ff2d95',.0)+'<text x="200" y="110" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#ff5fb0" filter="url(#bl)" opacity=".9">COCKTAILS</text><text x="200" y="110" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#ffd0ea">COCKTAILS</text>'+R(0,470,400,40,'#3a2316')+R(0,505,400,300,'#120a0e')+(function(){var s='';[70,200,330].forEach(function(x){s+=R(x-4,560,8,150,'#555')+'<ellipse cx="'+x+'" cy="556" rx="34" ry="10" fill="#7a1f3a"/>';});return s;})()+R(180,430,24,40,'#e8f0ff',.6,4)+P('M170 430 L214 430 L192 400Z','#ff9ad0',.8)+C(60,420,40,'#ff2d95',.3,1)+C(350,430,50,'#3a8bd6',.3,1));
+  S.pompier_voisine = W('#3a1008','#0a0404', C(200,300,260,'#ff6a1a',.35,1)+R(110,150,180,460,'#2a1a14')+R(124,166,152,200,'#1e120d')+R(124,386,152,210,'#1e120d')+C(262,400,8,'#d4a84a')+P('M60 760 Q120 300 200 420 Q260 150 340 760Z','#ff7a1a',.55)+P('M110 760 Q160 460 210 520 Q260 360 300 760Z','#ffd04a',.55)+C(70,80,60,'#ff2020',.5,1)+C(330,80,60,'#2060ff',.5,1)+R(0,700,400,100,'#100808')+R(20,200,10,500,'#c0392b',.9)+R(60,200,10,500,'#c0392b',.9)+(function(){var s='';for(var y=230;y<680;y+=40)s+=R(20,y,50,6,'#d9d9d9',.9);return s;})()+C(140,120,50,'#444',.5,1)+C(250,60,60,'#444',.45,1));
+  S.moniteur_eleve = W('#6aa0d8','#dbe9f5', C(300,120,50,'#fff7cf',.9,1)+P('M-20 520 L120 220 L190 340 L260 160 L420 520Z','#dfeaf6')+P('M120 220 L90 290 L130 270 L150 300 L190 340 L160 260Z','#9bb4d0',.7)+P('M260 160 L230 230 L260 215 L285 250 L320 230Z','#9bb4d0',.7)+P('M-20 520 L420 520 L420 800 L-20 800Z','#f4f8fc')+P('M0 620 Q200 560 400 640 L400 800 L0 800Z','#e3edf7')+R(60,430,110,70,'#7a4a2a')+P('M50 430 L115 380 L180 430Z','#5a2f1a')+R(90,455,24,45,'#ffd27a')+(function(){var s='';[[300,560],[350,600],[250,610]].forEach(function(p){s+=R(p[0]-3,p[1],6,30,'#4a2f1a')+P('M'+p[0]+' '+(p[1]-60)+' L'+(p[0]-26)+' '+(p[1]+4)+' L'+(p[0]+26)+' '+(p[1]+4)+'Z','#1f5a3a')+P('M'+p[0]+' '+(p[1]-20)+' L'+(p[0]-20)+' '+(p[1]+4)+' L'+(p[0]+20)+' '+(p[1]+4)+'Z','#2f7a4a');});return s;})());
+  S.tatoueur_cliente = W('#251018','#08040a', R(0,0,400,520,'#1a0c12')+(function(){var s='';for(var i=0;i<6;i++){s+=R(26+(i%3)*120,110+(i/3|0)*150,96,120,'#e8dcc4',.9,3)+C(74+(i%3)*120,170+(i/3|0)*150,24,'none',1)+P('M'+(54+(i%3)*120)+' '+(210+(i/3|0)*150)+' q20 -70 40 0 q20 -50 20 0',null,null,'#b02a3a');}return s;})()+'<text x="200" y="90" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#3aff9a" filter="url(#bl)">INK</text><text x="200" y="90" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#c8ffe6">INK</text>'+R(0,640,400,160,'#0e0608')+R(150,500,140,40,'#2a2a30',1,8)+R(190,540,20,100,'#555')+R(120,480,200,30,'#14161c',1,10)+R(40,560,90,60,'#333',1,4)+C(80,600,16,'#c0392b',.9)+R(300,540,60,80,'#222',1,4)+C(120,470,60,'#fff3d0',.3,1));
+  S.pilote_hotesse = W('#0a1230','#02040c', (function(){var s='';for(var i=0;i<60;i++)s+=C((i*67)%400,(i*131)%420,1+(i%3)*.6,'#fff',.8);return s;})()+P('M0 360 Q100 300 400 380 L400 420 L0 420Z','#2a3a7a',.6)+R(60,120,280,320,'#05070f',1,60)+R(60,120,280,320,'none')+P('M80 440 Q200 410 320 440',null,null,'#334')+R(0,500,400,300,'#12182a')+(function(){var s='';[40,230].forEach(function(x){s+=R(x,520,130,250,'#1f2b55',1,18)+R(x+10,500,110,60,'#2a3a70',1,12);});return s;})()+R(0,470,400,8,'#e8e8f0',.6)+(function(){var s='';for(var x=20;x<400;x+=50)s+=C(x,490,3,'#ffd27a',.9);return s;})()+C(200,120,150,'#7aa0ff',.12,1));
+  S.musicien_fan = W('#1a0b2a','#05020a', P('M80 0 L0 700 L160 700Z','#b06aff',.2)+P('M320 0 L240 700 L400 700Z','#ff3b9a',.2)+P('M200 0 L130 700 L270 700Z','#fff',.1)+R(0,580,400,220,'#0b0612')+R(30,380,110,190,'#15101c',1,6)+C(85,430,32,'#2a2430')+C(85,500,32,'#2a2430')+R(30,372,110,8,'#c0392b')+R(280,420,90,150,'#15101c',1,6)+R(290,440,70,100,'#2a2430',1,4)+R(180,500,16,100,'#2a2430')+P('M188 330 Q150 360 188 400 Q226 430 188 470 Q160 500 188 520',null,null,'#a0682a')+R(180,300,16,100,'#3a2418',1,4)+(function(){var s='';[[40,610],[200,640],[330,620]].forEach(function(p){s+=R(p[0]-30,p[1],70,40,'#222',1,3)+R(p[0]-30,p[1]+8,70,3,'#777');});return s;})()+C(60,60,3,'#ff3b9a')+C(340,60,3,'#b06aff'));
+  S.photographe_modele = W('#d5d5dc','#6d6d7a', R(0,0,400,560,'#ececf2')+P('M0 560 Q200 520 400 560 L400 800 L0 800Z','#ececf2')+R(20,60,110,150,'#222',1,6)+R(30,70,90,130,'#fff8e8',1,4)+R(70,210,6,420,'#333')+R(290,100,90,100,'#222',1,6)+R(298,108,74,84,'#fff8e8',1,4)+R(330,200,6,420,'#333')+R(170,430,6,260,'#1a1a1a')+P('M174 560 L120 700M174 560 L230 700M174 560 L174 710',null,null,'#1a1a1a')+R(140,380,70,50,'#111',1,8)+C(175,405,16,'#556')+C(175,405,8,'#9ab')+R(0,700,400,100,'#1a1a22',.6)+C(200,250,160,'#fff',.35,1));
+  S.coach_cliente = W('#222a33','#07090c', R(0,40,400,420,'#10161c')+R(20,60,360,360,'#5a7a92',.25)+P('M20 420 L180 60 L230 60 L70 420Z','#fff',.1)+P('M220 420 L330 60 L370 60 L280 420Z','#fff',.08)+R(0,520,400,280,'#0a0c10')+R(40,480,320,10,'#3a3f48')+R(30,440,16,90,'#1b1f26',1,4)+R(354,440,16,90,'#1b1f26',1,4)+(function(){var s='';[[30,440],[354,440]].forEach(function(p){s+=C(p[0]+8,p[1]+8,34,'#2a2f38');});return s;})()+R(120,570,160,40,'#222831',1,10)+R(130,610,10,60,'#222831')+R(260,610,10,60,'#222831')+(function(){var s='';for(var i=0;i<5;i++)s+=R(30+i*70,720-i*0,24+i*4,18,'#3a3f48',1,4)+R(30+i*70,720,24+i*4,18,'#3a3f48',1,4);return s;})()+C(200,100,110,'#ff7a2a',.1,1));
+  S.ecrivain_muse = W('#1f2a38','#07090d', R(240,80,130,220,'#0e1622')+(function(){var s='';for(var i=0;i<30;i++)s+=R(250+(i*37)%110,90+(i*53)%200,1.5,16,'#8fb4e6',.55);return s;})()+R(304,80,4,220,'#1a2433')+R(240,186,130,4,'#1a2433')+R(0,520,400,280,'#2a1a10')+R(0,510,400,16,'#4a3020')+R(70,440,150,70,'#1d1d1d',1,6)+R(90,400,110,50,'#2a2a2a',1,4)+R(100,380,90,20,'#e8e0cc')+R(40,430,20,80,'#d9d0bc')+R(230,470,50,40,'#e8e0cc',1,3)+R(300,400,16,110,'#6a4a2a')+P('M284 400 L332 400 L322 350 L294 350Z','#2e6b4a')+C(308,420,90,'#ffcf6a',.4,1)+shelves('#3a2616',['#7a2b2b','#2b4a7a','#8a6a2b','#4a6b2b'],20,260)+R(130,520,6,20,'#444'));
+  S.garde_celebrite = W('#1b1630','#05040a', R(0,0,400,520,'#0c0a18')+(function(){var s='';for(var i=0;i<26;i++){var x=(i*29)%380,h=80+(i*53)%220;s+=R(x,520-h,22,h,'#16142a')+(function(){var w='';for(var j=0;j<h/18;j++)if((i+j)%3)w+=R(x+4+(j%2)*10,520-h+6+j*16,5,7,'#ffd27a',.7);return w;})();}return s;})()+R(0,0,400,520,'#fff',.03)+R(0,520,400,280,'#241a2e')+R(40,560,320,200,'#f5eefc',1,14)+R(40,540,320,60,'#e2d4f2',1,14)+R(60,590,100,60,'#fff',1,10)+R(240,590,100,60,'#fff',1,10)+R(10,430,12,100,'#d8b86a')+R(378,430,12,100,'#d8b86a')+C(200,40,60,'#ffe9b0',.35,1)+(function(){var s='';for(var i=-3;i<=3;i++)s+=R(200+i*22-1,40,2,40+Math.abs(i)*-5+20,'#ffe9b0',.6)+C(200+i*22,92-Math.abs(i)*5,4,'#fff3d0');return s;})());
+  S.chauffeur_passagere = W('#0b1020','#020306', (function(){var s='';[[60,300,'#ff3b6a'],[150,260,'#ffd27a'],[250,320,'#3ab0ff'],[340,280,'#ffd27a'],[100,380,'#ffffff'],[300,400,'#ff3b6a']].forEach(function(p){s+=C(p[0],p[1],34,p[2],.55,1);});return s;})()+P('M0 800 L400 800 L400 470 Q200 410 0 470Z','#0a0c14')+R(0,470,400,12,'#1a1e2c')+P('M150 800 L190 480 L210 480 L250 800Z','#13161f')+R(196,500,8,40,'#e8e8c0',.7)+R(196,570,8,60,'#e8e8c0',.7)+R(196,670,8,90,'#e8e8c0',.7)+R(0,0,400,70,'#050608')+R(160,30,80,30,'#111',1,8)+R(300,560,70,160,'#10131c',1,16)+C(335,520,26,'#10131c'));
+  S.chef_critique = W('#3a2a1c','#0b0705', R(0,0,400,500,'#2a2a30')+(function(){var s='';for(var x=0;x<400;x+=40)s+=R(x,0,2,500,'#000',.2);for(var y=0;y<500;y+=40)s+=R(0,y,400,2,'#000',.2);return s;})()+R(40,60,320,8,'#8a8a96')+(function(){var s='';for(var i=0;i<6;i++){s+=R(60+i*52,68,3,40+(i%2)*20,'#8a8a96')+'<ellipse cx="'+(61+i*52)+'" cy="'+(130+(i%2)*20)+'" rx="22" ry="8" fill="#3a3a44"/>';}return s;})()+R(0,500,400,40,'#9a9aa6')+R(0,540,400,260,'#4a4a54')+R(40,440,150,60,'#16161a',1,4)+C(80,440,14,'#ff6a1a',.9)+C(130,440,14,'#ff6a1a',.9)+C(80,420,40,'#ff6a1a',.35,1)+R(220,420,130,80,'#3a3a44',1,4)+R(320,380,6,40,'#555')+C(200,360,150,'#ff8a2a',.12,1)+R(60,580,280,60,'#6a6a78',1,6)+R(110,560,70,20,'#e8e2d0',1,4));
+  S.bibliothecaire_lectrice = W('#2a1d12','#0a0705', shelves('#4a3018',['#7a2b2b','#2b4a7a','#4a6b2b','#8a6a2b','#5a2b6b','#2b6b6b'],10,640)+P('M0 0 L400 0 L400 800 L0 800Z','#000',.18)+R(300,60,10,700,'#6a4a2a')+R(350,60,10,700,'#6a4a2a')+(function(){var s='';for(var y=100;y<740;y+=50)s+=R(300,y,60,6,'#6a4a2a');return s;})()+R(60,640,200,14,'#5a3a22')+R(80,654,10,140,'#4a2f1b')+R(230,654,10,140,'#4a2f1b')+C(120,590,60,'#ffcf6a',.55,1)+R(116,600,8,40,'#4a3a22')+P('M92 600 L148 600 L138 566 L102 566Z','#2e6b4a')+R(170,625,60,15,'#e8d8b0')+R(180,615,40,10,'#7a2b2b'));
+  return S;
+})();
+/* ── Animations légères des décors (SMIL dans le SVG : fonctionne en image de fond) ── */
+var STORY_ANIM = (function(){
+  function an(attr,vals,dur,delay,extra){ return '<animate attributeName="'+attr+'" values="'+vals+'" dur="'+dur+'s" begin="'+(delay||0)+'s" repeatCount="indefinite"'+(extra||'')+'/>'; }
+  function glow(x,y,r,col,o1,o2,dur,delay){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'" filter="url(#bl)" opacity="'+o1+'">'+an('opacity',o1+';'+o2+';'+o1+';'+((o1+o2)/2)+';'+o1,dur,delay)+an('r',r+';'+(r*1.12)+';'+r+';'+(r*.94)+';'+r,dur,delay)+'</circle>'; }
+  function blink(x,y,r,col,dur,delay,lo){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'" opacity="1">'+an('opacity',(lo||0)+';1;1;'+(lo||0),dur,delay,' keyTimes="0;.1;.55;1"')+'</circle>'; }
+  function flame(x,y,s,dur,delay){ return '<path d="M'+x+' '+y+' q'+(-6*s)+' '+(-14*s)+' 0 '+(-26*s)+' q'+(6*s)+' '+(12*s)+' 0 '+(26*s)+'z" fill="#fff1b0" opacity=".9"><animateTransform attributeName="transform" type="scale" values="1 1;.85 1.18;1.05 .9;.9 1.12;1 1" dur="'+dur+'s" begin="'+(delay||0)+'s" repeatCount="indefinite" additive="sum"/></path>'; }
+  function fall(n,x0,x1,y0,y1,r,col,dmin,dmax,op,drift){ var s=''; for(var i=0;i<n;i++){ var x=x0+((i*97)%(x1-x0)), d=dmin+((i*37)%10)/10*(dmax-dmin), b=-((i*53)%100)/100*d; s+='<circle cx="'+x+'" r="'+(r*(.6+((i*7)%5)/5))+'" fill="'+col+'" opacity="'+op+'"><animate attributeName="cy" from="'+y0+'" to="'+y1+'" dur="'+d.toFixed(1)+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/>'+(drift?'<animate attributeName="cx" values="'+x+';'+(x+drift)+';'+x+'" dur="'+(d/1.5).toFixed(1)+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/>':'')+'</circle>'; } return s; }
+  function rain(n,x0,x1,y0,y1,col,op){ var s=''; for(var i=0;i<n;i++){ var x=x0+((i*53)%(x1-x0)), d=(.6+((i*13)%7)/10).toFixed(1), b=-((i*29)%10)/10; s+='<rect x="'+x+'" width="1.4" height="14" fill="'+col+'" opacity="'+op+'"><animate attributeName="y" from="'+y0+'" to="'+y1+'" dur="'+d+'s" begin="'+b+'s" repeatCount="indefinite"/></rect>'; } return s; }
+  function beam(d,col,op,from,to,cx,cy,dur){ return '<path d="'+d+'" fill="'+col+'" opacity="'+op+'"><animateTransform attributeName="transform" type="rotate" values="'+from+' '+cx+' '+cy+';'+to+' '+cx+' '+cy+';'+from+' '+cx+' '+cy+'" dur="'+dur+'s" repeatCount="indefinite"/></path>'; }
+  function steam(x,y,n,col){ var s=''; for(var i=0;i<n;i++){ s+='<circle cx="'+(x+i*14)+'" r="'+(8+i*2)+'" fill="'+col+'" filter="url(#bl)" opacity="0"><animate attributeName="cy" from="'+y+'" to="'+(y-120)+'" dur="'+(4+i)+'s" begin="'+(i*1.1)+'s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.35;0" dur="'+(4+i)+'s" begin="'+(i*1.1)+'s" repeatCount="indefinite"/></circle>'; } return s; }
+  function dust(n,col){ return fall(n,10,390,820,-20,1.6,col,14,26,.5,18); }
+  function stars(n,y1){ var s=''; for(var i=0;i<n;i++) s+='<circle cx="'+((i*61)%400)+'" cy="'+((i*47)%y1)+'" r="1.6" fill="#fff" opacity=".1">'+an('opacity','.1;1;.1',2+(i%4),-(i%5))+'</circle>'; return s; }
+  var A={};
+  A.detenu_policiere = glow(200,150,90,'#e8eefc',.05,.14,5,0)+blink(48,60,4,'#ff3030',3,0,.1)+dust(10,'#c8d0e0');
+  A.chevalier_princesse = glow(50,262,60,'#ff9a2e',.45,.85,1.3,0)+glow(350,262,60,'#ff9a2e',.85,.4,1.1,.3)+flame(50,270,1.1,.9,0)+flame(350,270,1.1,1.1,.2)+glow(205,230,50,'#f6f0cf',.2,.45,7,0)+dust(14,'#ffd9a0');
+  A.infirmiere_patient = '<path d="M296 360 L312 360 L320 344 L330 376 L338 360 L352 360" fill="none" stroke="#9fffcf" stroke-width="3" stroke-dasharray="70" stroke-linecap="round"><animate attributeName="stroke-dashoffset" values="70;0;0;-70" keyTimes="0;.35;.7;1" dur="1.6s" repeatCount="indefinite"/></path>'+blink(354,392,3,'#3dff9a',1.6,0,.15)+glow(325,440,60,'#ffffff',.0,.18,6,0);
+  A.doctorant_professeure = glow(110,420,80,'#ffcf6a',.4,.65,6,0)+dust(18,'#ffe2a8');
+  A.client_danseuse = beam('M130 0 L270 0 L360 640 L40 640Z','#ffd7e8',.12,-6,6,200,0,6)+beam('M200 0 L120 0 L-60 640 L140 640Z','#ff3b7a',.12,6,-6,200,0,7)+glow(200,640,80,'#ff3b7a',.2,.5,3,0)+fall(14,10,390,820,300,1.8,'#ffd0ea',10,20,.4,12);
+  A.masseur_cliente = [70,130,260,330].map(function(x,i){ return glow(x,368,40,'#ffb347',.35,.7,1.2+i*.25,i*.2)+flame(x,356,.9,.9+i*.15,i*.1); }).join('')+steam(60,330,3,'#fff');
+  A.livreur_cliente = glow(200,110,40,'#ffe29a',.4,.7,7,0)+blink(200,110,26,'#050508',9,2,0).replace('opacity="1"','opacity="0"').replace(/values="[^"]*"/,'values="0;.45;0;.2;0"').replace(' keyTimes="0;.1;.55;1"','');
+  A.inconnus_bar = '<rect x="60" y="86" width="280" height="34" fill="#ff5fb0" opacity="0" filter="url(#bl)">'+an('opacity','0;.35;0;.5;.1;.45;0',5,0)+'</rect>'+glow(60,420,40,'#ff2d95',.2,.5,4,0)+glow(350,430,50,'#3a8bd6',.4,.15,5,1)+fall(10,10,390,820,300,1.6,'#ffd0ea',12,20,.3,10);
+  A.pompier_voisine = glow(200,300,230,'#ff6a1a',.28,.5,.9,0)+'<path d="M60 760 Q120 300 200 420 Q260 150 340 760Z" fill="#ff9a1a" opacity=".25"><animateTransform attributeName="transform" type="scale" values="1 1;1.03 .97;.98 1.04;1 1" dur=".8s" repeatCount="indefinite" additive="sum"/></path>'+'<circle cx="70" cy="80" r="75" fill="#ff2020" filter="url(#bl)" opacity="0">'+an('opacity','0;.85;0;0',1,0,' keyTimes="0;.25;.5;1"')+'</circle><circle cx="330" cy="80" r="75" fill="#2060ff" filter="url(#bl)" opacity="0">'+an('opacity','0;0;.85;0',1,0,' keyTimes="0;.5;.75;1"')+'</circle>'+steam(120,600,4,'#555')+fall(16,40,360,820,300,2,'#ffb43c',3,6,.7,20);
+  A.moniteur_eleve = fall(46,0,400,-10,810,2.2,'#ffffff',7,14,.85,24);
+  A.tatoueur_cliente = '<rect x="140" y="50" width="120" height="50" fill="#3aff9a" opacity="0" filter="url(#bl)">'+an('opacity','.5;.5;.1;.5;.5;.05;.5;.5',4,0)+'</rect>'+glow(120,470,60,'#fff3d0',.2,.35,6,0);
+  A.pilote_hotesse = stars(34,400)+blink(40,300,5,'#ff3030',1.8,0,0)+glow(200,120,150,'#7aa0ff',.08,.2,8,0);
+  A.musicien_fan = beam('M80 0 L0 700 L160 700Z','#b06aff',.22,-10,12,80,0,5)+beam('M320 0 L240 700 L400 700Z','#ff3b9a',.22,12,-10,320,0,6)+beam('M200 0 L130 700 L270 700Z','#ffffff',.12,-6,6,200,0,7)+'<rect width="400" height="800" fill="#fff" opacity="0">'+an('opacity','0;0;.12;0;0;.08;0',3.2,0)+'</rect>';
+  A.photographe_modele = '<rect width="400" height="800" fill="#fff" opacity="0">'+an('opacity','0;0;0;.75;0;0;0;0',4.5,0)+'</rect>'+glow(75,140,60,'#fff8e8',.3,.5,4,0)+glow(335,150,50,'#fff8e8',.3,.5,5,.5);
+  A.coach_cliente = glow(200,100,120,'#ff7a2a',.08,.22,5,0)+glow(200,420,160,'#5a7a92',.05,.14,7,1)+dust(10,'#c0d0e0');
+  A.ecrivain_muse = rain(30,246,364,80,296,'#9fc4ff',.55)+glow(308,420,90,'#ffcf6a',.35,.6,6,0)+dust(12,'#ffe2a8');
+  A.garde_celebrite = (function(){ var s=''; for(var i=0;i<18;i++) s+='<rect x="'+((i*47)%380)+'" y="'+(200+(i*71)%300)+'" width="5" height="7" fill="#ffd27a" opacity=".1">'+an('opacity','.1;.9;.1',2+(i%5),-(i%4))+'</rect>'; return s; })()+glow(200,40,60,'#ffe9b0',.3,.55,4,0)+stars(10,60);
+  A.chauffeur_passagere = [[60,300,'#ff3b6a'],[150,260,'#ffd27a'],[250,320,'#3ab0ff'],[340,280,'#ffd27a'],[100,380,'#ffffff'],[300,400,'#ff3b6a']].map(function(p,i){ return glow(p[0],p[1],34,p[2],.3,.7,2+i*.5,i*.4); }).join('')+'<rect x="196" y="500" width="8" height="40" fill="#e8e8c0" opacity=".7"><animate attributeName="y" values="480;800" dur="1.1s" repeatCount="indefinite"/></rect><rect x="196" y="500" width="8" height="60" fill="#e8e8c0" opacity=".7"><animate attributeName="y" values="480;800" dur="1.1s" begin="-.55s" repeatCount="indefinite"/></rect>';
+  A.chef_critique = glow(80,440,40,'#ff6a1a',.35,.8,.8,0)+glow(130,440,40,'#ff6a1a',.8,.35,.7,.2)+steam(60,420,4,'#fff')+glow(200,360,150,'#ff8a2a',.08,.2,2,0);
+  A.bibliothecaire_lectrice = glow(120,590,70,'#ffcf6a',.4,.65,6,0)+dust(20,'#ffe2a8');
+  return A;
+})();
+
+function storySceneBg(duoId){
+  var s = STORY_SCENES[duoId];
+  if(!s) return '';
+  var _reduce=false; try{ _reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+  if(STORY_ANIM[duoId] && !_reduce) s = s.replace('<rect width="400" height="800" fill="url(#h)"/></svg>', STORY_ANIM[duoId]+'<rect width="400" height="800" fill="url(#h)"/></svg>');
+  return 'linear-gradient(rgba(5,5,8,.45), rgba(5,5,8,.7)), url("data:image/svg+xml;utf8,'+encodeURIComponent(s)+'") center/cover no-repeat';
+}
+
 function setAppBackground(bgValue){
   var layer = document.getElementById('app-bg-layer');
   if(!layer){
@@ -7768,7 +8173,7 @@ function renderStoryPrologue(){
   var customImg = getBgImage('stories', duo.id);
   var _prologueBg = customImg
     ? 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+customImg+'\') center/cover no-repeat'
-    : (duo.bg || 'radial-gradient(ellipse at center, rgba(120,70,150,.16) 0%, var(--bg) 70%)');
+    : (storySceneBg(duo.id) || duo.bg || 'radial-gradient(ellipse at center, rgba(120,70,150,.16) 0%, var(--bg) 70%)');
   box.style.background = 'transparent';
   setAppBackground(_prologueBg);
   box.innerHTML =
@@ -8048,6 +8453,38 @@ function isSoloEnriched(){ return isSoloGame() && G.mode!=='brise_glace'; }
 
 function shuffle(arr){ var a=arr.slice(),i=a.length,j,t; while(i--){j=Math.floor(Math.random()*(i+1));t=a[i];a[i]=a[j];a[j]=t;} return a; }
 
+// Cohérence anatomique : un gage qui agit sur un pénis (fellation, gland, testicules…) exige que la
+// personne concernée en ait un ; idem pour clitoris / cunnilingus / vagin. Ne s'applique qu'aux couples
+// Homme/Femme ou de même genre (Homme/Homme, Femme/Femme), jamais aux gages « doubles » (fellation/cunnilingus,
+// gland/clitoris, le/la…) ni aux gages solo/trio.
+function _anatomyOk(g, player){
+  try{
+    if(!g || !g.texte || g.solo || !G.players || G.players.length!==2) return true;
+    var partner = G.players.filter(function(p){ return p!==player; })[0];
+    if(!partner || !player) return true;
+    var ok = function(x){ return x.genre==='Homme' || x.genre==='Femme'; };
+    if(!ok(player) || !ok(partner)) return true;
+    var t = String(g.texte).toLowerCase();
+    if(t.indexOf('{joueur3}')>=0 || t.indexOf('{joueur4}')>=0) return true;
+    if(/\//.test(t.replace(/\*\*[^*]*\*\*/g,'')) || /\(e\)/.test(t)) return true;
+    var tgtP = /fellation|\b(son|ses|le|les|du)\s+(gland|pénis|penis|testicule|testicules|sexe masculin|frein|frenulum|filet|sillon)|\bsa (queue|bite|verge|tige)|\bla (tige|queue|verge)\b|sperme de \{partenaire\}|\bsuce(?:s|r|z)?\s+\{partenaire\}|sexe de \{partenaire\}[^.]*\b(il|lui)\b/.test(t);
+    var tgtV = /cunnilingus|\b(son|ses|le|la|les)\s+(clitoris|vagin|vulve|point g)|lèvres vaginales|chatte/.test(t);
+    var ownP = /\b(ton|ta|tes)\s+(gland|pénis|penis|testicule|testicules|queue|bite|verge)/.test(t);
+    var ownV = /\b(ton|ta|tes)\s+(clitoris|vagin|vulve|chatte)/.test(t);
+    if((tgtP && tgtV) || (ownP && ownV)) return true;
+    var recv = /laisse[- ]?\s*\{partenaire\}|\btu reçois\b|\breçois\b|\bte (fait|faire|suce|lèche|masturbe|branle|doigte|pénètre)\b|\bt'(insérer|insère)\b/.test(t);
+    var needPartnerM=false, needPartnerF=false, needActorM=false, needActorF=false;
+    if(tgtP){ if(recv) needActorM=true; else needPartnerM=true; }
+    if(tgtV){ if(recv) needActorF=true; else needPartnerF=true; }
+    if(ownP) needActorM=true;
+    if(ownV) needActorF=true;
+    if(needPartnerM && partner.genre!=='Homme') return false;
+    if(needPartnerF && partner.genre!=='Femme') return false;
+    if(needActorM && player.genre!=='Homme') return false;
+    if(needActorF && player.genre!=='Femme') return false;
+  }catch(e){}
+  return true;
+}
 function gageOk(g, player, lvl, ignorePrat) {
   if(g.solo && !isSoloGame()) return false;
   if(isSoloGame() && !g.solo && g.texte && g.texte.indexOf('{partenaire}')>=0) return false;
@@ -8073,6 +8510,7 @@ function gageOk(g, player, lvl, ignorePrat) {
   } else {
     if(g.genre!=='Mixte' && g.genre!==player.genre) return false;
   }
+  if(!_anatomyOk(g, player)) return false;
   if(g.modes && g.modes.length>0) {
     var ok = ['brise_glace','classique','pimente'];
     var acc2 = G.mode==='brise_glace' ? ok : (G.mode==='competition' ? ['pimente','competition'] : [G.mode]);
@@ -8775,9 +9213,9 @@ function pickStoryChoice(beatIdx, optIdx, elBtn){
   var gage = pool[G.gageIdx];
   var duo = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
   if(!duo || !gage) return;
-  var beat = (duo.trame||[]).filter(function(b,i){ return i===gage._beatIdx; })[0];
+  var beat = (duo.trame||[])[gage._origIdx];
   if(!beat || !beat.choix) return;
-  var cle = beat.choix.cle || ('c'+gage._beatIdx);
+  var cle = beat.choix.cle || ('c'+gage._origIdx);
   G._storyChoix[cle] = (beat.choix.valeurs && beat.choix.valeurs[optIdx]) || String(optIdx);
   // Retour visuel : l'option choisie reste surlignée
   var parent = elBtn && elBtn.parentNode;
@@ -8798,13 +9236,25 @@ function pickStoryChoice(beatIdx, optIdx, elBtn){
     G.level=lvl; G.gageIdx=idx;
   }
 }
+// Choix effectifs : ceux faits par les joueurs, sinon la 1re option de chaque bifurcation (valeur par défaut).
+function _storyChoixEff(duo){
+  var eff = {};
+  (duo.trame||[]).forEach(function(b,i){
+    if(!b.choix) return;
+    var cle = b.choix.cle || ('c'+i);
+    eff[cle] = (b.choix.valeurs && b.choix.valeurs[0]) || '0';
+  });
+  var made = G._storyChoix || {};
+  Object.keys(made).forEach(function(k){ eff[k] = made[k]; });
+  return eff;
+}
 function buildTrameGame(duo, pH, pF){
   G.gagesByLevel = {}; G.changePool = {};
   var _varVues = {};
   var beats = (duo.trame||[]).filter(function(b){
     // Bifurcation : un beat conditionné n'apparaît que si le choix correspondant a été fait.
     if(b.si){
-      var ch = G._storyChoix || {};
+      var ch = _storyChoixEff(duo);
       var okSi = Object.keys(b.si).every(function(k){ return ch[k]===b.si[k]; });
       if(!okSi) return false;
     }
@@ -8838,7 +9288,8 @@ function buildTrameGame(duo, pH, pF){
   beats.forEach(function(b, i){
     var lvl = b.acte || 1;
     if(!G.gagesByLevel[lvl]) G.gagesByLevel[lvl] = [];
-    G.gagesByLevel[lvl].push(_trameBeatToGage(b, pH, pF, i));
+    var _tg = _trameBeatToGage(b, pH, pF, i); _tg._origIdx = (duo.trame||[]).indexOf(b);
+    G.gagesByLevel[lvl].push(_tg);
   });
   // Les beats sont ordonnés : aucun pool de remplacement aléatoire (le bouton Changer
   // avancerait sinon dans une scène sans rapport avec la trame en cours).
@@ -9741,7 +10192,7 @@ function displayGage() {
       var _storyDuoBg = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
       _bgValue = _storyImg
         ? 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+_storyImg+'\') center/cover no-repeat'
-        : (_storyDuoBg ? _storyDuoBg.bg : '');
+        : (storySceneBg(G._storyDuo) || (_storyDuoBg ? _storyDuoBg.bg : ''));
     } else if(_modeImg){
       _bgValue = 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+_modeImg+'\') center/cover no-repeat';
     }
@@ -11158,7 +11609,9 @@ function showEnd(){
     var _duoEnd = STORY_DUOS.filter(function(d){return d.id===G._storyDuo;})[0];
     if(_duoEnd){
       var _hf = getRoleHF();
-      var _epi = (_duoEnd.epilogue||'')
+      var _epiSrc = _duoEnd.epilogue||'';
+      if(_duoEnd.epilogues){ var _fv = (_storyChoixEff(_duoEnd).fin||'1'); _epiSrc = _duoEnd.epilogues[parseInt(_fv,10)-1] || _epiSrc; }
+      var _epi = _epiSrc
         .replace(/\{H\}/g, _hf.pH?_hf.pH.prenom:'')
         .replace(/\{F\}/g, _hf.pF?_hf.pF.prenom:'');
       el('g-counter').textContent = 'Fin de l\'histoire';
@@ -12067,6 +12520,7 @@ function filterGages() {
         +'<div>'+tags.map(function(t){return '<span class="admin-mini-tag">'+t+'</span>';}).join('')+'</div>'
         +'<button type="button" onclick="toggleGageInfo(\''+domId+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px" title="Voir comment ce gage fonctionne in-game" id="chev_'+domId+'">▾</button>'
       +'</div>'
+      +'<div style="margin-top:6px">'+gGenreSeg(isBase?'base':'custom', i, g.genre)+(g._g0&&g._g0!==g.genre?' <span style="font-size:10px;color:var(--muted)">(origine : '+g._g0+')</span>':'')+'</div>'
       +'<div id="info_'+domId+'" class="hidden">'+buildGageInfoBadges(g)+'</div>'
       +'</div>';
   }).join('');
@@ -12983,7 +13437,8 @@ function _ngPreviewResultHTML(R){
       var body = g._kama ? '🕉 Kâmasûtra — une position sera tirée au moment de jouer' : _ngTxt(g.texte, actor, partner);
       h+='<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid '+(g.genre==='Femme'?'#e07aa8':(g.genre==='Homme'?'#6aa8e0':'var(--gold)'))+';border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:14px;line-height:1.5">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px"><div style="font-size:11px;color:var(--muted);flex:1;min-width:0;line-height:1.35">#'+(i+1)+' · '+ico[actor]+' '+_esc(actor)+(g._swapped?' · ✏️ choisi par toi':'')+(tags.length?' · '+_esc(tags.join(' · ')):'')+'</div>'
-        +'<button class="btn ghost sm" style="padding:6px 10px;font-size:12px;flex:0 0 auto" onclick="ngSwapOpen('+l+','+i+')">🔀 Changer</button></div>'+body+'</div>';
+        +'<button class="btn ghost sm" style="padding:6px 10px;font-size:12px;flex:0 0 auto" onclick="ngSwapOpen('+l+','+i+')">🔀 Changer</button></div>'+body
+        +(g._kama?'':'<div style="margin-top:7px">'+_ngPrevSeg(l,i,g.genre||'Mixte')+'</div>')+'</div>';
     });
   });
   var lock=_ngLockLoad();
@@ -12996,6 +13451,25 @@ function _ngPreviewResultHTML(R){
   return '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">'+total+' gages au total · 🎯 = gage de ta présélection « Prochaine partie »</div>'+h+bar;
 }
 
+/* ── Mixte / Homme / Femme sur un gage de l'aperçu (ne modifie que cette partie) ── */
+function _ngPrevSeg(l,i,cur){
+  return ['Mixte','Homme','Femme'].map(function(v){
+    var on=cur===v, lab={Mixte:'⚧ Mixte',Homme:'👨 Homme',Femme:'👩 Femme'}[v];
+    return '<button type="button" onclick="ngPrevSetGenre('+l+','+i+',\''+v+'\')" style="margin-right:3px;border:1px solid '+(on?'var(--gold)':'var(--border)')+';background:'+(on?'rgba(240,192,96,.18)':'var(--card)')+';color:'+(on?'var(--gold)':'var(--muted)')+';border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer">'+lab+'</button>';
+  }).join('');
+}
+function ngPrevSetGenre(l,i,genre){
+  var R=_ngPrev.res; if(!R||R.err) return; var g=(R.snap[l]||[])[i]; if(!g) return;
+  if(genre!=='Mixte'){
+    var cand=R.players.filter(function(p){return p.genre===genre;});
+    if(!cand.length){ if(typeof showFavToast==='function') showFavToast('Aucun joueur '+(genre==='Homme'?'homme':'femme')+' dans cette partie'); return; }
+    var cur=cand.filter(function(p){return p.prenom===g._p;})[0];
+    g._p=(cur||cand[0]).prenom;
+  }
+  g.genre=genre;
+  var o=document.getElementById('ng-prev-ov'), top=o?o.scrollTop:0;
+  _ngPreviewRender(); o=document.getElementById('ng-prev-ov'); if(o) o.scrollTop=top;
+}
 /* ── Remplacer un gage directement dans l'aperçu ── */
 var _ngSwap = {l:0, i:0, kw:'', generic:false, tab:'prat', prat:''};
 // Clé de comparaison anti-doublon : texte normalisé (durées, prénoms, ponctuation ignorés).
@@ -13231,7 +13705,9 @@ function ngRenderList(){
       : (idx===0 && nSelectedShown>0 ? '<div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px">✓ Déjà sélectionnés ('+nSelectedShown+')</div>' : '');
     return sep + '<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 4px;cursor:pointer;'+(checked?'background:rgba(240,192,96,0.08);border-radius:8px':'')+'">'
       + '<input type="checkbox" onchange="ngToggle(\''+it.key.replace(/'/g,"\\'")+'\')" '+(checked?'checked':'')+' style="width:18px;height:18px;flex:0 0 auto;margin-top:1px">'
-      + '<span style="font-size:12.5px;line-height:1.4">'+lvlTag+genreBadge+badge+playedBadge+changedBadge+'<br>'+textBlock+'</span>'
+      + '<span style="font-size:12.5px;line-height:1.4">'+lvlTag+genreBadge+badge+playedBadge+changedBadge+'<br>'+textBlock
+      + (it.src==='kama' ? '' : '<div style="margin-top:5px">'+gGenreSeg(it.src==='base'?'base':'custom', it.src==='base'?GAGES_BASE.indexOf(g):customGages.indexOf(g), g.genre)+'</div>')
+      + '</span>'
       + '</label>';
   }).join('');
 }
