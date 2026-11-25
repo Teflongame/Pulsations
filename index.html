@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?famialy=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -89,6 +89,15 @@ textarea { min-height:80px; resize:vertical; }
 select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239a8eaa' stroke-width='2' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
 .field-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:3px; display:block; margin-top:10px; }
 .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ngp, .ngp * { box-sizing:border-box; }
+.ngp { max-width:560px; margin:0 auto; font-size:14px; overflow-x:hidden; }
+.ngp .btn { width:auto; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; }
+.ngp input[type=text], .ngp input:not([type]), .ngp select { width:100%; min-width:0; background:var(--card,#1c1418); color:var(--text,#f3e9ec); border:1px solid var(--border,#3a2b31); border-radius:10px; padding:10px 12px; font-size:15px; font-family:inherit; }
+.ngp input[type=checkbox] { width:18px; height:18px; padding:0; flex:0 0 auto; accent-color:var(--rose,#cf8aa0); }
+.ngp details > summary { padding:6px 0; }
+.ngp label { -webkit-tap-highlight-color:transparent; }
+.ng-bar { position:fixed; left:0; right:0; bottom:0; z-index:960; display:flex; gap:8px; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:linear-gradient(rgba(11,11,16,0),rgba(11,11,16,.96) 28%); }
+.ng-bar .btn { flex:1; padding:13px 8px; font-size:14px; }
 .cat-acc { margin:10px 0; border:1.5px solid rgba(207,138,160,.55); border-radius:12px; overflow:hidden; background:rgba(207,138,160,.06); }
 .cat-acc-head { display:flex; align-items:center; gap:8px; padding:12px 14px; cursor:pointer; user-select:none; -webkit-user-select:none; }
 .cat-acc-name { flex:1; font-size:14px; font-weight:700; letter-spacing:.4px; color:#e98fb2; text-transform:uppercase; }
@@ -12847,20 +12856,20 @@ function ngPreviewOpen(){
 function ngPreviewClose(){ var o=document.getElementById('ng-prev-ov'); if(o) o.remove(); }
 function _ngPreviewRender(){
   var o=document.getElementById('ng-prev-ov');
-  if(!o){ o=document.createElement('div'); o.id='ng-prev-ov'; o.style.cssText='position:fixed;inset:0;z-index:900;background:var(--bg,#0b0b10);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 90px'; document.body.appendChild(o); }
+  if(!o){ o=document.createElement('div'); o.id='ng-prev-ov'; o.className='ngp'; o.style.cssText='position:fixed;inset:0;z-index:900;max-width:none;background:var(--bg,#0b0b10);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top) + 12px) 12px 120px'; document.body.appendChild(o); }
   var P=_ngPrev, dur=_ngDuration;
   var durLbl = dur===30?'⚡ Rapide':(dur===45?'⏱ Standard':'🌙 Longue');
-  var h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><button class="btn ghost sm" onclick="ngPreviewClose()">← Retour</button><h3 style="font-size:15px;color:var(--gold);margin:0">👁 Aperçu de la prochaine partie</h3></div>';
+  var h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><button class="btn ghost sm" style="padding:8px 12px" onclick="ngPreviewClose()">←</button><h3 style="font-size:15px;color:var(--gold);margin:0;flex:1;min-width:0">👁 Aperçu prochaine partie</h3></div>';
   h+='<p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">Simulation complète sans jouer : mêmes règles que la vraie partie (durée <b>'+durLbl+'</b>, gages « Prochaine partie » inclus). Tire autant de fois que tu veux, puis valide.</p>';
   // Configuration
   var modes=[['classique','Classique'],['brise_glace','Découverte / Brise-glace'],['pimente','Pimenté'],['competition','Compétition']];
   h+='<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px">';
-  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><select id="ngp-mode" onchange="_ngPrevCfg()" style="flex:1">'+modes.map(function(m){return '<option value="'+m[0]+'"'+(P.mode===m[0]?' selected':'')+'>'+m[1]+'</option>';}).join('')+'</select></div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><select id="ngp-mode" onchange="_ngPrevCfg()" style="flex:1;min-width:0">'+modes.map(function(m){return '<option value="'+m[0]+'"'+(P.mode===m[0]?' selected':'')+'>'+m[1]+'</option>';}).join('')+'</select></div>';
   var _profs=loadProfiles().map(function(pf,i){ return {pf:pf,i:i}; }).filter(function(x){ return (x.pf.players||[]).length===2; });
-  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><select id="ngp-prof" onchange="_ngPrevLoadProfile(this.value)" style="flex:1"><option value="">📂 Charger un profil existant…</option>'
+  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><select id="ngp-prof" onchange="_ngPrevLoadProfile(this.value)" style="flex:1;min-width:0"><option value="">📂 Charger un profil existant…</option>'
     +_profs.map(function(x){ return '<option value="'+x.i+'"'+(String(P.profIdx)===String(x.i)?' selected':'')+'>'+_esc(x.pf.name||'Profil')+' — '+_esc(x.pf.players.map(function(pl){return pl.prenom;}).join(' & '))+'</option>'; }).join('')
-    +'</select><button class="btn ghost sm" onclick="_ngPrevClear()">Tout décocher</button></div>';
-  var _gsel=function(id,v){ return '<select id="'+id+'" onchange="_ngPrevGenre()" style="width:92px">'+['Homme','Femme','Trans'].map(function(g){return '<option value="'+g+'"'+(v===g?' selected':'')+'>'+_NG_ICO[g]+' '+g+'</option>';}).join('')+'</select>'; };
+    +'</select><button class="btn ghost sm" style="flex:0 0 auto;padding:8px 12px" onclick="_ngPrevClear()">✕ Vider</button></div>';
+  var _gsel=function(id,v){ return '<select id="'+id+'" onchange="_ngPrevGenre()" style="width:124px;flex:0 0 124px">'+['Homme','Femme','Trans'].map(function(g){return '<option value="'+g+'"'+(v===g?' selected':'')+'>'+_NG_ICO[g]+' '+g+'</option>';}).join('')+'</select>'; };
   h+='<div style="display:flex;gap:6px;margin-bottom:8px"><input id="ngp-h" value="'+_esc(P.hName)+'" placeholder="Joueur 1" oninput="_ngPrevCfg()" style="flex:1;min-width:0">'+_gsel('ngp-gh',P.gH)+'</div>'
     +'<div style="display:flex;gap:6px;margin-bottom:8px"><input id="ngp-f" value="'+_esc(P.fName)+'" placeholder="Joueur 2" oninput="_ngPrevCfg()" style="flex:1;min-width:0">'+_gsel('ngp-gf',P.gF)+'</div>';
   // Accessoires
@@ -12972,14 +12981,16 @@ function _ngPreviewResultHTML(R){
       if((g.accessoires||[]).indexOf('Sangles de contention poignets')>=0||(g.accessoires||[]).indexOf('Masque BDSM')>=0) tags.push('🔗 contention');
       (g.accessoires||[]).forEach(function(a){ if(a!=='Sangles de contention poignets'&&a!=='Masque BDSM') tags.push(a); });
       var body = g._kama ? '🕉 Kâmasûtra — une position sera tirée au moment de jouer' : _ngTxt(g.texte, actor, partner);
-      h+='<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid '+(g.genre==='Femme'?'#e07aa8':(g.genre==='Homme'?'#6aa8e0':'var(--gold)'))+';border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px;line-height:1.45">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:3px"><div style="font-size:10.5px;color:var(--muted)">#'+(i+1)+' · '+ico[actor]+' '+_esc(actor)+(g._swapped?' · ✏️ choisi par toi':'')+(tags.length?' · '+_esc(tags.join(' · ')):'')+'</div>'
-        +'<button class="btn ghost sm" style="padding:3px 9px;font-size:11px;flex:0 0 auto" onclick="ngSwapOpen('+l+','+i+')">🔀 Changer</button></div>'+body+'</div>';
+      h+='<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid '+(g.genre==='Femme'?'#e07aa8':(g.genre==='Homme'?'#6aa8e0':'var(--gold)'))+';border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:14px;line-height:1.5">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px"><div style="font-size:11px;color:var(--muted);flex:1;min-width:0;line-height:1.35">#'+(i+1)+' · '+ico[actor]+' '+_esc(actor)+(g._swapped?' · ✏️ choisi par toi':'')+(tags.length?' · '+_esc(tags.join(' · ')):'')+'</div>'
+        +'<button class="btn ghost sm" style="padding:6px 10px;font-size:12px;flex:0 0 auto" onclick="ngSwapOpen('+l+','+i+')">🔀 Changer</button></div>'+body+'</div>';
     });
   });
   var lock=_ngLockLoad();
   var isLocked = lock && lock.sig===_ngSig(R.mode,R.dur,R.players,R.acc);
-  var bar='<div style="position:sticky;bottom:0;margin:14px -14px -90px;padding:10px 14px;background:linear-gradient(transparent,var(--bg,#0b0b10) 30%);display:flex;gap:8px">'
+  var bar='<div class="ng-bar">'
+    +'<button class="btn ghost" onclick="ngPreviewRun()">🔄 Autre tirage</button>'
+    +'<button class="btn" style="flex:1.3" onclick="ngPreviewValidate()">'+(isLocked?'✅ Validée':'✅ Valider')+'</button></div>';
     +'<button class="btn ghost" style="flex:1" onclick="ngPreviewRun()">🔄 Autre tirage</button>'
     +'<button class="btn" style="flex:1.4" onclick="ngPreviewValidate()">'+(isLocked?'✅ Validée (re-valider)':'✅ Valider cette partie')+'</button></div>';
   return '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">'+total+' gages au total · 🎯 = gage de ta présélection « Prochaine partie »</div>'+h+bar;
@@ -13044,12 +13055,12 @@ function ngSwapTab(t){ _ngSwap.tab=t; _ngSwapRender(); }
 function _ngSwapRender(){
   var R=_ngPrev.res, S=_ngSwap, cur=R.snap[S.l][S.i]; if(!cur) return;
   var o=document.getElementById('ng-swap-ov');
-  if(!o){ o=document.createElement('div'); o.id='ng-swap-ov'; o.style.cssText='position:fixed;inset:0;z-index:950;background:var(--bg,#0b0b10);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px'; document.body.appendChild(o); }
+  if(!o){ o=document.createElement('div'); o.id='ng-swap-ov'; o.className='ngp'; o.style.cssText='position:fixed;inset:0;z-index:970;max-width:none;background:var(--bg,#0b0b10);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top) + 12px) 12px 40px'; document.body.appendChild(o); }
   var actor=cur._p, partner=R.players.filter(function(p){return p.prenom!==actor;})[0].prenom;
-  var h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><button class="btn ghost sm" onclick="ngSwapClose()">← Retour</button><h3 style="font-size:14px;color:var(--gold);margin:0">🔀 Changer le gage #'+(S.i+1)+' · Niv.'+S.l+'</h3></div>';
+  var h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><button class="btn ghost sm" style="padding:8px 12px" onclick="ngSwapClose()">←</button><h3 style="font-size:14px;color:var(--gold);margin:0;flex:1;min-width:0">🔀 Changer le gage #'+(S.i+1)+' · Niv.'+S.l+'</h3></div>';
   h+='<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Gage actuel ('+_esc(actor)+') :</div><div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12.5px;margin-bottom:10px">'+_ngTxt(cur.texte,actor,partner)+'</div>';
   var tabs=[['prat','🎯 Pratiques choisies'],['perso','✍️ Mes gages perso'],['autre','➕ Autre pratique']];
-  h+='<div style="display:flex;gap:6px;margin-bottom:10px">'+tabs.map(function(t){ return '<button class="btn '+(S.tab===t[0]?'':'ghost')+' sm" style="flex:1;padding:8px 4px;font-size:11.5px" onclick="ngSwapTab(\''+t[0]+'\')">'+t[1]+'</button>'; }).join('')+'</div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:10px">'+tabs.map(function(t){ return '<button class="btn '+(S.tab===t[0]?'':'ghost')+' sm" style="flex:1 1 0;min-width:0;padding:9px 4px;font-size:11.5px;white-space:normal;line-height:1.2;text-align:center" onclick="ngSwapTab(\''+t[0]+'\')">'+t[1]+'</button>'; }).join('')+'</div>';
   if(S.tab==='autre'){
     var lab=_ngPratLabels(), ids=Object.keys(lab).sort(function(a,b){ return lab[a].localeCompare(lab[b]); });
     h+='<select id="ngs-prat" onchange="_ngSwap.prat=this.value;_ngSwapRenderList()" style="width:100%;margin-bottom:8px"><option value="">Choisis une pratique…</option>'+ids.map(function(id){ return '<option value="'+id+'"'+(S.prat===id?' selected':'')+'>'+_esc(lab[id])+'</option>'; }).join('')+'</select>';
