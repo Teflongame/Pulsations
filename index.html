@@ -786,13 +786,51 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
   <div style="display:flex;flex-direction:column;gap:14px;margin-top:24px">
     <button class="btn" style="padding:20px;text-align:center;line-height:1.6" onclick="kamaStartRandom()">🎲 Sélection aléatoire<br><span style="font-size:12px;font-weight:400;opacity:.85">Le jeu choisit une position pour vous</span></button>
     <button class="btn ghost" style="padding:20px;text-align:center;line-height:1.6" onclick="kamaStartManual()">📖 Choix manuel<br><span style="font-size:12px;font-weight:400;opacity:.85">Parcourez toutes les positions</span></button>
+    <button class="btn" style="padding:20px;text-align:center;line-height:1.6;background:linear-gradient(135deg,#7a4fd0,#d8a657)" onclick="goToKamaExplore()">🧭 Exploration des niveaux<br><span style="font-size:12px;font-weight:400;opacity:.9">Du niveau 1 facile au niveau 3 expert, minuteur et voix en option</span></button>
   </div>
   <div class="btn-row"><button class="btn ghost" onclick="goTo('page-kama-setup')">← Retour</button></div>
 </div>
 
+<!-- PAGE KÂMASÛTRA — Exploration des niveaux : réglages -->
+<div class="page" id="page-kama-explore-setup">
+  <div class="page-header"><h1>🧭 Exploration des niveaux</h1><p>3 niveaux, du plus facile au plus expert. Vous avancez (ou revenez en arrière) quand vous voulez.</p></div>
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px">⏱️ Changer de position automatiquement</div>
+  <div id="kx-timer-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px">Ambiance</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <button type="button" class="btn ghost" id="kx-voice-btn" style="text-align:left" onclick="kxToggleVoice()">🔊 Lecture à voix haute</button>
+    <button type="button" class="btn ghost" id="kx-music-btn" style="text-align:left" onclick="kxToggleMusicOpt()">🎵 Musique d'ambiance</button>
+  </div>
+  <div class="btn-row" style="margin-top:22px">
+    <button class="btn ghost" onclick="goTo('page-kama-choice')">← Retour</button>
+    <button class="btn" onclick="kxStart()">Commencer ▶</button>
+  </div>
+</div>
+
+<!-- PAGE KÂMASÛTRA — Exploration des niveaux : partie -->
+<div class="page" id="page-kama-explore">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h1 style="margin:0">🧭 Exploration</h1><button type="button" class="amb-btn" onclick="toggleAmbient()" title="Musique d'ambiance" style="background:transparent;border:1.5px solid var(--border);border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted)">🎵 ▶</button></div>
+  <div id="kx-levels" style="display:flex;gap:8px;margin:10px 0 6px"></div>
+  <div id="kx-progress" style="font-size:11.5px;color:var(--muted);text-align:center;margin-bottom:2px"></div>
+  <div id="kx-timer-wrap" style="display:none;margin:8px 0 0">
+    <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden"><div id="kx-timer-bar" style="height:100%;width:100%;background:var(--gold);transition:width 1s linear"></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:12px;color:var(--muted)"><span id="kx-timer-txt"></span><button type="button" id="kx-pause-btn" onclick="kxTogglePause()" style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;font-family:inherit">⏸ Pause</button></div>
+  </div>
+  <div id="kx-card"></div>
+  <div class="btn-row" style="flex-direction:column;gap:10px;margin-top:10px">
+    <button class="btn" style="width:100%" onclick="kxNewPos(false)">🔄 Une autre position (même niveau)</button>
+    <div style="display:flex;gap:10px">
+      <button class="btn ghost" id="kx-down" style="flex:1" onclick="kxStep(-1)">⬇️ Niveau précédent</button>
+      <button class="btn" id="kx-up" style="flex:1" onclick="kxStep(1)">Niveau suivant ⬆️</button>
+    </div>
+    <button class="btn ghost" id="kx-prev" style="width:100%" onclick="kxPrevPos()">↩️ Position précédente</button>
+    <button class="btn ghost" style="width:100%" onclick="kxQuit()">🏠 Terminer</button>
+  </div>
+</div>
+
 <!-- PAGE KÂMASÛTRA — position aléatoire -->
 <div class="page" id="page-kama-random">
-  <div class="page-header"><h1>🪷 Position aléatoire</h1></div>
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h1 style="margin:0">🪷 Position aléatoire</h1><button type="button" class="amb-btn" onclick="toggleAmbient()" title="Musique d'ambiance" style="background:transparent;border:1.5px solid var(--border);border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted)">🎵 ▶</button></div>
   <div id="kama-random-card"></div>
   <div class="btn-row" style="flex-direction:column;gap:10px;margin-top:10px">
     <button class="btn" style="width:100%" onclick="kamaDrawRandom()">🔄 Nouvelle position</button>
@@ -810,7 +848,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 
 <!-- PAGE KÂMASÛTRA — détail d'une position -->
 <div class="page" id="page-kama-detail">
-  <div class="page-header"><h1 id="kama-detail-name">—</h1></div>
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h1 id="kama-detail-name" style="margin:0">—</h1><button type="button" class="amb-btn" onclick="toggleAmbient()" title="Musique d'ambiance" style="background:transparent;border:1.5px solid var(--border);border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted)">🎵 ▶</button></div>
   <div id="kama-detail-content"></div>
   <div class="btn-row" style="flex-direction:column;gap:10px;margin-top:10px">
     <button class="btn ghost" style="width:100%" onclick="goTo('page-kama-manual')">← Voir toutes les positions</button>
@@ -6596,7 +6634,8 @@ function saveCustom(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch
 // ── NAVIGATION ──
 function goTo(pageId) {
   if(pageId!=='page-game' && 'speechSynthesis' in window) speechSynthesis.cancel();
-  if(pageId!=='page-game' && pageId!=='page-story-prologue' && typeof clearAppBackground==='function') clearAppBackground();
+  if(pageId.indexOf('page-kama')===0 && typeof modeSceneBg==='function') setAppBackground(modeSceneBg('kamasutra', (typeof _kamaBgLevel==='function'?_kamaBgLevel():2)));
+  else if(pageId!=='page-game' && pageId!=='page-story-prologue' && typeof clearAppBackground==='function') clearAppBackground();
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
   var pg=document.getElementById(pageId);
   if(!pg){ console.warn('Page not found:',pageId); return; }
@@ -8144,6 +8183,52 @@ function storySceneBg(duoId){
   return 'linear-gradient(rgba(5,5,8,.45), rgba(5,5,8,.7)), url("data:image/svg+xml;utf8,'+encodeURIComponent(s)+'") center/cover no-repeat';
 }
 
+/* ── Fonds animés intégrés pour les modes Classique / Pimenté / Compétition / Kâmasûtra ── */
+var MODE_SCENES = (function(){
+  function svg(top,bot,defs,inner){ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+top+'"/><stop offset="1" stop-color="'+bot+'"/></linearGradient>'+defs+'</defs><rect width="400" height="800" fill="url(#bg)"/>'+inner+'</svg>'; }
+  function rg(id,col){ return '<radialGradient id="'+id+'"><stop offset="0" stop-color="'+col+'" stop-opacity=".95"/><stop offset=".45" stop-color="'+col+'" stop-opacity=".35"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/></radialGradient>'; }
+  function an(a,v,d,b,x){ return '<animate attributeName="'+a+'" values="'+v+'" dur="'+d+'s" begin="'+(b||0)+'s" repeatCount="indefinite"'+(x||'')+'/>'; }
+  function rise(n,gid,rmin,rmax,dmin,dmax,op,sway,y0,y1){ var s=''; for(var i=0;i<n;i++){ var x=10+((i*83)%380), r=rmin+((i*29)%10)/10*(rmax-rmin), d=dmin+((i*17)%10)/10*(dmax-dmin), b=-((i*41)%100)/100*d; s+='<circle cx="'+x+'" r="'+r.toFixed(1)+'" fill="url(#'+gid+')" opacity="'+op+'"><animate attributeName="cy" from="'+(y0==null?840:y0)+'" to="'+(y1==null?-40:y1)+'" dur="'+d.toFixed(1)+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/>'+(sway?'<animate attributeName="cx" values="'+x+';'+(x+sway)+';'+x+';'+(x-sway)+';'+x+'" dur="'+(d/2).toFixed(1)+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/>':'')+'</circle>'; } return s; }
+  var P={ // palettes par niveau (1 → 5) : de plus en plus chaud
+    classique:[['#2a1c12','#08060a','#ffc27a'],['#2d1a12','#08060a','#ffa95a'],['#301812','#09050a','#ff8f5a'],['#33141a','#09040a','#ff6f6a'],['#3a1020','#0a030a','#ff4f7a']],
+    pimente:[['#2a0610','#0a0206','#ff5a3a'],['#32060e','#0a0206','#ff4a3a'],['#3a0510','#0a0206','#ff3a3a'],['#42041a','#0a0208','#ff2a5a'],['#4a0426','#0a0210','#ff1a7a']],
+    competition:[['#0c1230','#05060f','#ffd24a'],['#0e1238','#05060f','#ffc03a'],['#14123e','#06050f','#ffae3a'],['#1c1038','#07050f','#ff8f3a'],['#2a0e30','#08040e','#ff6a3a']],
+    kamasutra:[['#0f1c2e','#04070d','#6fd6c0'],['#1a1a3a','#05060f','#c9a2ff'],['#2a1838','#080510','#e8b04a'],['#38142a','#0a040a','#ff8a5a'],['#42101e','#0a0306','#ff5a6a']]
+  };
+  function classique(l){ var c=P.classique[l-1]; return svg(c[0],c[1], rg('o',c[2])+rg('w',c[2]),
+      '<ellipse cx="200" cy="860" rx="320" ry="260" fill="url(#w)" opacity=".5">'+an('opacity','.4;.65;.45;.6;.4',7)+'</ellipse>'
+      +'<circle cx="40" cy="520" r="170" fill="url(#w)" opacity=".4">'+an('opacity','.25;.5;.3;.45;.25',5,0)+an('r','170;185;165;180;170',5,0)+'</circle>'
+      +'<circle cx="370" cy="380" r="150" fill="url(#w)" opacity=".35">'+an('opacity','.5;.25;.45;.3;.5',6,1)+'</circle>'
+      +rise(16,'o',6,26,16,30,.42,16)+'<rect width="400" height="800" fill="#000" opacity=".12"/>'); }
+  function pimente(l){ var c=P.pimente[l-1]; return svg(c[0],c[1], rg('o',c[2])+rg('g','#ff9a2a')+'<linearGradient id="f" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffd24a"/><stop offset=".35" stop-color="'+c[2]+'"/><stop offset="1" stop-color="'+c[2]+'" stop-opacity="0"/></linearGradient>',
+      '<ellipse cx="200" cy="860" rx="360" ry="300" fill="url(#o)" opacity=".7">'+an('opacity','.5;.85;.55;.8;.5',2.4)+'</ellipse>'
+      +[0,1,2,3,4].map(function(i){ var x=20+i*85, w=80+((i*37)%30), h=260+((i*53)%140); return '<path d="M'+(x)+' 820 Q'+(x-w*.5)+' '+(820-h*.5)+' '+(x+w*.1)+' '+(820-h)+' Q'+(x+w*.7)+' '+(820-h*.45)+' '+(x+w)+' 820Z" fill="url(#f)" opacity=".55" style="transform-origin:'+(x+w/2)+'px 820px"><animateTransform attributeName="transform" type="scale" values="1 1;.94 1.12;1.04 .92;.97 1.08;1 1" dur="'+(1.6+i*.3).toFixed(1)+'s" begin="-'+(i*.4)+'s" repeatCount="indefinite" additive="sum"/></path>'; }).join('')
+      +rise(14,'g',2,5,5,10,.9,24,830,300)+rise(7,'o',34,70,14,24,.16,30,840,100)+'<rect width="400" height="800" fill="#000" opacity=".1"/>'); }
+  function competition(l){ var c=P.competition[l-1]; return svg(c[0],c[1], rg('o',c[2]),
+      '<path d="M0 0 L120 0 L330 800 L-60 800Z" fill="'+c[2]+'" opacity=".10"><animateTransform attributeName="transform" type="rotate" values="-10 60 0;12 60 0;-10 60 0" dur="9s" repeatCount="indefinite"/></path>'
+      +'<path d="M400 0 L280 0 L70 800 L460 800Z" fill="#fff" opacity=".07"><animateTransform attributeName="transform" type="rotate" values="12 340 0;-12 340 0;12 340 0" dur="11s" repeatCount="indefinite"/></path>'
+      +[0,1].map(function(i){ return '<circle cx="200" cy="470" r="30" fill="none" stroke="'+c[2]+'" stroke-width="3" opacity="0">'+an('r','30;260',4,i*2)+an('opacity','.7;0',4,i*2)+'</circle>'; }).join('')
+      +'<ellipse cx="200" cy="820" rx="300" ry="200" fill="url(#o)" opacity=".45">'+an('opacity','.3;.55;.3',3)+'</ellipse>'
+      +(function(){ var s='',cols=[c[2],'#ffffff','#ff4a8a','#4ac8ff']; for(var i=0;i<22;i++){ var x=(i*61)%400,d=7+((i*13)%8),b=-((i*29)%100)/100*d; s+='<rect x="'+x+'" width="6" height="11" fill="'+cols[i%4]+'" opacity=".6"><animate attributeName="y" from="-20" to="820" dur="'+d+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" values="0 '+(x+3)+' 0;360 '+(x+3)+' 0" dur="'+(2+i%3)+'s" repeatCount="indefinite"/></rect>'; } return s; })()
+      +'<rect width="400" height="800" fill="#000" opacity=".14"/>'); }
+  function kamasutra(l){ var c=P.kamasutra[l-1]; var petals=function(n){ var s=''; for(var i=0;i<n;i++){ var x=(i*67)%400,d=16+((i*11)%12),b=-((i*37)%100)/100*d; s+='<ellipse rx="5" ry="10" fill="'+c[2]+'" opacity=".5"><animate attributeName="cy" from="-20" to="820" dur="'+d+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/><animate attributeName="cx" values="'+x+';'+(x+30)+';'+x+';'+(x-30)+';'+x+'" dur="'+(d/2.5).toFixed(1)+'s" begin="'+b.toFixed(1)+'s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" values="0;360" dur="'+(4+i%4)+'s" repeatCount="indefinite"/></ellipse>'; } return s; };
+    var ring=function(n,r,rx,ry,op){ var s=''; for(var i=0;i<n;i++) s+='<ellipse cx="200" cy="'+(400-r)+'" rx="'+rx+'" ry="'+ry+'" fill="none" stroke="'+c[2]+'" stroke-width="1.4" opacity="'+op+'" transform="rotate('+(i*360/n)+' 200 400)"/>'; return s; };
+    return svg(c[0],c[1], rg('o',c[2]),
+      '<circle cx="200" cy="400" r="330" fill="url(#o)" opacity=".28">'+an('opacity','.2;.38;.2',8)+'</circle>'
+      +'<g><animateTransform attributeName="transform" type="rotate" from="0 200 400" to="360 200 400" dur="140s" repeatCount="indefinite"/>'+ring(12,150,26,95,.5)+ring(12,230,34,130,.3)+'<circle cx="200" cy="400" r="62" fill="none" stroke="'+c[2]+'" stroke-width="1.5" opacity=".6"/></g>'
+      +'<g><animateTransform attributeName="transform" type="rotate" from="360 200 400" to="0 200 400" dur="90s" repeatCount="indefinite"/>'+ring(8,95,18,62,.55)+'<circle cx="200" cy="400" r="150" fill="none" stroke="'+c[2]+'" stroke-width="1" stroke-dasharray="4 10" opacity=".5"/></g>'
+      +'<circle cx="200" cy="400" r="14" fill="'+c[2]+'" opacity=".8">'+an('opacity','.5;1;.5',4)+'</circle>'
+      +petals(12)+rise(5,'o',30,60,18,28,.15,20,840,200)+'<rect width="400" height="800" fill="#000" opacity=".12"/>'); }
+  return {classique:classique,pimente:pimente,competition:competition,kamasutra:kamasutra};
+})();
+function modeSceneBg(mode, lvl){
+  var f = MODE_SCENES[mode]; if(!f) return '';
+  var l = Math.max(1, Math.min(5, parseInt(lvl,10)||1));
+  var s = f(l);
+  try{ if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) s = s.replace(/<animate[^>]*\/>/g,'').replace(/<animateTransform[^>]*\/>/g,''); }catch(e){}
+  return 'linear-gradient(rgba(5,5,8,.28), rgba(5,5,8,.5)), url("data:image/svg+xml;utf8,'+encodeURIComponent(s)+'") center/cover no-repeat';
+}
+
 function setAppBackground(bgValue){
   var layer = document.getElementById('app-bg-layer');
   if(!layer){
@@ -8154,11 +8239,12 @@ function setAppBackground(bgValue){
     document.body.appendChild(layer);
   }
   if(bgValue){
-    layer.style.background = bgValue;
+    if(layer._bgKey !== bgValue){ layer.style.background = bgValue; layer._bgKey = bgValue; }
     document.body.style.background = 'transparent';
     requestAnimationFrame(function(){ layer.style.opacity = '1'; });
   } else {
     layer.style.opacity = '0';
+    layer._bgKey = null;
     document.body.style.background = '';
   }
 }
@@ -10195,6 +10281,8 @@ function displayGage() {
         : (storySceneBg(G._storyDuo) || (_storyDuoBg ? _storyDuoBg.bg : ''));
     } else if(_modeImg){
       _bgValue = 'linear-gradient(rgba(5,5,8,.55), rgba(5,5,8,.75)), url(\''+_modeImg+'\') center/cover no-repeat';
+    } else if(MODE_SCENES[G.mode]){
+      _bgValue = modeSceneBg(G.mode, G.level);   // fond animé intégré (niveau = couleur plus chaude)
     }
     setAppBackground(_bgValue);
   }
@@ -15257,6 +15345,126 @@ function kamaShowDetail(i){
 }
 
 
+// ══════════════ KÂMASÛTRA — « EXPLORATION DES NIVEAUX » ══════════════
+// 3 niveaux (Facile → Intermédiaire → Expert) basés sur la difficulté des positions.
+// Positions tirées au hasard, changement libre dans le niveau, montée/descente de niveau à volonté,
+// minuteur optionnel (changement automatique), lecture vocale et musique comme en mode classique.
+var KX_LEVELS = [
+  {n:1, label:'Niv. 1', name:'Facile', icon:'🟢', test:function(d){return d<=2;}},
+  {n:2, label:'Niv. 2', name:'Intermédiaire', icon:'🟡', test:function(d){return d===3;}},
+  {n:3, label:'Niv. 3', name:'Expert', icon:'🔴', test:function(d){return d>=4;}}
+];
+var KX = {lvl:1, cur:null, hist:[], seen:{1:{},2:{},3:{}}, timer:0, left:0, paused:false, tid:null, voice:true, music:true, active:false};
+function _kamaBgLevel(){ return (KX.active && document.getElementById('page-kama-explore') && document.getElementById('page-kama-explore').classList.contains('active')) ? [1,3,5][KX.lvl-1] : 2; }
+function kxPool(l){ var d=KX_LEVELS[l-1]; return getKamaData().filter(function(k){ return d.test(k.difficulty||1); }); }
+function goToKamaExplore(){
+  try{ KX.voice = voiceNarrationOn; }catch(e){}
+  KX.music = true;
+  goTo('page-kama-explore-setup'); kxRenderSetup();
+}
+function kxRenderSetup(){
+  var opts=[[0,'Sans minuteur'],[30,'30 s'],[60,'1 min'],[120,'2 min'],[180,'3 min'],[300,'5 min']];
+  var box=document.getElementById('kx-timer-chips'); if(!box) return;
+  box.innerHTML=opts.map(function(o){ var on=KX.timer===o[0];
+    return '<button type="button" onclick="kxSetTimer('+o[0]+')" style="border:1px solid '+(on?'var(--gold)':'var(--border)')+';background:'+(on?'rgba(216,166,87,.16)':'var(--card)')+';color:'+(on?'var(--gold)':'var(--text)')+';border-radius:16px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit">'+o[1]+'</button>'; }).join('');
+  var v=document.getElementById('kx-voice-btn'), m=document.getElementById('kx-music-btn');
+  if(v) v.textContent = (KX.voice?'🔊 Lecture à voix haute : oui':'🔇 Lecture à voix haute : non');
+  if(m) m.textContent = (KX.music?'🎵 Musique d\'ambiance : oui':'🔇 Musique d\'ambiance : non');
+}
+function kxSetTimer(s){ KX.timer=s; kxRenderSetup(); }
+function kxToggleVoice(){ KX.voice=!KX.voice; kxRenderSetup(); }
+function kxToggleMusicOpt(){ KX.music=!KX.music; kxRenderSetup(); }
+function kxStart(){
+  KX.lvl=1; KX.cur=null; KX.hist=[]; KX.seen={1:{},2:{},3:{}}; KX.active=true; KX.paused=false;
+  // Lancé dans le geste du joueur (obligatoire sur iPhone pour l'audio)
+  _ambWant = !!KX.music;
+  if(_ambWant){ try{ var a=_ambEl(); if(_ambCtx) _ambCtx.resume(); _ambSetVol(_AMB_VOL); var pr=a.play(); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){} }
+  goTo('page-kama-explore');
+  kxNewPos(false);
+  kxStartTicker();
+}
+function kxStartTicker(){
+  clearInterval(KX.tid);
+  KX.tid=setInterval(function(){
+    var pg=document.getElementById('page-kama-explore');
+    if(!pg || !pg.classList.contains('active')){ if(!KX.active) clearInterval(KX.tid); return; }
+    if(!KX.timer || KX.paused) return;
+    // Pendant que la voix lit la position, le minuteur attend
+    try{ if('speechSynthesis' in window && speechSynthesis.speaking) return; }catch(e){}
+    KX.left--;
+    if(KX.left<=0){ kxNewPos(true); return; }
+    kxRenderTimer();
+  },1000);
+}
+function kxRenderTimer(){
+  var w=document.getElementById('kx-timer-wrap'); if(!w) return;
+  w.style.display = KX.timer ? 'block' : 'none';
+  if(!KX.timer) return;
+  var bar=document.getElementById('kx-timer-bar'), t=document.getElementById('kx-timer-txt'), pb=document.getElementById('kx-pause-btn');
+  if(bar) bar.style.width = Math.max(0,Math.min(100,KX.left/KX.timer*100))+'%';
+  if(t){ var m=Math.floor(KX.left/60), s=KX.left%60; t.textContent='Prochaine position dans '+m+':'+(s<10?'0':'')+s; }
+  if(pb) pb.textContent = KX.paused ? '▶ Reprendre' : '⏸ Pause';
+}
+function kxTogglePause(){ KX.paused=!KX.paused; kxRenderTimer(); }
+function kxNewPos(auto){
+  var pool=kxPool(KX.lvl); if(!pool.length) return;
+  var seen=KX.seen[KX.lvl];
+  var fresh=pool.filter(function(k){ return !seen[k.name] && (!KX.cur || k.name!==KX.cur.name); });
+  if(!fresh.length){ KX.seen[KX.lvl]=seen={}; fresh=pool.filter(function(k){ return !KX.cur || k.name!==KX.cur.name; }); if(!fresh.length) fresh=pool; }
+  kxShow(fresh[Math.floor(Math.random()*fresh.length)], true);
+  if(auto) vibrate(18);
+}
+function kxShow(k, pushHist){
+  if(pushHist && KX.cur) { KX.hist.push(KX.cur); if(KX.hist.length>30) KX.hist.shift(); }
+  KX.cur=k; KX.seen[KX.lvl][k.name]=1; KX.left=KX.timer;
+  renderKamaModeCard('kx-card', k);
+  kxRenderHeader(); kxRenderTimer(); kxSpeak(k);
+}
+function kxPrevPos(){
+  if(!KX.hist.length) return;
+  var k=KX.hist.pop();
+  // la position précédente peut venir d'un autre niveau : on s'y replace
+  var d=k.difficulty||1; for(var i=0;i<KX_LEVELS.length;i++) if(KX_LEVELS[i].test(d)){ KX.lvl=KX_LEVELS[i].n; break; }
+  kxShow(k,false);
+  setAppBackground(modeSceneBg('kamasutra',[1,3,5][KX.lvl-1]));
+}
+function kxSetLevel(l){
+  l=Math.max(1,Math.min(3,l));
+  var changed = l!==KX.lvl;
+  KX.lvl=l;
+  setAppBackground(modeSceneBg('kamasutra',[1,3,5][l-1]));
+  if(changed || !KX.cur) kxNewPos(false); else kxRenderHeader();
+}
+function kxStep(d){ kxSetLevel(KX.lvl+d); }
+function kxRenderHeader(){
+  var box=document.getElementById('kx-levels');
+  if(box) box.innerHTML=KX_LEVELS.map(function(L){
+    var on=L.n===KX.lvl, pool=kxPool(L.n).length, vu=Object.keys(KX.seen[L.n]).length;
+    return '<button type="button" onclick="kxSetLevel('+L.n+')" style="flex:1;border:1.5px solid '+(on?'var(--gold)':'var(--border)')+';background:'+(on?'rgba(216,166,87,.18)':'var(--card)')+';color:'+(on?'var(--gold)':'var(--text)')+';border-radius:12px;padding:8px 4px;font-family:inherit;cursor:pointer;line-height:1.3"><div style="font-size:15px">'+L.icon+'</div><div style="font-size:12px;font-weight:700">'+L.label+'</div><div style="font-size:10px;opacity:.8">'+L.name+' · '+Math.min(vu,pool)+'/'+pool+'</div></button>';
+  }).join('');
+  var pr=document.getElementById('kx-progress'); if(pr){ var L=KX_LEVELS[KX.lvl-1]; pr.textContent='Niveau '+L.n+' — '+L.name; }
+  var dn=document.getElementById('kx-down'), up=document.getElementById('kx-up'), pv=document.getElementById('kx-prev');
+  if(dn){ dn.disabled=KX.lvl<=1; dn.style.opacity=KX.lvl<=1?'.4':'1'; }
+  if(up){ up.disabled=KX.lvl>=3; up.style.opacity=KX.lvl>=3?'.4':'1'; }
+  if(pv){ pv.disabled=!KX.hist.length; pv.style.opacity=KX.hist.length?'1':'.4'; }
+}
+function kxSpeak(k){
+  if(!KX.voice || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    var raw=(k.name+'. '+String(k.desc||'').replace(/<[^>]+>/g,' ')).replace(/\{prenom\}|\{partenaire\}/g,'').replace(/\s*—\s*/g,'… ').replace(/\.\s+/g,'… ').replace(/\s+/g,' ');
+    var u=new SpeechSynthesisUtterance(raw); u.lang='fr-FR';
+    var v=_pickFrenchVoice(); if(v) u.voice=v;
+    u.rate=0.72; u.pitch=0.85; u.volume=0.7;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function kxQuit(){
+  KX.active=false; clearInterval(KX.tid);
+  try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+  goTo('page-home');
+}
+
 function _findGageByTexte(texte){
   for(var i=0;i<GAGES_BASE.length;i++){ if(GAGES_BASE[i].texte===texte) return GAGES_BASE[i]; }
   for(var j=0;j<customGages.length;j++){ if(customGages[j].texte===texte) return customGages[j]; }
@@ -17284,14 +17492,16 @@ function _ambEl(){
   _amb.addEventListener('play',_ambBtn); _amb.addEventListener('pause',_ambBtn);
   return _amb;
 }
-function _ambOnGamePage(){ var p=document.getElementById('page-game'); return !!(p&&p.classList.contains('active')); }
+function _ambOnGamePage(){ var p=document.querySelector('#page-game.active, #page-kama-random.active, #page-kama-detail.active, #page-kama-explore.active'); return !!p; }
 function _ambBtn(){
-  var b=document.getElementById('music-toggle-btn'); if(!b) return;
   var playing=!!(_amb&&!_amb.paused);
-  b.textContent=playing?'🎵 ⏸':'🎵 ▶';
-  b.style.borderColor=playing?'var(--gold)':'var(--border)';
-  b.style.color=playing?'var(--gold)':'var(--muted)';
-  b.title=playing?'Mettre la musique en pause':'Lancer la musique d\'ambiance';
+  var bs=document.querySelectorAll('#music-toggle-btn, .amb-btn');
+  for(var i=0;i<bs.length;i++){ var b=bs[i];
+    b.textContent=playing?'🎵 ⏸':'🎵 ▶';
+    b.style.borderColor=playing?'var(--gold)':'var(--border)';
+    b.style.color=playing?'var(--gold)':'var(--muted)';
+    b.title=playing?'Mettre la musique en pause':'Lancer la musique d\'ambiance';
+  }
 }
 function _ambApply(){
   if(_ambWant && _ambOnGamePage()){
