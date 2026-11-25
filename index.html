@@ -89,6 +89,15 @@ textarea { min-height:80px; resize:vertical; }
 select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239a8eaa' stroke-width='2' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
 .field-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:3px; display:block; margin-top:10px; }
 .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.cat-acc { margin:10px 0; border:1.5px solid rgba(207,138,160,.55); border-radius:12px; overflow:hidden; background:rgba(207,138,160,.06); }
+.cat-acc-head { display:flex; align-items:center; gap:8px; padding:12px 14px; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.cat-acc-name { flex:1; font-size:14px; font-weight:700; letter-spacing:.4px; color:#e98fb2; text-transform:uppercase; }
+.cat-acc-count { font-size:11px; color:var(--muted); }
+.cat-acc.has-sel .cat-acc-count { color:#e98fb2; font-weight:700; }
+.cat-acc-chev { font-size:15px; color:#e98fb2; transition:transform .2s; }
+.cat-acc.open .cat-acc-chev { transform:rotate(180deg); }
+.cat-acc-body { display:none; padding:2px 10px 12px; }
+.cat-acc.open .cat-acc-body { display:block; }
 .cat-title { font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:1.5px; margin:14px 0 6px; padding-bottom:4px; border-bottom:1px solid rgba(var(--accent-rgb),0.2); font-weight:600; }
 .error-msg { color:#ff6b6b; font-size:13px; text-align:center; min-height:20px; margin:4px 0; }
 .genre-row { display:flex; gap:10px; margin:10px 0; }
@@ -7122,7 +7131,8 @@ function renderPratiques(g, isSolo, preselected, prefavs) {
   Object.keys(cats).forEach(function(cat) {
     // Si pas mode solo : cacher catégories réservées solo
     if(!isSolo && SOLO_ONLY_CATS.indexOf(cat) >= 0) return;
-    html += '<div class="cat-title">' + cat + '</div>';
+    var _catStart = html.length;
+    html += _catAccOpen(cat);
     cats[cat].forEach(function(p) {
       // Filtrer pratiques solo_h/solo_f/solo_t hors mode solo
       var isSoloPrat = ['solo','solo_h','solo_f','solo_t','masturb_solo_h','masturb_solo_f','masturb_solo_t',
@@ -7139,8 +7149,11 @@ function renderPratiques(g, isSolo, preselected, prefavs) {
         + '<span class="fav-star' + (isFav?' active':'') + '" onclick="toggleFav(event,\'' + p.id + '\',this)" title="Pratique favorite">' + (isFav ? (favRk+1).toString() : '★') + '</span>'
         + '</label>';
     });
+    html += _catAccClose();
+    if(html.indexOf('prat-item',_catStart)<0) html = html.slice(0,_catStart); // catégorie vidée par les filtres
   });
   area.innerHTML = html;
+  updateCatCounts();
 }
 
 function toggleFav(evt, pratId, starEl) {
@@ -7291,19 +7304,40 @@ function goBackPlayer() {
 }
 
 // ── ACCESSOIRES ──
+// ── Catégories repliables (titres roses + menu déroulant) : page Objets et page Pratiques ──
+var _catOpen = {};
+function _catAccOpen(cat){
+  var k=String(cat).replace(/'/g,"\\'");
+  return '<div class="cat-acc'+(_catOpen[cat]?' open':'')+'" data-cat="'+String(cat).replace(/"/g,'&quot;')+'"><div class="cat-acc-head" onclick="toggleCatAcc(this)"><span class="cat-acc-name">'+cat+'</span><span class="cat-acc-count"></span><span class="cat-acc-chev">▾</span></div><div class="cat-acc-body">';
+}
+function _catAccClose(){ return '</div></div>'; }
+function toggleCatAcc(head){
+  var box=head.parentNode; box.classList.toggle('open');
+  _catOpen[box.getAttribute('data-cat')]=box.classList.contains('open');
+}
+function updateCatCounts(){
+  document.querySelectorAll('.cat-acc').forEach(function(b){
+    var n=b.querySelectorAll('.acc-item.checked, .prat-item.checked').length;
+    var c=b.querySelector('.cat-acc-count');
+    if(c) c.textContent = n ? (n+' sélectionné'+(n>1?'s':'')) : 'aucun';
+    b.classList.toggle('has-sel', n>0);
+  });
+}
+document.addEventListener('click', function(){ setTimeout(updateCatCounts,0); });
 function renderAccPage() {
   var ad = getAccData();
   var profileAcc = (G._loadedProfile && G._loadedProfile.acc) ? G._loadedProfile.acc : [];
   var html = '';
   Object.keys(ad).forEach(function(cat) {
-    html += '<div class="cat-title">' + cat + '</div><div class="acc-grid">';
+    html += _catAccOpen(cat) + '<div class="acc-grid">';
     ad[cat].forEach(function(a) {
       var checked = profileAcc.indexOf(a) >= 0;
       html += '<label class="acc-item'+(checked?' checked':'')+'" onclick="toggleAcc(this,\'' + a.replace(/'/g,"\\'") + '\')">'        + '<input type="checkbox" value="' + a + '"' + (checked?' checked':'') + '> ' + a + '</label>';
     });
-    html += '</div>';
+    html += '</div>' + _catAccClose();
   });
   document.getElementById('acc-content').innerHTML = html;
+  updateCatCounts();
   // Partner order for trio/quartet (subscribers only)
   if(G.nb >= 3) renderPartnerOrder();
 }
@@ -16710,11 +16744,16 @@ function _ambSetTarget(v){
   if(_ambFade) return;
   _ambFade=setInterval(function(){
     if(!_amb){ clearInterval(_ambFade); _ambFade=null; return; }
-    var d=_ambTarget-_amb.volume;
-    if(Math.abs(d)<0.02){ _amb.volume=_ambTarget; clearInterval(_ambFade); _ambFade=null; return; }
-    _amb.volume=Math.max(0,Math.min(1,_amb.volume+(d>0?0.03:-0.05)));
+    var cur=_ambGetVol(), d=_ambTarget-cur;
+    if(Math.abs(d)<0.02){ _ambSetVol(_ambTarget); clearInterval(_ambFade); _ambFade=null; return; }
+    _ambSetVol(Math.max(0,Math.min(1,cur+(d>0?0.03:-0.05))));
   },60);
 }
+// Volume via Web Audio (GainNode) : sur iPhone, HTMLMediaElement.volume est ignoré (toujours 100 %),
+// ce qui noyait la voix. Le gain, lui, fonctionne partout.
+var _ambCtx=null, _ambGain=null;
+function _ambGetVol(){ return _ambGain ? _ambGain.gain.value : (_amb?_amb.volume:0); }
+function _ambSetVol(v){ if(_ambGain) _ambGain.gain.value=v; else if(_amb){ try{ _amb.volume=v; }catch(e){} } }
 function _ambDuck(on){ _ambSpeaking=Math.max(0,_ambSpeaking+(on?1:-1)); _ambSetTarget(_ambSpeaking>0?_AMB_DUCK:_AMB_VOL); }
 function _ambEl(){
   if(_amb) return _amb;
@@ -16725,7 +16764,14 @@ function _ambEl(){
     _ambUrl=URL.createObjectURL(new Blob([u8],{type:'audio/mpeg'}));
     _amb.src=_ambUrl;
   }catch(e){ _amb.src=AMBIENT_SRC; }
-  _amb.loop=true; _amb.volume=_AMB_VOL; _amb.preload='auto';
+  _amb.loop=true; _amb.preload='auto';
+  // Session audio « ambient » : la musique se MÉLANGE à la synthèse vocale au lieu d'être coupée (Safari iOS 16.4+).
+  try{ if(navigator.audioSession) navigator.audioSession.type='ambient'; }catch(e){}
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(AC){ _ambCtx=new AC(); var src=_ambCtx.createMediaElementSource(_amb); _ambGain=_ambCtx.createGain(); _ambGain.gain.value=_AMB_VOL; src.connect(_ambGain); _ambGain.connect(_ambCtx.destination); }
+    else _amb.volume=_AMB_VOL;
+  }catch(e){ _ambCtx=null; _ambGain=null; try{ _amb.volume=_AMB_VOL; }catch(_){} }
   _amb.addEventListener('play',_ambBtn); _amb.addEventListener('pause',_ambBtn);
   return _amb;
 }
@@ -16740,7 +16786,8 @@ function _ambBtn(){
 }
 function _ambApply(){
   if(_ambWant && _ambOnGamePage()){
-    var a=_ambEl(), p=a.play();
+    var a=_ambEl(); try{ if(_ambCtx&&_ambCtx.state!=='running') _ambCtx.resume(); }catch(e){}
+    var p=a.play();
     if(p&&p.catch) p.catch(function(){ _ambBtn(); }); // lecture refusée (pas de geste) : le bouton reste sur ▶
   } else if(_amb && !_amb.paused){ _amb.pause(); }
   _ambBtn();
@@ -16766,14 +16813,14 @@ function toggleAmbient(){
   if(typeof _lg==='function') window.launchGame=function(){
       _ambDecided=true; _ambWant=!!AUTO_PLAY_ON;
       // Lecture lancée DANS le geste de l'utilisateur (clic « Commencer ») : obligatoire sur iPhone/Safari.
-      if(_ambWant){ try{ var a=_ambEl(); a.volume=_AMB_VOL; var pr=a.play(); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){} }
+      if(_ambWant){ try{ var a=_ambEl(); if(_ambCtx) _ambCtx.resume(); _ambSetVol(_AMB_VOL); var pr=a.play(); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){} }
       var r=_lg.apply(this,arguments); _ambApply(); return r;
     };
   if('speechSynthesis' in window){
     var _sp=speechSynthesis.speak.bind(speechSynthesis), _sc=speechSynthesis.cancel.bind(speechSynthesis);
     speechSynthesis.speak=function(u){
       try{
-        var done=false, once=function(){ if(!done){ done=true; _ambDuck(false); } };
+        var done=false, once=function(){ if(!done){ done=true; _ambDuck(false); setTimeout(_ambApply,150); } };
         u.addEventListener('start',function(){ _ambDuck(true); });
         u.addEventListener('end',once); u.addEventListener('error',once);
         if(!u.volume||u.volume<1) u.volume=1;   // voix toujours bien audible par-dessus la musique
@@ -16782,6 +16829,13 @@ function toggleAmbient(){
     };
     speechSynthesis.cancel=function(){ _ambSpeaking=0; _ambSetTarget(_AMB_VOL); return _sc(); };
   }
+  // Chien de garde : quand le système coupe la musique pendant que la voix parle (iOS/Android),
+  // on la relance aussitôt — tant que le joueur ne l'a pas mise en pause lui-même.
+  setInterval(function(){
+    if(!_ambWant || !_amb || document.hidden || !_ambOnGamePage()) return;
+    try{ if(_ambCtx && _ambCtx.state!=='running') _ambCtx.resume(); }catch(e){}
+    if(_amb.paused){ var p=_amb.play(); if(p&&p.catch) p.catch(function(){}); }
+  },1200);
   document.addEventListener('visibilitychange',function(){ if(document.hidden&&_amb&&!_amb.paused) _amb.pause(); else if(!document.hidden&&_ambWant) _ambApply(); });
 })();
 </script>
