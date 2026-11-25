@@ -6053,14 +6053,21 @@ function saveMyGages(){ saveCustom(MY_GAGES_KEY, myGages); }
   if(myGages && myGages.length){
     myGages.forEach(function(g){
       customGages.push({ texte:g.texte, niveau:g.niveau||1, genre:g.genre||'Mixte',
-        pratiques:g.pratiques||[], accessoires:g.accessoires||[], modes:g.modes||[], solo:false, _perso100:true });
+        pratiques:g.pratiques||[], accessoires:g.accessoires||[], modes:g.modes||[], solo:false });
     });
     saveCustomGages();
     myGages = []; saveMyGages();
   }
 })();
-// Liste des gages 100% personnalisés (créés via la case dans l'onglet Gages)
-function perso100Gages(){ return customGages.filter(function(g){ return g._perso100; }); }
+// Concept « gage 100% personnalisé » retiré : les anciens gages marqués deviennent de simples gages perso
+// (ils rejoignent le pool normal et restent sélectionnables dans « Prochaine partie → Pool de gages »).
+(function(){
+  var ch=false;
+  customGages.forEach(function(g){ if(g._perso100){ delete g._perso100; ch=true; } });
+  if(ch){ try{ saveCustomGages(); }catch(e){} }
+  try{ localStorage.removeItem('perso_sel_v28'); }catch(e){}
+})();
+function perso100Gages(){ return []; }
 // Les gages saisis en mode Privé sont éphémères : ils ne doivent jamais être écrits
 // dans la liste permanente des gages personnalisés.
 function saveCustomGages(){
@@ -9857,7 +9864,8 @@ function storyMidReminder(){
   return cap(hf.rH.article)+' et '+hf.rF.article+', toujours dans leurs personnages.';
 }
 // ══════════════ NARRATION VOCALE (tous les modes) — Web Speech API, zéro serveur ══════════════
-var voiceNarrationOn = (function(){ try{ return localStorage.getItem('voice_narration_v28')==='1'; }catch(e){ return false; } })();
+// Narration vocale ACTIVÉE par défaut (clé v33), comme le mode auto et la musique : au joueur de la couper.
+var voiceNarrationOn = (function(){ try{ return localStorage.getItem('voice_narration_v33')!=='0'; }catch(e){ return true; } })();
 
 // ══════════════ MODE AUTOMATIQUE ══════════════
 // Le jeu lit le gage, démarre seul le timer/dé, puis enchaîne tout seul quelques
@@ -9913,8 +9921,17 @@ function _pickFrenchVoice(){
     var saved = fr.find(function(v){ return (v.name+'|'+v.lang)===savedId; });
     if(saved) return saved;
   }
-  // Par défaut : une voix féminine si disponible, sinon la première voix française trouvée
-  return fr.find(function(v){return _voiceGender(v)==='f';}) || fr[0];
+  // Par défaut : la voix féminine française la plus douce/naturelle disponible (voix « premium » ou
+  // « enhanced » d'abord, puis noms connus pour leur timbre chaud), sinon la première voix française.
+  var _rang=function(v){
+    var n=(v.name||'').toLowerCase(), r=0;
+    if(_voiceGender(v)==='f') r+=10;
+    if(/premium|enhanced|natural|neural|siri/.test(n)) r+=8;
+    if(/am[ée]lie|audrey|aur[ée]lie|marie|julie|denise|hortense|c[ée]line|l[ée]a|vivienne|brigitte/.test(n)) r+=5;
+    if(v.localService===false && /google/.test(n)) r+=2;
+    return r;
+  };
+  return fr.slice().sort(function(a,b){ return _rang(b)-_rang(a); })[0];
 }
 function setVoicePref(id){
   _saveVoicePref(id);
@@ -9982,7 +9999,7 @@ function updateVoiceToggleBtn(){
 }
 function toggleVoiceNarration(){
   voiceNarrationOn = !voiceNarrationOn;
-  try{ localStorage.setItem('voice_narration_v28', voiceNarrationOn?'1':'0'); }catch(e){}
+  try{ localStorage.setItem('voice_narration_v33', voiceNarrationOn?'1':'0'); }catch(e){}
   updateVoiceToggleBtn();
   if(!voiceNarrationOn && 'speechSynthesis' in window) speechSynthesis.cancel();
   else if(voiceNarrationOn){
@@ -10022,12 +10039,15 @@ function speakGageText(gage, player, partner){
     .replace(/[*][*]([^*]+)[*][*]/g, '$1')
     .replace(/🎭|🔒|👮|💼|📦|🎓|🩺|🚒|👨‍🍳|🍸|💆‍♂️|💆‍♀️|👮‍♀️|💉|📚|🧹|🖤|🏠|🛍️|🤒/g, '');
   if(!raw.trim()) return;
+  // Diction sensuelle : débit lent, voix légèrement grave, souffle entre les phrases (points de suspension).
+  raw = raw.replace(/\s*—\s*/g, '… ').replace(/\.\s+/g, '… ').replace(/,\s+/g, ', … ').replace(/\s+/g, ' ');
   var utt = new SpeechSynthesisUtterance(raw);
   utt.lang = 'fr-FR';
   var freshVoice = _pickFrenchVoice(); // re-résolu à chaque lecture, jamais depuis le cache
   if(freshVoice) utt.voice = freshVoice;
-  utt.rate = 0.80;
-  utt.pitch = 0.90;
+  utt.rate = 0.72;
+  utt.pitch = 0.85;
+  utt.volume = 0.95;
   if(AUTO_PLAY_ON){
     utt.onend = function(){ _autoOnNarrationEnd(); };
   }
@@ -10586,7 +10606,7 @@ function toggleAutoPlay(){
   try{ localStorage.setItem('auto_play_v33', AUTO_PLAY_ON?'1':'0'); }catch(e){}
   if(AUTO_PLAY_ON && !voiceNarrationOn && 'speechSynthesis' in window){
     voiceNarrationOn = true;
-    try{ localStorage.setItem('voice_narration_v28','1'); }catch(e){}
+    try{ localStorage.setItem('voice_narration_v33','1'); }catch(e){}
     updateVoiceToggleBtn();
     showFavToast('🔄 Mode automatique activé — narration vocale allumée pour en profiter pleinement');
   } else {
@@ -11791,9 +11811,6 @@ function renderGageForm() {
     +'<label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:8px">'
     +'<input type="checkbox" id="g-solo" onchange="liveVal()" style="width:18px;height:18px;flex:0 0 auto">'
     +'<span style="font-size:13px;line-height:1.4"><strong>👤 Solo uniquement</strong><br><span style="color:var(--muted);font-size:11px">Ce gage ne sortira qu\'en mode Solo (jamais en couple).</span></span></label>'
-    +'<label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card2);border:1px solid var(--gold);border-radius:10px;padding:10px 12px;margin-top:10px">'
-    +'<input type="checkbox" id="g-perso100" style="width:18px;height:18px;flex:0 0 auto;accent-color:var(--gold)">'
-    +'<span style="font-size:13px;line-height:1.4"><strong style="color:var(--gold)">🎯 Gage 100% personnalisé</strong><br><span style="color:var(--muted);font-size:11px">Proposé en début de partie (si pratiques/objets compatibles) puis garanti à 100%, invisible in-game.</span></span></label>'
     +'<h3>Accessoires <span style="font-weight:400;color:var(--muted)">(optionnel)</span></h3>'
     +'<div id="g-acc-grid" class="admin-check-grid"></div>'
     +'<h3>Pratiques du joueur <span style="font-weight:400;color:var(--muted)">(optionnel)</span></h3>'
@@ -11816,8 +11833,7 @@ function renderGageListFilters() {
   return '<p style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5">Par défaut, seuls <strong>tes gages personnalisés</strong> sont affichés (les plus récents en premier) — bascule sur "Tous" pour voir aussi les gages de base. Chaque gage indique en petit ses <strong>conditions exactes de tirage in-game</strong> (niveau, genre, mode, pratiques, accessoires). 🎯 100% = jamais tiré au hasard, uniquement proposé au démarrage d\'une partie.</p>'
     +'<div class="search-box"><input type="text" id="s-kw" placeholder="🔍 Mot-clé…" oninput="filterGages()"><select id="s-lvl" onchange="filterGages()"><option value="">Tous niveaux</option><option value="1">Niv.1</option><option value="2">Niv.2</option><option value="3">Niv.3</option><option value="4">Niv.4</option><option value="5">Niv.5</option></select></div>'
     +'<div class="search-box"><select id="s-genre" onchange="filterGages()" style="flex:1"><option value="">Tous genres</option><option value="Homme">👨 H</option><option value="Femme">👩 F</option><option value="Mixte">⚧ M</option></select><select id="s-src" onchange="filterGages()" style="flex:1"><option value="custom" selected>🎯 Mes gages perso</option><option value="all">Tous (perso + base)</option><option value="base">Base uniquement</option></select></div>'
-    +'<div class="search-box"><select id="s-prat" onchange="filterGages()" style="flex:1"><option value="">Toutes pratiques</option>'+pratOptions+'</select><select id="s-type" onchange="filterGages()" style="flex:1"><option value="">Tous types</option><option value="guide">🎓 Guide</option><option value="action">🎯 Action</option><option value="choix">🔀 Choix A/B</option><option value="question">❓ Question</option><option value="defi">⚡ Défi/Fun</option><option value="massage">💆 Massage</option><option value="kamasutra">🕉 Kamasutra</option></select></div>'
-    +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:4px 2px 8px"><input type="checkbox" id="s-perso100" onchange="filterGages()" style="width:16px;height:16px;accent-color:var(--gold)"><span style="font-size:13px">🎯 Uniquement les gages 100% personnalisés</span></label>';
+    +'<div class="search-box"><select id="s-prat" onchange="filterGages()" style="flex:1"><option value="">Toutes pratiques</option>'+pratOptions+'</select><select id="s-type" onchange="filterGages()" style="flex:1"><option value="">Tous types</option><option value="guide">🎓 Guide</option><option value="action">🎯 Action</option><option value="choix">🔀 Choix A/B</option><option value="question">❓ Question</option><option value="defi">⚡ Défi/Fun</option><option value="massage">💆 Massage</option><option value="kamasutra">🕉 Kamasutra</option></select></div>';
 }
 
 function initAdminGageForm() {
@@ -12420,7 +12436,7 @@ function _dataKeyGroups(){
     {label:'👍👎 Notes de fin de partie', keys:['gprefs_v28']},
     {label:'⭐ Favoris', keys:['pulsations_favs_v1']},
     {label:'📝 Mes gages (liste perso hors admin)', keys:['myg_v28']},
-    {label:'⚙️ Réglages (thème, voix, langue)', keys:['jdc_theme_v28','voice_narration_v28','pulsations_lang']},
+    {label:'⚙️ Réglages (thème, voix, langue)', keys:['jdc_theme_v28','voice_narration_v28','voice_narration_v33','auto_play_v33','pulsations_lang']},
     {label:'📁 Médiathèque personnelle', keys:['media_lib_v28']},
     {label:'🎬 Histoires personnalisées', keys:['custom_stories_v28']},
     {label:'🖼️ Fonds d\'écran', keys:['bg_images_v28']},
@@ -12654,14 +12670,7 @@ var KAMA_POSE_OPTIONS = ['missionnaire','levrette','cavalier','cuillere','lotus'
 
 var _ngPersoOpen = true;
 function renderAdminNextGame(){
-  var html = '<div onclick="ngTogglePerso()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">'
-    + '<strong style="font-size:13px">🎯 Gages personnalisés garantis à 100%</strong>'
-    + '<span id="ng-perso-chev" style="font-size:14px;color:var(--muted)">'+(_ngPersoOpen?'▴':'▾')+'</span>'
-    + '</div>';
-  html += '<div id="ng-perso-wrap" class="'+(_ngPersoOpen?'':'hidden')+'">';
-  html += '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Choisis ici quels gages personnalisés "🎯 garantis à 100%" seront proposés au démarrage de la prochaine partie. C\'est exactement la même sélection que celle vue par le joueur en configuration — tu peux la préparer à l\'avance, ou l\'ajuster après coup.</p>'
-    + '<div id="custom-gage-picker"></div>';
-  html += '</div>';
+  var html = '';
   html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">';
   html += '<h3 style="font-size:14px;color:var(--gold);margin-bottom:6px">🗂️ Pool de gages par durée</h3>';
   html += '<p style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Choisis des gages — de base ou perso, autant que tu veux — pour une durée de partie précise. Le jeu tirera ensuite dedans en priorité, en respectant les pratiques/accessoires réellement choisis par les joueurs. Aucun plafond ici : un avertissement s\'affiche juste si tu dépasses largement la capacité d\'un niveau pour cette durée.</p>';
@@ -12930,7 +12939,8 @@ function _ngPreviewResultHTML(R){
       (g.accessoires||[]).forEach(function(a){ if(a!=='Sangles de contention poignets'&&a!=='Masque BDSM') tags.push(a); });
       var body = g._kama ? '🕉 Kâmasûtra — une position sera tirée au moment de jouer' : _ngTxt(g.texte, actor, partner);
       h+='<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid '+(g.genre==='Femme'?'#e07aa8':(g.genre==='Homme'?'#6aa8e0':'var(--gold)'))+';border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px;line-height:1.45">'
-        +'<div style="font-size:10.5px;color:var(--muted);margin-bottom:3px">#'+(i+1)+' · '+ico[actor]+' '+_esc(actor)+(tags.length?' · '+_esc(tags.join(' · ')):'')+'</div>'+body+'</div>';
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:3px"><div style="font-size:10.5px;color:var(--muted)">#'+(i+1)+' · '+ico[actor]+' '+_esc(actor)+(g._swapped?' · ✏️ choisi par toi':'')+(tags.length?' · '+_esc(tags.join(' · ')):'')+'</div>'
+        +'<button class="btn ghost sm" style="padding:3px 9px;font-size:11px;flex:0 0 auto" onclick="ngSwapOpen('+l+','+i+')">🔀 Changer</button></div>'+body+'</div>';
     });
   });
   var lock=_ngLockLoad();
@@ -12939,6 +12949,93 @@ function _ngPreviewResultHTML(R){
     +'<button class="btn ghost" style="flex:1" onclick="ngPreviewRun()">🔄 Autre tirage</button>'
     +'<button class="btn" style="flex:1.4" onclick="ngPreviewValidate()">'+(isLocked?'✅ Validée (re-valider)':'✅ Valider cette partie')+'</button></div>';
   return '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">'+total+' gages au total · 🎯 = gage de ta présélection « Prochaine partie »</div>'+h+bar;
+}
+
+/* ── Remplacer un gage directement dans l'aperçu ── */
+var _ngSwap = {l:0, i:0, kw:'', generic:false};
+// Clé de comparaison anti-doublon : texte normalisé (durées, prénoms, ponctuation ignorés).
+function _ngNorm(t){ return String(t||'').toLowerCase().replace(/\*\*[^*]+\*\*/g,'#').replace(/\{[a-z0-9]+\}/g,'_').replace(/[^a-zàâçéèêëîïôûùüÿœ_# ]/g,' ').replace(/\s+/g,' ').trim(); }
+function _ngWithState(fn){
+  var R=_ngPrev.res, keep={mode:G.mode, players:G.players, acc:G.acc, ct:G._contenu, dur:G_duration, lm:{1:LVL_MAX[1],2:LVL_MAX[2],3:LVL_MAX[3],4:LVL_MAX[4]}, st:G._storyDuo};
+  var out=null;
+  try{ G.mode=R.mode; G.players=R.players; G.acc=R.acc.slice(); G._contenu=R.contenu||null; G._storyDuo=null; G_duration=R.dur; applyDuration(R.dur); out=fn(); }
+  catch(e){ out=[]; }
+  G.mode=keep.mode; G.players=keep.players; G.acc=keep.acc; G._contenu=keep.ct; G_duration=keep.dur; G._storyDuo=keep.st; [1,2,3,4].forEach(function(l){ LVL_MAX[l]=keep.lm[l]; });
+  return out;
+}
+function _ngSwapCands(){
+  var R=_ngPrev.res, S=_ngSwap, cur=R.snap[S.l][S.i]; if(!cur) return [];
+  var actor=R.players.filter(function(p){ return p.prenom===cur._p; })[0]||R.players[0];
+  // Anti-doublon : ni le même texte, ni un texte équivalent (même gage à la durée près) déjà présent dans la partie.
+  var used={}, usedN={}; [1,2,3,4,5].forEach(function(l){ (R.snap[l]||[]).forEach(function(g,j){ used[g.texte]=true; usedN[_ngNorm(g.texte)]=true; }); });
+  var partner=R.players.filter(function(p){ return p.prenom!==actor.prenom; })[0]||actor;
+  var chosen=(actor.pratiques||[]).concat(partner.pratiques||[]);
+  var seenN={};
+  return _ngWithState(function(){
+    var ct=G._contenu;
+    return allGages().filter(function(g){
+      if(g.niveau!==S.l || g.solo || g._kama || used[g.texte]) return false;
+      if(/\{joueur[34]\}/.test(g.texte)) return false;
+      // En rapport avec les pratiques choisies : le gage doit porter au moins une pratique cochée par l'un des deux joueurs
+      // (option « sans pratique » pour inclure aussi les gages sensuels génériques).
+      var gp=g.pratiques||[];
+      if(gp.length){ if(!gp.some(function(p){ return chosen.indexOf(p)>=0; })) return false; }
+      else if(!S.generic) return false;
+      var n=_ngNorm(g.texte); if(usedN[n] || seenN[n]) return false;
+      if(!gageOk(g, actor, S.l)) return false;
+      if(ct){
+        if(actor.prenom===ct){ if(_gageDemandeAction(g)||_gageImpossibleSurEntrave(g)) return false; }
+        else if(_gagePrenomEstEntrave(g)) return false;
+      }
+      seenN[n]=true;
+      return true;
+    });
+  });
+}
+function ngSwapOpen(l,i){ _ngSwap={l:l,i:i,kw:'',generic:false}; _ngSwapRender(); }
+function ngSwapClose(){ var o=document.getElementById('ng-swap-ov'); if(o) o.remove(); }
+function _ngSwapRender(){
+  var R=_ngPrev.res, S=_ngSwap, cur=R.snap[S.l][S.i]; if(!cur) return;
+  var o=document.getElementById('ng-swap-ov');
+  if(!o){ o=document.createElement('div'); o.id='ng-swap-ov'; o.style.cssText='position:fixed;inset:0;z-index:950;background:var(--bg,#0b0b10);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px'; document.body.appendChild(o); }
+  var actor=cur._p, partner=R.players.filter(function(p){return p.prenom!==actor;})[0].prenom;
+  var all=_ngSwapCands(), kw=(S.kw||'').toLowerCase();
+  var list=all.filter(function(g){ return !kw || g.texte.toLowerCase().indexOf(kw)>=0; });
+  var h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><button class="btn ghost sm" onclick="ngSwapClose()">← Retour</button><h3 style="font-size:14px;color:var(--gold);margin:0">🔀 Changer le gage #'+(S.i+1)+' · Niv.'+S.l+'</h3></div>';
+  h+='<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Gage actuel ('+_esc(actor)+') :</div><div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12.5px;margin-bottom:10px">'+_ngTxt(cur.texte,actor,partner)+'</div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><input id="ngs-kw" placeholder="🔍 Mot-clé…" value="'+_esc(S.kw||'')+'" oninput="_ngSwap.kw=this.value;_ngSwapRenderList()" style="flex:1;min-width:0"><button class="btn sm" onclick="ngSwapRandom()">🎲 Au hasard</button></div>';
+  h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px"><input type="checkbox" id="ngs-gen"'+(S.generic?' checked':'')+' onchange="_ngSwap.generic=this.checked;_ngSwapRenderList()"> Inclure aussi les gages sensuels sans pratique précise</label>';
+  h+='<div style="font-size:11px;color:var(--muted);margin-bottom:6px" id="ngs-count"></div><div id="ngs-list"></div>';
+  o.innerHTML=h; _ngSwapRenderList();
+}
+function _ngSwapRenderList(){
+  var R=_ngPrev.res, S=_ngSwap, cur=R.snap[S.l][S.i]; if(!cur) return;
+  var actor=cur._p, partner=R.players.filter(function(p){return p.prenom!==actor;})[0].prenom;
+  var kw=(S.kw||'').toLowerCase();
+  var all=_ngSwapCands(); S._cands=all;
+  var list=all.filter(function(g){ return !kw || g.texte.toLowerCase().indexOf(kw)>=0; });
+  var c=document.getElementById('ngs-count'); if(c) c.textContent=list.length+' gage'+(list.length>1?'s':'')+' possible'+(list.length>1?'s':'')+' pour '+actor+' à ce niveau'+(list.length>60?' (60 premiers affichés)':'');
+  var box=document.getElementById('ngs-list'); if(!box) return;
+  box.innerHTML=list.slice(0,60).map(function(g){
+    var k=all.indexOf(g); var tags=(g.accessoires||[]).filter(function(a){return a!=='Aucun';});
+    return '<div onclick="ngSwapPick('+k+')" style="cursor:pointer;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px;line-height:1.45">'
+      +(tags.length?'<div style="font-size:10.5px;color:var(--muted);margin-bottom:2px">'+_esc(tags.join(' · '))+'</div>':'')+_ngTxt(g.texte,actor,partner)+'</div>';
+  }).join('') || '<div style="font-size:12px;color:var(--muted);padding:10px">Aucun autre gage compatible à ce niveau avec cette configuration.</div>';
+}
+function ngSwapPick(k){
+  var R=_ngPrev.res, S=_ngSwap, cur=R.snap[S.l][S.i], g=(S._cands||[])[k]; if(!g||!cur) return;
+  // Garde-fou final : jamais de doublon, même exact ou équivalent.
+  var nk=_ngNorm(g.texte), dupe=false;
+  [1,2,3,4,5].forEach(function(l){ (R.snap[l]||[]).forEach(function(x,j){ if(!(l===S.l&&j===S.i) && (x.texte===g.texte||_ngNorm(x.texte)===nk)) dupe=true; }); });
+  if(dupe) return;
+  R.snap[S.l][S.i]=Object.assign(JSON.parse(JSON.stringify(g)),{_p:cur._p,_ch:false,_kama:false,_swapped:true});
+  ngSwapClose();
+  var o=document.getElementById('ng-prev-ov'), top=o?o.scrollTop:0;
+  _ngPreviewRender(); o=document.getElementById('ng-prev-ov'); if(o) o.scrollTop=top;
+}
+function ngSwapRandom(){
+  var all=_ngSwapCands(); if(!all.length) return;
+  _ngSwap._cands=all; ngSwapPick(Math.floor(Math.random()*all.length));
 }
 function ngPreviewValidate(){
   var R=_ngPrev.res; if(!R||R.err) return;
@@ -16615,7 +16712,7 @@ function _ambEl(){
     _ambUrl=URL.createObjectURL(new Blob([u8],{type:'audio/mpeg'}));
     _amb.src=_ambUrl;
   }catch(e){ _amb.src=AMBIENT_SRC; }
-  _amb.loop=true; _amb.volume=0.35; _amb.preload='auto';
+  _amb.loop=true; _amb.volume=0.25; _amb.preload='auto';
   _amb.addEventListener('play',_ambBtn); _amb.addEventListener('pause',_ambBtn);
   return _amb;
 }
