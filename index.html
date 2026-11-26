@@ -760,7 +760,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
       <span class="mode-badge free">✓ Niv.1-2 gratuits</span>
     </div>
     <div class="mode-card" id="mc-des" onclick="selectMode('des')" style="position:relative">
-      <span class="icon">🎰</span><div class="label">Dés &amp; Roue</div><div class="sub">Action + zone tirées au sort, niveaux 1 à 5</div>
+      <span class="icon">🎰</span><div class="label">Dés &amp; Roue</div><div class="sub">Roue ou dés — action + zone ou position, niveaux 1 à 5</div>
       <span class="mode-badge free">✓ Niv.1-2 gratuits</span>
     </div>
   </div>
@@ -1161,6 +1161,8 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
 </div>
 
 <!-- PAGE HISTORIQUE -->
+<div class="page" id="page-rd-players"><div id="rdp-root" style="padding:40px 14px 20px;max-width:460px;margin:0 auto"></div></div>
+<div class="page" id="page-rd"><div id="rd-bar" style="position:fixed;top:10px;right:12px;z-index:60;display:flex;gap:8px;align-items:center"><button id="rd-voice-btn" onclick="rdVoice()" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:32px;height:32px;font-size:14px;cursor:pointer;color:var(--muted)" title="Narration vocale">🔇</button><button class="amb-btn" onclick="toggleAmbient()" title="Musique d'ambiance" style="background:transparent;border:1.5px solid var(--border);border-radius:16px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted)">🎵 ▶</button></div><div id="rd-root" style="padding:40px 14px 20px;max-width:460px;margin:0 auto"></div></div>
 <div class="page" id="page-history">
   <div class="page-header"><h1>📖 Historique</h1><p>Vos dernières parties</p></div>
   <div id="history-list"></div>
@@ -1182,6 +1184,7 @@ h3 { font-size:15px; font-weight:600; color:var(--gold); margin:14px 0 8px; }
     <button class="admin-tab" id="atab-bgimages-nav" onclick="adminTab('bgimages',this)">🖼️ Fonds d'écran</button>
     <button class="admin-tab" id="atab-stories-nav" onclick="adminTab('stories',this)">🎬 Histoires</button>
     <button class="admin-tab" id="atab-news-nav" onclick="adminTab('news',this)">📣 Nouveautés</button>
+    <button class="admin-tab" id="atab-rd-nav" onclick="adminTab('rd',this)">🎡 Roue & Dés</button>
     <button class="admin-tab" id="atab-media-nav" onclick="adminTab('media',this)">📁 Médiathèque</button>
     <button class="admin-tab" id="atab-data-nav" onclick="adminTab('data',this)">💾 Données</button>
   </div>
@@ -10754,14 +10757,15 @@ var voiceNarrationOn = (function(){ try{ return localStorage.getItem('voice_narr
 // Mode automatique ACTIVÉ par défaut (clé v33) : c'est à l'utilisateur de repasser en manuel.
 var AUTO_PLAY_ON = (function(){ try{ return localStorage.getItem('auto_play_v33')!=='0'; }catch(e){ return true; } })();
 var _autoToken = 0;
-var AUTO_GRACE = 5; // valeur de repli si un niveau n'a pas de réglage dédié
-var AUTO_GRACE_BY_LVL = {1:5, 2:5, 3:5, 4:5, 5:5}; // pause après le timer/dé avant de passer au gage suivant
+var AUTO_GRACE = 4; // valeur de repli si un niveau n'a pas de réglage dédié
+var AUTO_GRACE_BY_LVL = {1:4, 2:4, 3:4, 4:4, 5:4}; // pause après le timer/dé avant de passer au gage suivant
 var AUTO_PRE_PAUSE = 1.5; // secondes de silence avant de commencer à lire le gage suivant (respiration entre 2 gages)
-var AUTO_MECH_DELAY = 5; // secondes entre la fin de la narration (lecture du gage) et le démarrage du timer/dé
+var AUTO_MECH_DELAY = 2; // secondes entre la fin de la narration (lecture du gage) et le démarrage du timer/dé
 var AUTO_NO_TIMER_WAIT = 15; // secondes de "temps de réponse" virtuel pour un gage sans timer ni dé (question, etc.)
 var _autoGoNext = function(){};
 var _autoOnNarrationEnd = function(){}; // appelé par speakGageText quand la narration du gage se termine
 loadDurConfig(); // charge la calibration sauvegardée (durées + mode auto), maintenant que tout est déclaré
+try{ if(localStorage.getItem('auto_timing_v34')!=='1'){ AUTO_MECH_DELAY=2; [1,2,3,4,5].forEach(function(k){ AUTO_GRACE_BY_LVL[k]=4; }); AUTO_GRACE=4; saveDurConfig(); localStorage.setItem('auto_timing_v34','1'); } }catch(e){}
 var _voiceFR = null;
 var VOICE_PREF_KEY = 'voice_id_v28';
 var _FEMALE_VOICE_NAMES = ['amelie','amélie','audrey','aurelie','aurélie','celine','céline','chantal','charline','marie','virginie','lea','léa','julie','hortense','denise','eloise','éloise','elise','élise','sandrine','manon','claire','camille','emma','lucie','justine','severine','séverine','nathalie','zosia','flo','ines','inès',
@@ -10929,9 +10933,19 @@ function speakGageText(gage, player, partner){
   utt.rate = 0.72;
   utt.pitch = 0.85;
   utt.volume = 0.7;
-  if(AUTO_PLAY_ON){
-    utt.onend = function(){ _autoOnNarrationEnd(); };
-  }
+  utt.onend = function(){
+    if(AUTO_PLAY_ON){ _autoOnNarrationEnd(); return; }
+    // Mode son (voix) sans auto : le minuteur démarre tout seul, avec un bip, après la diction
+    try{
+      var g0 = gage;
+      setTimeout(function(){
+        var cur = (G.gagesByLevel[G.level]||[])[G.gageIdx];
+        if(AUTO_PLAY_ON || cur!==g0 || timerRun || _diceRolling || _curGageEngaged || !voiceNarrationOn) return;
+        if(hasDiceRef(g0.texte)){ return; }
+        if(extractTimer(g0.texte) && timerLeft>0){ playBeep(); toggleTimer(); }
+      }, AUTO_MECH_DELAY*1000);
+    }catch(e){}
+  };
   speechSynthesis.speak(utt);
 }
 
@@ -11426,7 +11440,7 @@ function scheduleAutoPlayForGage(gage){
       if(!_diceRolling) rollDice(); // le résultat appellera _autoGoNext() automatiquement à l'arrêt du dé
     } else {
       var s = extractTimer(gage.texte);
-      if(s && !timerRun) toggleTimer(); // la fin du timer appellera _autoGoNext() automatiquement
+      if(s && !timerRun){ playBeep(); toggleTimer(); } // bip de départ (le même que la fin) ; la fin du timer appellera _autoGoNext()
     }
   };
   // Petit temps de respiration entre la fin de la narration et le démarrage du timer/dé,
@@ -13545,7 +13559,7 @@ function resetDurConfig(){
   DURATION_PRESETS[45]={1:5,2:4,3:3,4:2};
   DURATION_PRESETS[60]={1:7,2:6,3:4,4:4};
   AUTO_GRACE_BY_LVL[1]=5; AUTO_GRACE_BY_LVL[2]=5; AUTO_GRACE_BY_LVL[3]=5; AUTO_GRACE_BY_LVL[4]=5; AUTO_GRACE_BY_LVL[5]=5;
-  AUTO_PRE_PAUSE=1.5; AUTO_MECH_DELAY=5; AUTO_NO_TIMER_WAIT=15;
+  AUTO_PRE_PAUSE=1.5; AUTO_MECH_DELAY=2; AUTO_NO_TIMER_WAIT=15;
   adminTab('duree', document.getElementById('atab-duree-nav'));
 }
 
@@ -18106,8 +18120,12 @@ function toggleAmbient(){
 
   /* — Nouveautés — */
   var NEWS = [{
-    id:'v33-nov26', date:'26/11/2026', title:'Nouveautés de Pulsations',
+    id:'v34-nov26', date:'26/11/2026', title:'Nouveautés de Pulsations',
     items:[
+      ['⏱','Minuteur automatique','Avec la voix ou le mode auto : 2 secondes après la lecture du gage, le minuteur démarre avec un bip (le même qu\'à la fin). En mode auto, le gage suivant arrive 4 secondes après.'],
+      ['🎡','Nouveau mode « Roue & Dés »','Une vraie roue qui tourne ou deux dés lancés, sans carte : le sort décide, le résultat est lu à voix haute. 3 niveaux (Coquin, Hot, Très hot) : la roue et les dés changent et la température monte. Aucun réglage, on joue directement.'],
+      ['📖','Historique des parties','Retrouvez vos dernières parties depuis le bouton « Historique » en bas de l\'accueil.'],
+      ['🌙','Écran sombre en mode auto','Quand un gage se lance tout seul, l\'écran s\'assombrit pour ne pas éblouir. Rien ne s\'arrête : touchez l\'écran pour le rallumer, l\'audio continue.'],
       ['🗳️','Gages « Vote à deux »','Deux choix, A ou B : comptez jusqu\'à 3 et annoncez votre choix en même temps. Même choix, vous le faites ensemble ; sinon, on revote.'],
       ['🎭','Nouvelle pratique « Jeu de rôle »','À cocher dans « Fun » : de courts gages pour entrer dans la peau des personnages du mode Histoire (policière, infirmière, chevalier…), en mode Classique, Découverte et Compétition.'],
       ['🙈','Gages « Aveugle »','Un partenaire a les yeux bandés et doit deviner : bouche, langue ou souffle ? Sans bandeau coché, on ferme simplement les yeux.'],
@@ -18128,17 +18146,24 @@ function toggleAmbient(){
   window.showNewsPopup = function(force, cb){
     var n = NEWS[0];
     if(!force && _lastSeen()===n.id){ if(cb) cb(); return; }
-    var o = _ov(_newsHTML(n) + '<button class="btn sm" id="news-ok" style="width:100%;margin:6px 0 0">C\'est parti !</button>');
+    var o = _ov(_newsHTML(n) + '<div style="position:sticky;bottom:-20px;margin:0 -18px -20px;padding:12px 18px 16px;background:linear-gradient(to top,var(--card) 70%,transparent);display:flex;gap:8px"><button class="btn ghost sm" id="news-later" style="margin:0;flex:1">Plus tard</button><button class="btn sm" id="news-ok" style="margin:0;flex:1.6">✓ Lu</button></div>');
     o.querySelector('#news-ok').onclick = function(){
       try{ localStorage.setItem(NEWS_KEY, n.id); }catch(e){}
       o.remove(); if(cb) cb();
     };
+    o.querySelector('#news-later').onclick = function(){ o.remove(); if(cb) cb(); };
   };
+  /* Pop-up de nouveautés à chaque entrée dans l'application */
+  function _entryNews(){
+    if(document.getElementById('news-ok') || _lastSeen()===NEWS[0].id) return;
+    var pg = document.querySelector('.page.active'); if(pg && pg.id && pg.id!=='page-home' && pg.id!=='page-landing' && !/home|accueil|landing|splash/i.test(pg.id)) { /* écran de départ inconnu : on affiche quand même */ }
+    showNewsPopup(true);
+  }
+  if(document.readyState==='complete') setTimeout(_entryNews, 700); else window.addEventListener('load', function(){ setTimeout(_entryNews, 700); });
   var _lg = window.launchGame;
   window.launchGame = function(){
     var self = this, args = arguments;
     G._softAsked = false;
-    if(_lastSeen()!==NEWS[0].id){ showNewsPopup(false, function(){ _lg.apply(self, args); }); return; }
     return _lg.apply(this, args);
   };
 
@@ -18578,7 +18603,7 @@ function toggleAmbient(){
     2:[['Caresser','caresse'],['Embrasser','embrasse'],['Masser','masse'],['Mordiller','mordille doucement'],['Lécher','lèche'],['Souffler','souffle sur']],
     3:[['Embrasser','embrasse'],['Lécher','lèche'],['Masser','masse'],['Mordiller','mordille'],['Dessiner','dessine du bout des doigts sur'],['Frôler','frôle de ses lèvres']],
     4:[['Embrasser','embrasse lentement'],['Lécher','lèche lentement'],['Caresser','caresse lentement'],['Mordiller','mordille'],['Masser','masse'],['Souffler','souffle sur']],
-    5:[['Embrasser','embrasse'],['Lécher','lèche'],['Sucer','suce'],['Caresser','caresse'],['Masser','masse'],['Mordiller','mordille']]
+    5:[['Embrasser','embrasse'],['Lécher','lèche'],['Sucer','suce'],['Caresser','caresse'],['Masturber','masturbe'],['Doigter','doigte'],['Mordiller','mordille']]
   };
   var MOUTH = ['embrasse','lèche','suce','mordille','souffle','frôle'];
   var HANDS = ['caresse','effleure','masse','dessine'];
@@ -18587,12 +18612,26 @@ function toggleAmbient(){
     2:[['Ventre','le ventre'],['Nuque','la nuque'],['Bras','l\'intérieur des bras'],['Bas du dos','le bas du dos'],['Cuisses','les cuisses'],['Pieds','les pieds'],['Hanches','les hanches']],
     3:[['Poitrine','la poitrine'],['Cuisses (haut)','l\'intérieur des cuisses'],['Fesses','les fesses'],['Bas du ventre','le bas du ventre'],['Gorge','la gorge'],['Hanches','les hanches']],
     4:[['Poitrine','la poitrine'],['Tétons','les tétons'],['Cuisses (haut)','le haut des cuisses'],['Fesses','les fesses'],['Aine','l\'aine'],['Pubis','le pubis']],
-    5:[['Tétons','les tétons'],['Poitrine','la poitrine'],['Aine','l\'aine'],['Fesses','les fesses'],['Cuisses (haut)','le haut des cuisses'],['Sexe','le sexe']]
+    5:[['Sexe','le sexe'],['Sexe','le sexe'],['Tétons','les tétons'],['Poitrine','la poitrine'],['Aine','l\'aine'],['Fesses','les fesses'],['Cuisses (haut)','l\'intérieur des cuisses']]
   };
-  var DUR = {1:'30 secondes',2:'45 secondes',3:'1 minute',4:'1 minute',5:'90 secondes'};
+  var DUR = {1:'30 secondes',2:'45 secondes',3:'1 minute',4:'90 secondes',5:'2 minutes'};
   function rnd(a){ return a[Math.floor(Math.random()*a.length)]; }
-  function makeDice(l, actor, partner, mouthOnly){
+  function makeDice(l, actor, partner, mouthOnly, noPos){
     var lvl = Math.max(1, Math.min(5, l||1));
+    if(!noPos && lvl>=4 && partner && Math.random()<0.3 && !(typeof contentionActive==='function' && contentionActive())){
+      var hasK = function(x){ return x && (x.pratiques||[]).indexOf('kamasutra')>=0; };
+      if(hasK(actor) && hasK(partner)){
+        var ks = []; try{ ks = getKamaData().filter(function(k){ return (k.difficulty||1)<=3; }); }catch(e){}
+        if(ks.length){
+          var k = rnd(ks);
+          return {
+            texte:'{prenom} et {partenaire}, position **'+k.name+'** : '+(k.desc||'')+' — **2 minutes**.',
+            niveau:lvl, genre:'Mixte', pratiques:[], accessoires:[], modes:[], solo:false,
+            _dice:true, _dA:'Position', _dZ:k.name, _dLvl:lvl, _dPos:true
+          };
+        }
+      }
+    }
     var pr = (actor && actor.pratiques) || [];
     var oral = pr.some(function(p){ return /oral/.test(p); });
     var hand = pr.some(function(p){ return /masturb/.test(p); });
@@ -18600,6 +18639,7 @@ function toggleAmbient(){
     var z = rnd(zones);
     var acts = ACT[lvl].filter(function(a){
       var v = a[1];
+      if(/^(masturbe|doigte)/.test(v) && z[0]!=='Sexe') return false;
       if(mouthOnly && !MOUTH.some(function(m){ return v.indexOf(m)===0; })) return false;
       if(z[0]==='Sexe' || z[0]==='Pubis' || z[0]==='Aine'){
         var isMouth = MOUTH.some(function(m){ return v.indexOf(m)===0; });
@@ -18611,23 +18651,49 @@ function toggleAmbient(){
     if(!acts.length) acts = ACT[1].filter(function(a){ return !mouthOnly || MOUTH.some(function(m){ return a[1].indexOf(m)===0; }); });
     var a = rnd(acts);
     return {
-      texte:'🎲 {prenom}, **'+a[1]+'** '+z[1]+' de {partenaire} — **'+DUR[lvl]+'**.',
+      texte:'{prenom}, **'+a[1]+'** '+z[1]+' de {partenaire} — **'+DUR[lvl]+'**.',
       niveau:lvl, genre:'Mixte', pratiques:[], accessoires:[], modes:[], solo:false,
       _dice:true, _dA:a[0], _dZ:z[0], _dLvl:lvl
     };
   }
   function partnerOf(p){ var o = G.players.filter(function(x){ return x.prenom!==p; })[0]; return o || G.players[0]; }
 
+  window._DICE = {makeDice:makeDice, ACT:ACT, ZONE:ZONE, DUR:DUR, rnd:rnd};
   var _sm = window.selectMode;
+  function _applyDes(kind, rounds){
+    G._dice = false; G._rd = true; G._rdKind = kind; G._rdRounds = rounds || 6;
+    G.mode = 'classique'; G.nb = 2; G._storyDuo = null; G._rolesChosen = false;
+    G.acc = ['Aucun']; G._useCustomGages = false; G._selectedCustomGages = [];
+    document.querySelectorAll('.mode-card').forEach(function(c){ c.classList.remove('sel'); });
+    goTo('page-rd-players');
+    if(window._rdPlayersPage) window._rdPlayersPage();
+  }
   window.selectMode = function(m){
     if(m==='des'){
-      G._dice = true;
-      var r = _sm.call(this, 'classique');
-      var c1 = document.getElementById('mc-classique'); if(c1) c1.classList.remove('sel');
-      var c2 = document.getElementById('mc-des'); if(c2) c2.classList.add('sel');
-      return r;
+      var old = document.getElementById('dk-pop'); if(old) old.remove();
+      var rounds = 6;
+      var pop = document.createElement('div'); pop.id = 'dk-pop';
+      pop.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px';
+      pop.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 18px;max-width:340px;width:100%;text-align:center">'
+        + '<div style="font-size:18px;font-weight:700;margin-bottom:6px">Roue & Dés</div>'
+        + '<div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">3 niveaux d\'intensité : la roue ou les dés changent et la température monte à chaque palier.</div>'
+        + '<div style="font-size:10.5px;letter-spacing:.1em;color:var(--muted);margin-bottom:6px">TOURS PAR NIVEAU</div>'
+        + '<div id="dk-r" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px"></div>'
+        + '<div style="display:flex;flex-direction:column;gap:9px"><button class="btn" id="dk-roue" style="margin:0">🎡 Roue aléatoire avec gages</button><button class="btn" id="dk-des" style="margin:0">🎲 Dés coquins</button></div>'
+        + '<button class="btn ghost sm" id="dk-cancel" style="margin:12px auto 0">Annuler</button></div>';
+      document.body.appendChild(pop);
+      var rw = pop.querySelector('#dk-r');
+      [4,6,8].forEach(function(n){
+        var b = document.createElement('button'); b.className='btn ghost sm'; b.style.cssText='margin:0;min-width:54px'; b.textContent=n;
+        function mark(){ Array.prototype.forEach.call(rw.children,function(x){ x.style.borderColor = (+x.textContent===rounds)?'var(--gold)':''; x.style.color = (+x.textContent===rounds)?'var(--gold)':''; }); }
+        b.onclick = function(){ rounds = n; mark(); }; rw.appendChild(b); if(n===rounds) setTimeout(mark,0);
+      });
+      pop.querySelector('#dk-roue').onclick = function(){ pop.remove(); _applyDes('roue', rounds); };
+      pop.querySelector('#dk-des').onclick = function(){ pop.remove(); _applyDes('des', rounds); };
+      pop.querySelector('#dk-cancel').onclick = function(){ pop.remove(); };
+      return;
     }
-    G._dice = false;
+    G._dice = false; G._rd = false;
     return _sm.apply(this, arguments);
   };
 
@@ -18641,7 +18707,7 @@ function toggleAmbient(){
         var arr = G.gagesByLevel[l]; if(!arr) return;
         for(var i=0;i<arr.length;i++){
           var g = arr[i];
-          if(i%3===2 || !g || g._kama || g._ch || g._dice || g._contentionIntro || g._written || g._bonusSurprise || g._trame) continue;
+          if(!g || g._kama || g._ch || g._dice || g._contentionIntro || g._written || g._bonusSurprise || g._trame) continue;
           if((g.texte||'').slice(0,2)==='🎓') continue;
           var actor = G.players.filter(function(p){ return p.prenom===g._p; })[0]; if(!actor) continue;
           if(tied && actor.prenom===tied) continue;           // la personne attachée garde ses gages adaptés
@@ -18654,39 +18720,109 @@ function toggleAmbient(){
     return r;
   };
 
-  /* Animation : deux rouleaux Action + Zone qui s'arrêtent l'un après l'autre */
-  function runReveal(g){
-    var card = document.getElementById('g-card'); if(!card) return;
-    var body = card.querySelector('.gage-text-body'); if(!body) return;
-    var old = card.querySelector('.dice-stage'); if(old) old.remove();
-    var st = document.createElement('div'); st.className = 'dice-stage';
-    st.style.cssText = 'display:flex;gap:8px;align-items:stretch;justify-content:center;margin:2px 0 14px;width:100%;box-sizing:border-box';
-    function reel(title){ return '<div style="flex:1 1 0;min-width:104px;text-align:center"><div style="font-size:10px;letter-spacing:.12em;color:var(--muted);margin-bottom:4px">'+title+'</div><div class="dice-reel" style="min-height:64px;display:flex;align-items:center;justify-content:center;border:2px solid var(--gold);border-radius:14px;background:var(--card2);font-weight:700;font-size:17px;line-height:1.15;padding:6px 4px;color:var(--gold);word-break:keep-all;overflow-wrap:normal;hyphens:none;min-width:104px;box-shadow:0 0 14px rgba(216,166,87,.18)"></div></div>'; }
-    st.innerHTML = reel('ACTION') + '<div style="align-self:center;font-size:20px;color:var(--muted);padding-top:14px">+</div>' + reel('ZONE');
-    body.parentNode.insertBefore(st, body);
-    var reels = st.querySelectorAll('.dice-reel');
-    var lvl = g._dLvl || g.niveau || 1;
-    var done = !!g._diceShown; g._diceShown = true;
-    if(done){ reels[0].textContent = g._dA; reels[1].textContent = g._dZ; return; }
-    body.style.opacity = '0'; body.style.transition = 'opacity .5s';
-    var aL = ACT[lvl].map(function(x){ return x[0]; }), zL = ZONE[lvl].map(function(x){ return x[0]; });
-    var tA = setInterval(function(){ reels[0].textContent = rnd(aL); reels[0].style.transform='translateY('+(Math.random()*4-2)+'px)'; }, 70);
-    var tZ = setInterval(function(){ reels[1].textContent = rnd(zL); reels[1].style.transform='translateY('+(Math.random()*4-2)+'px)'; }, 70);
-    setTimeout(function(){ clearInterval(tA); reels[0].textContent = g._dA; reels[0].style.transform=''; reels[0].style.background='rgba(216,166,87,.18)'; try{ vibrate(15); }catch(e){} }, 1300);
-    setTimeout(function(){ clearInterval(tZ); reels[1].textContent = g._dZ; reels[1].style.transform=''; reels[1].style.background='rgba(216,166,87,.18)'; try{ vibrate([10,30,25]); playBeep(); }catch(e){} }, 2100);
-    setTimeout(function(){ body.style.opacity = '1'; }, 2500);
+  /* Tirage sans carte : vraie roue qui tourne OU deux dés lancés, puis résultat lu à voix haute */
+  (function(){ if(document.getElementById('dz-css')) return; var st=document.createElement('style'); st.id='dz-css';
+    st.textContent='@keyframes dzShake{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-14px) rotate(-16deg)}50%{transform:translateY(0) rotate(14deg)}75%{transform:translateY(-8px) rotate(-9deg)}100%{transform:translateY(0) rotate(0)}}'
+    +'@keyframes dzLand{0%{transform:scale(1.18)}100%{transform:scale(1)}}'
+    +'.dz-die.roll{animation:dzShake .32s linear infinite}.dz-die.land{animation:dzLand .35s ease-out}'
+    +'.dz-res{opacity:0;transition:opacity .6s;margin-top:14px;font-size:17px;line-height:1.5;text-align:center}.dz-res.on{opacity:1}';
+    document.head.appendChild(st); })();
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function resultHTML(g){
+    var pl = G.players.filter(function(x){ return x.prenom===g._p; })[0] || G.players[0];
+    var pa = partnerOf(pl.prenom);
+    var col = pl.genre==='Homme' ? 'var(--blue)' : 'var(--rose)';
+    return gageText(g)
+      .replace(/{prenom}/g,'<strong style="color:'+col+'">'+esc(pl.prenom)+'</strong>')
+      .replace(/{partenaire}/g,'<strong style="color:var(--gold)">'+esc(pa.prenom)+'</strong>')
+      .replace(/[*][*]([^*]+)[*][*]/g,'<strong style="color:var(--gold)">$1</strong>');
   }
+  function wheelSegs(g){
+    if(g._segs) return;
+    var actor = G.players.filter(function(x){ return x.prenom===g._p; })[0] || G.players[0];
+    var segs = [];
+    for(var i=0;i<7;i++){ var d = makeDice(g._dLvl||1, actor, partnerOf(actor.prenom), false, true); segs.push([d._dA, d._dZ]); }
+    var k = Math.floor(Math.random()*8);
+    segs.splice(k, 0, [g._dA, g._dZ]);
+    g._segs = segs; g._wheelIdx = k;
+    g._rot = 360*5 - k*45 + (Math.random()*24-12);
+  }
+  function wheelSVG(g){
+    var cols = ['#7a1f45','#3a2d5c','#9c3a2a','#2d4a5c'], out = '', R=140;
+    function pt(a,r){ var t=a*Math.PI/180; return [150+r*Math.sin(t), 150-r*Math.cos(t)]; }
+    for(var i=0;i<8;i++){
+      var a0=i*45-22.5, a1=i*45+22.5, p0=pt(a0,R), p1=pt(a1,R);
+      out += '<path d="M150 150 L'+p0[0].toFixed(1)+' '+p0[1].toFixed(1)+' A'+R+' '+R+' 0 0 1 '+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+' Z" fill="'+cols[i%4]+'" stroke="#d8a657" stroke-width="1.5"/>';
+      var l0 = String(g._segs[i][0]), l1 = String(g._segs[i][1]); if(l1.length>13) l1 = l1.slice(0,12)+'…'; if(l0.length>13) l0=l0.slice(0,12)+'…';
+      out += '<g transform="rotate('+(i*45)+' 150 150)"><text x="150" y="58" text-anchor="middle" fill="#f6e7c8" font-size="12.5" font-weight="700" font-family="inherit">'+esc(l0)+'</text><text x="150" y="75" text-anchor="middle" fill="#d8a657" font-size="11.5" font-family="inherit">'+esc(l1)+'</text></g>';
+    }
+    return '<svg viewBox="0 0 300 300" style="width:100%;height:100%;display:block">'+out+'<circle cx="150" cy="150" r="20" fill="#14101a" stroke="#d8a657" stroke-width="3"/><circle cx="150" cy="150" r="5" fill="#d8a657"/></svg>';
+  }
+  function curGage(){ return (G.gagesByLevel[G.level]||[])[G.gageIdx]; }
+  function finishSpin(g){
+    if(curGage()!==g) return;
+    g._spinDone = true;
+    var res = document.querySelector('#g-card .dz-res'); if(res){ res.innerHTML = resultHTML(g); res.classList.add('on'); }
+    var btn = document.getElementById('dz-go'); if(btn) btn.style.display='none';
+    try{ vibrate([10,30,25]); playBeep(); }catch(e){}
+    var tm = document.getElementById('g-timer'); if(tm && typeof timerLeft!=='undefined' && timerLeft>0) tm.classList.remove('hidden');
+    if(g._pendingSpeak){ var ps = g._pendingSpeak; g._pendingSpeak = null; try{ _sp.apply(ps.self, ps.args); }catch(e){} }
+  }
+  function startSpin(g){
+    if(curGage()!==g || g._spinning || g._spinDone) return;
+    g._spinning = true;
+    var btn = document.getElementById('dz-go'); if(btn) btn.style.display='none';
+    try{ vibrate(15); }catch(e){}
+    if(g._kindUsed==='roue'){
+      var w = document.getElementById('dz-wheel'); if(!w) return;
+      w.style.transition='none'; w.style.transform='rotate(0deg)'; void w.offsetWidth;
+      w.style.transition='transform 4.8s cubic-bezier(.12,.62,.08,1)'; w.style.transform='rotate('+g._rot+'deg)';
+      setTimeout(function(){ finishSpin(g); }, 5000);
+    } else {
+      var d = [document.getElementById('dz-d1'), document.getElementById('dz-d2')];
+      if(!d[0]||!d[1]) return;
+      var lvl = g._dLvl||1, aL = ACT[lvl].map(function(x){return x[0];}), zL = ZONE[lvl].map(function(x){return x[0];});
+      d[0].classList.add('roll'); d[1].classList.add('roll');
+      var t1 = setInterval(function(){ d[0].firstChild.textContent = rnd(aL); }, 80);
+      var t2 = setInterval(function(){ d[1].firstChild.textContent = rnd(g._dPos? [g._dZ] : zL); }, 80);
+      setTimeout(function(){ clearInterval(t1); d[0].classList.remove('roll'); d[0].classList.add('land'); d[0].firstChild.textContent = g._dA; try{ vibrate(15); }catch(e){} }, 1700);
+      setTimeout(function(){ clearInterval(t2); d[1].classList.remove('roll'); d[1].classList.add('land'); d[1].firstChild.textContent = g._dZ; finishSpin(g); }, 2500);
+    }
+  }
+  window._diceRender = function(g){
+    var card = document.getElementById('g-card'); if(!card) return;
+    var kind = G._diceKind || 'roue';
+    g._kindUsed = g._kindUsed || kind;
+    var html = '<div class="dz-stage" style="display:flex;flex-direction:column;align-items:center;width:100%;padding:6px 0">';
+    if(g._kindUsed==='roue'){
+      wheelSegs(g);
+      html += '<div style="width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:20px solid #d8a657;margin-bottom:-12px;z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))"></div>'
+        + '<div style="width:min(300px,80vw);aspect-ratio:1;border-radius:50%;box-shadow:0 0 26px rgba(216,166,87,.28)"><div id="dz-wheel" style="width:100%;height:100%;transform:rotate('+(g._spinDone?g._rot:0)+'deg)">'+wheelSVG(g)+'</div></div>';
+    } else {
+      var big = g._dPos ? 'font-size:15px' : 'font-size:19px';
+      function die(id,t,lab){ return '<div style="text-align:center"><div style="font-size:10px;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">'+lab+'</div><div id="'+id+'" class="dz-die" style="width:112px;height:112px;border:2px solid var(--gold);border-radius:22px;background:var(--card2);display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(216,166,87,.22)"><div style="'+big+';font-weight:700;color:var(--gold);padding:6px;line-height:1.15;word-break:keep-all;text-align:center">'+esc(t)+'</div></div></div>'; }
+      var shownA = g._spinDone ? g._dA : '🎲', shownB = g._spinDone ? g._dZ : '🎲';
+      html += '<div style="display:flex;gap:16px;justify-content:center;margin:10px 0 4px">'+die('dz-d1',shownA,g._dPos?'TIRAGE':'ACTION')+die('dz-d2',shownB,g._dPos?'POSITION':'ZONE')+'</div>';
+    }
+    html += '<button id="dz-go" class="btn" style="margin:18px auto 0;'+(g._spinDone?'display:none':'')+'">'+(g._kindUsed==='roue'?'🎡 Lancer la roue':'🎲 Lancer les dés')+'</button>'
+      + '<div class="dz-res'+(g._spinDone?' on':'')+'">'+(g._spinDone?resultHTML(g):'')+'</div></div>';
+    card.innerHTML = html;
+    var tm = document.getElementById('g-timer'); if(tm && !g._spinDone) tm.classList.add('hidden');
+    var go = document.getElementById('dz-go'); if(go) go.onclick = function(){ startSpin(g); };
+    if(!g._spinDone && !g._spinning && typeof AUTO_PLAY_ON!=='undefined' && AUTO_PLAY_ON) setTimeout(function(){ startSpin(g); }, 800);
+  };
   var _dg = window.displayGage;
   window.displayGage = function(){
     var r = _dg.apply(this, arguments);
     try{
-      var g = (G.gagesByLevel[G.level]||[])[G.gageIdx];
+      var g = curGage();
       if(g && g._dice){
+        g._spinning = false;
         var tries = 0, iv = setInterval(function(){
           tries++;
-          if((G.gagesByLevel[G.level]||[])[G.gageIdx]!==g || tries>40){ clearInterval(iv); return; }
+          if(curGage()!==g || tries>40){ clearInterval(iv); return; }
           var c = document.getElementById('g-card');
-          if(c && c.querySelector('.gage-text-body') && !c.querySelector('.dice-stage')){ clearInterval(iv); runReveal(g); }
+          if(c && c.querySelector('.gage-text-body') && !c.querySelector('.dz-stage')){ clearInterval(iv); window._diceRender(g); }
         }, 50);
       }
     }catch(e){}
@@ -18694,10 +18830,8 @@ function toggleAmbient(){
   };
   var _sp = window.speakGageText;
   window.speakGageText = function(gage, player, partner){
-    var self = this, args = arguments;
-    if(gage && gage._dice && gage._dA && !gage._diceSpoken){
-      gage._diceSpoken = true;
-      setTimeout(function(){ if((G.gagesByLevel[G.level]||[])[G.gageIdx]===gage) _sp.apply(self, args); }, 2700);
+    if(gage && gage._dice && !gage._spinDone){
+      gage._pendingSpeak = {self:this, args:arguments};
       return;
     }
     return _sp.apply(this, arguments);
@@ -18721,6 +18855,7 @@ function toggleAmbient(){
   /* ────────────── 2. HISTORIQUE ────────────── */
   var HIST = 'pulsations_hist_games_v1';
   function loadH(){ try{ return JSON.parse(localStorage.getItem(HIST)||'[]'); }catch(e){ return []; } }
+  window._recordGame = function(){ return recordGame(); };
   function recordGame(){
     try{
       if(window.isTestGame && isTestGame()) return;
@@ -18728,6 +18863,7 @@ function toggleAmbient(){
       G._histDone = G._startedAt;
       var list = loadH();
       var lbl = {classique:'Classique',brise_glace:'Brise-glace',pimente:'Pimenté',decouverte:'Découverte',competition:'Compétition',solo:'Solo',story:'Histoire',kamasutra:'Kâmasûtra'}[G.mode] || G.mode;
+      if(G._rd) lbl = G._rdKind==='roue' ? 'Roue' : 'Dés';
       if(G._dice) lbl = 'Dés & Roue';
       var stats = (G.progressLog||[]).length;
       list.unshift({ ts:Date.now(), mode:lbl, names:(G.players||[]).map(function(p){ return p.prenom; }), level:G.level, min:G._startedAt?Math.max(1,Math.round((Date.now()-G._startedAt)/60000)):null, n:stats, story:(G.mode==='story'&&G._storyDuo)?G._storyDuo:null });
@@ -18767,7 +18903,7 @@ function toggleAmbient(){
     if(!o){
       o = document.createElement('div'); o.id = 'dim-ov';
       o.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,'+DIM_ALPHA+');opacity:0;transition:opacity 1.2s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation';
-      var wake = function(ev){ ev.preventDefault(); ev.stopPropagation(); dimOff(); };
+      var wake = function(ev){ ev.preventDefault(); ev.stopPropagation(); dimOff(); clearTimeout(window._redimTO); window._redimTO = setTimeout(function(){ if(AUTO_PLAY_ON) dimOn(); }, 6000); };
       o.addEventListener('click', wake); o.addEventListener('touchend', wake);
       document.body.appendChild(o);
     }
@@ -18778,7 +18914,7 @@ function toggleAmbient(){
   window._dimOn = dimOn;
   var _sch = window.scheduleAutoPlayForGage;
   window.scheduleAutoPlayForGage = function(gage){
-    dimOff(); var o0 = document.getElementById('dim-ov'); if(o0) o0.remove();   // nouveau gage : écran clair
+    clearTimeout(window._redimTO); dimOff(); var o0 = document.getElementById('dim-ov'); if(o0) o0.remove();   // nouveau gage : écran clair
     var r = _sch.apply(this, arguments);
     try{
       if(AUTO_PLAY_ON && gage && !gage._kama){
@@ -18794,7 +18930,7 @@ function toggleAmbient(){
   window.rollDice = function(){ var r = _rd.apply(this, arguments); try{ if(AUTO_PLAY_ON) dimOn(); }catch(e){} return r; };
   var _go2 = window.goTo;
   window.goTo = function(id){
-    var o = document.getElementById('dim-ov'); if(o) o.remove();
+    clearTimeout(window._redimTO); var o = document.getElementById('dim-ov'); if(o) o.remove();
     var r = _go2.apply(this, arguments);
     var hb = document.getElementById('hist-tab'); if(hb) hb.style.display = (id==='page-home') ? 'flex' : 'none';
     return r;
@@ -18823,5 +18959,423 @@ function toggleAmbient(){
   };
 })();
 </script>
+<script>
+/* ═══ Roue & Dés — mode autonome : 3 niveaux d'intensité, la roue / les dés changent à chaque palier ═══ */
+(function(){
+  var LV = [
+    {name:'Coquin', emoji:'😏', mix:[1,2]},
+    {name:'Hot', emoji:'🔥', mix:[3,4]},
+    {name:'Très hot', emoji:'🌋', mix:[5]}
+  ];
+  /* [libellé court, gage, besoin] — 'o' = au moins un joueur a coché une pratique orale */
+  var WH_DEF = [
+    [
+      ['😏 Strip','{prenom} retire un vêtement devant {partenaire}, les yeux dans ses yeux — **30 secondes**.'],
+      ['💋 Baiser volé','{prenom} embrasse {partenaire} par surprise, longuement — **30 secondes**.'],
+      ['🤭 Murmure','{prenom} chuchote à l\'oreille de {partenaire} une chose coquine qu\'il aimerait faire ce soir.'],
+      ['🍑 Main baladeuse','{prenom} glisse une main sur les fesses de {partenaire} et la garde là — **30 secondes**.'],
+      ['👗 Par-dessus','{prenom} caresse {partenaire} par-dessus ses vêtements, partout — **1 minute**.'],
+      ['😈 Vérité','{partenaire} pose une question intime, {prenom} répond sans mentir.'],
+      ['💃 Danse sexy','{prenom} danse de façon très sexy pour {partenaire}, qui ne touche pas — **1 minute**.'],
+      ['🔥 Cou','{prenom} couvre de baisers et de petites morsures le cou de {partenaire} — **45 secondes**.'],
+      ['🫦 Lèvres','{prenom} effleure les lèvres de {partenaire} sans l\'embrasser — **30 secondes**.'],
+      ['👀 Regards','Regard intense, sans parler ni toucher — **1 minute**. Le premier qui craque embrasse l\'autre.'],
+      ['🧎 Sur les genoux','{partenaire} s\'assoit sur les genoux de {prenom}, qui caresse son dos et ses cuisses — **1 minute**.'],
+      ['👂 Oreille','{prenom} mordille doucement l\'oreille de {partenaire} — **30 secondes**.'],
+      ['🎭 Fantasme','{prenom} raconte un fantasme coquin à {partenaire}.'],
+      ['👑 Ordre','{partenaire} donne un ordre coquin, {prenom} s\'exécute.']
+    ],
+    [
+      ['👕 Déshabiller','{prenom} déshabille {partenaire} lentement, vêtement après vêtement — **2 minutes**.'],
+      ['🍒 Poitrine','{prenom} lèche et suce la poitrine et les tétons de {partenaire} — **1 minute**.'],
+      ['🩲 Sous-vêtement','{prenom} caresse {partenaire} par-dessus son sous-vêtement — **90 secondes**.'],
+      ['💆 Massage huilé','{prenom} masse tout le corps de {partenaire}, huile ou mains nues — **2 minutes**.'],
+      ['🦵 Cuisses','{prenom} embrasse l\'intérieur des cuisses de {partenaire} en se rapprochant de son sexe sans y toucher — **90 secondes**.'],
+      ['🥵 Frottements','Vous vous frottez l\'un contre l\'autre, vêtements au choix — **1 minute**.'],
+      ['🙈 Yeux fermés','{partenaire} ferme les yeux, {prenom} caresse où il veut, {partenaire} réagit sans parler — **90 secondes**.'],
+      ['🍑 Fessée','{prenom} donne **5 claques** sur les fesses de {partenaire}, qui choisit l\'intensité.'],
+      ['💬 Dirty talk','{prenom} dit à voix basse à {partenaire} tout ce qu\'il a envie de lui faire — **1 minute**.'],
+      ['🔥 Dos','{prenom} embrasse la nuque, le dos puis les reins de {partenaire} — **90 secondes**.'],
+      ['🪑 Lap dance','{prenom} fait un lap dance à {partenaire} — **90 secondes**.'],
+      ['🫠 Sous les habits','{prenom} glisse la main sous les vêtements de {partenaire}, sans toucher le sexe — **90 secondes**.'],
+      ['🍽️ Dégustation','{prenom} embrasse {partenaire} du cou jusqu\'au nombril, sans rien oublier — **2 minutes**.'],
+      ['🔁 Au choix','{partenaire} choisit : massage, baisers ou caresses. {prenom} exécute — **2 minutes**.']
+    ],
+    [
+      ['👅 Oral','{prenom} fait un sexe oral à {partenaire} — **3 minutes**.'],
+      ['🙌 Main','{prenom} masturbe {partenaire} à la main, au rythme que {partenaire} indique — **3 minutes**.'],
+      ['🔄 69','Position 69, tous les deux en même temps — **3 minutes**.'],
+      ['🍒 Doigts','{prenom} stimule {partenaire} avec les doigts, en cherchant les points les plus sensibles — **2 minutes**.'],
+      ['🐎 Chevauchée','{prenom} chevauche {partenaire} et mène le rythme — **3 minutes**.'],
+      ['🐕 Levrette','En levrette, {prenom} mène le rythme — **3 minutes**.'],
+      ['🛏️ Missionnaire','Missionnaire, les yeux dans les yeux — **3 minutes**.'],
+      ['⏳ Edging','{prenom} amène {partenaire} au bord de l\'orgasme **3 fois**, puis s\'arrête à chaque fois.'],
+      ['🎯 Orgasme','{prenom} amène {partenaire} à l\'orgasme, par la méthode de son choix. Durée libre.'],
+      ['👁️ Spectacle','{prenom} se masturbe devant {partenaire}, qui regarde sans toucher — **2 minutes**.'],
+      ['🗣️ Ordres','{partenaire} donne trois ordres explicites, {prenom} les exécute sans discuter.'],
+      ['🔀 Libre','Choisissez la position que vous voulez et allez-y — **4 minutes**.'],
+      ['🥄 Cuillère','En cuillère, lent et profond — **3 minutes**.'],
+      ['💦 Finale','Finale à deux : continuez librement jusqu\'à l\'orgasme de {prenom}, puis celui de {partenaire}. Durée libre.']
+    ]
+  ];
+  var RDKEY = 'pulsations_rd_v1';
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  var DEF = null;
+  function defaults(){
+    if(DEF) return clone(DEF);
+    var D = window._DICE;
+    DEF = { wheel: WH_DEF.map(function(l){ return l.map(function(x){ return {l:x[0], t:x[1]}; }); }), act:{}, zone:{}, dur:{} };
+    [1,2,3,4,5].forEach(function(l){ DEF.act[l] = D.ACT[l].map(function(x){ return {l:x[0], t:x[1]}; }); DEF.zone[l] = D.ZONE[l].map(function(x){ return {l:x[0], t:x[1]}; }); DEF.dur[l] = D.DUR[l]; });
+    return clone(DEF);
+  }
+  var RDD = null;
+  function loadRD(){
+    var d = defaults();
+    try{ var st = JSON.parse(localStorage.getItem(RDKEY)||'null'); if(st){
+      if(st.wheel) [0,1,2].forEach(function(i){ if(Array.isArray(st.wheel[i])) d.wheel[i] = st.wheel[i]; });
+      ['act','zone','dur'].forEach(function(k){ if(st[k]) [1,2,3,4,5].forEach(function(l){ if(st[k][l]!=null) d[k][l] = st[k][l]; }); });
+    } }catch(e){}
+    RDD = d; return d;
+  }
+  function saveRD(){ try{ localStorage.setItem(RDKEY, JSON.stringify(RDD)); }catch(e){} }
+  function getWH(lv){ if(!RDD) loadRD(); var l = (RDD.wheel[lv]||[]).filter(function(x){ return x && x.l && x.t; }); return l.length ? l : defaults().wheel[lv]; }
+  /* Pousse les données (éditées en admin) dans les tables des dés */
+  function applyDice(){
+    if(!RDD) loadRD(); var D = window._DICE, d0 = defaults();
+    [1,2,3,4,5].forEach(function(l){
+      var a = (RDD.act[l]||[]).filter(function(x){ return x && x.l && x.t; }), z = (RDD.zone[l]||[]).filter(function(x){ return x && x.l && x.t; });
+      D.ACT[l] = (a.length?a:d0.act[l]).map(function(x){ return [x.l, x.t]; });
+      D.ZONE[l] = (z.length?z:d0.zone[l]).map(function(x){ return [x.l, x.t]; });
+      D.DUR[l] = RDD.dur[l] || d0.dur[l];
+    });
+  }
+  var R = null; // état de partie
+  var timerIv = null, timerLeft = 0, timerRun = false;
+  function rnd(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function root(){ return document.getElementById('rd-root'); }
+  function oralOk(){ return true; }
+  function actorOf(t){ return G.players[(R.first + t) % G.players.length]; }
+  function partnerOfIdx(t){ return G.players[(R.first + t + 1) % G.players.length]; }
+  function fill(txt, a, b){
+    var col = a.genre==='Homme' ? 'var(--blue)' : 'var(--rose)';
+    return txt.replace(/{prenom}/g,'<strong style="color:'+col+'">'+esc(a.prenom)+'</strong>')
+      .replace(/{partenaire}/g,'<strong style="color:var(--gold)">'+esc(b.prenom)+'</strong>')
+      .replace(/[*][*]([^*]+)[*][*]/g,'<strong style="color:var(--gold)">$1</strong>');
+  }
+  function plain(txt, a, b){ return txt.replace(/{prenom}/g,a.prenom).replace(/{partenaire}/g,b.prenom).replace(/[*][*]([^*]+)[*][*]/g,'$1'); }
+  function speak(txt, onend){
+    try{
+      if(typeof voiceNarrationOn!=='undefined' && !voiceNarrationOn) return;
+      if(!('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      var raw = txt.replace(/\s*—\s*/g,'… ').replace(/\.\s+/g,'… ').replace(/,\s+/g,', … ').replace(/\s+/g,' ');
+      var u = new SpeechSynthesisUtterance(raw); u.lang='fr-FR';
+      var v = (typeof _pickFrenchVoice==='function') ? _pickFrenchVoice() : null; if(v) u.voice=v;
+      u.rate=.72; u.pitch=.85; u.volume=.7; if(onend) u.onend = onend; speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function stopTimer(){ if(timerIv){ clearInterval(timerIv); timerIv=null; } timerRun=false; }
+  function fmt(s){ return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+
+  /* ——— Roue du palier : 8 cases tirées dans la liste du niveau ——— */
+  function buildWheel(lv){
+    var pool = getWH(lv).slice();
+    var segs = [];
+    while(segs.length<8 && pool.length){ var x = pool.splice(Math.floor(Math.random()*pool.length),1)[0]; segs.push([x.l, x.t]); }
+    return segs;
+  }
+  function wheelSVG(segs){
+    var cols = ['#7a1f45','#3a2d5c','#9c3a2a','#2d4a5c'], out='', Rr=140, n=segs.length, step=360/n;
+    function pt(a,r){ var t=a*Math.PI/180; return [150+r*Math.sin(t),150-r*Math.cos(t)]; }
+    for(var i=0;i<n;i++){
+      var p0=pt(i*step-step/2,Rr), p1=pt(i*step+step/2,Rr);
+      out += '<path d="M150 150 L'+p0[0].toFixed(1)+' '+p0[1].toFixed(1)+' A'+Rr+' '+Rr+' 0 0 1 '+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+' Z" fill="'+cols[i%4]+'" stroke="#d8a657" stroke-width="1.5"/>';
+      var lab = String(segs[i][0]), sp = lab.indexOf(' '), em = sp<0 ? '🎲' : lab.slice(0,sp), tx = sp<0 ? lab : lab.slice(sp+1); if(tx.length>12) tx = tx.slice(0,11)+'…';
+      out += '<g transform="rotate('+(i*step)+' 150 150)"><text x="150" y="52" text-anchor="middle" font-size="20">'+em+'</text><text x="150" y="76" text-anchor="middle" fill="#f6e7c8" font-size="12.5" font-weight="700" font-family="inherit">'+esc(tx)+'</text></g>';
+    }
+    return '<svg viewBox="0 0 300 300" style="width:100%;height:100%;display:block">'+out+'<circle cx="150" cy="150" r="20" fill="#14101a" stroke="#d8a657" stroke-width="3"/><circle cx="150" cy="150" r="5" fill="#d8a657"/></svg>';
+  }
+
+  function css(){
+    if(document.getElementById('rd-css')) return;
+    var st=document.createElement('style'); st.id='rd-css';
+    st.textContent='@keyframes rdShake{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-14px) rotate(-16deg)}50%{transform:translateY(0) rotate(14deg)}75%{transform:translateY(-8px) rotate(-9deg)}100%{transform:translateY(0) rotate(0)}}'
+     +'@keyframes rdLand{0%{transform:scale(1.18)}100%{transform:scale(1)}}@keyframes rdRise{0%{opacity:0;transform:scale(.9)}100%{opacity:1;transform:scale(1)}}'
+     +'.rd-die.roll{animation:rdShake .32s linear infinite}.rd-die.land{animation:rdLand .35s ease-out}'
+     +'.rd-res{opacity:0;transition:opacity .6s;margin-top:14px;font-size:17px;line-height:1.5;text-align:center;min-height:30px}.rd-res.on{opacity:1}';
+    document.head.appendChild(st);
+  }
+
+  /* ——— Rendu d'un tour ——— */
+  function header(){
+    var lv = LV[R.lv], dots='';
+    for(var i=0;i<R.rounds;i++) dots += '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 3px;background:'+(i<R.turn?'var(--gold)':(i===R.turn?'var(--accent,#e8437a)':'rgba(255,255,255,.18)'))+'"></span>';
+    return '<div style="text-align:center;margin-bottom:12px"><div style="display:inline-block;padding:6px 16px;border-radius:20px;border:1px solid var(--gold);color:var(--gold);font-weight:700;font-size:13px;letter-spacing:.05em">'+lv.emoji+' NIVEAU '+(R.lv+1)+'/3 — '+lv.name.toUpperCase()+'</div><div style="margin-top:9px">'+dots+'</div></div>';
+  }
+  function showTurn(){
+    stopTimer(); css();
+    var a = actorOf(R.t), b = partnerOfIdx(R.t), g = R.cur = {a:a,b:b,done:false,spinning:false};
+    var h = header();
+    h += '<div style="text-align:center;margin-bottom:6px"><span class="player-badge '+(a.genre==='Homme'?'homme':'femme')+'">'+(a.genre==='Homme'?'👨':'👩')+' '+esc(a.prenom)+'</span></div>';
+    var stage;
+    if(R.kind==='roue'){
+      stage = '<div style="display:flex;flex-direction:column;align-items:center"><div style="width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:20px solid #d8a657;margin-bottom:-12px;z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))"></div>'
+        + '<div style="width:min(300px,80vw);aspect-ratio:1;border-radius:50%;box-shadow:0 0 26px rgba(216,166,87,.28)"><div id="rd-wheel" style="width:100%;height:100%;transform:rotate('+(R.rot||0)+'deg)">'+wheelSVG(R.segs)+'</div></div></div>';
+    } else {
+      function die(id,lab){ return '<div style="text-align:center"><div style="font-size:10px;letter-spacing:.12em;color:var(--muted);margin-bottom:5px">'+lab+'</div><div id="'+id+'" class="rd-die" style="width:112px;height:112px;border:2px solid var(--gold);border-radius:22px;background:var(--card2);display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(216,166,87,.22)"><div style="font-size:19px;font-weight:700;color:var(--gold);padding:6px;line-height:1.15;word-break:keep-all;text-align:center">🎲</div></div></div>'; }
+      stage = '<div style="display:flex;gap:16px;justify-content:center;margin:10px 0 4px">'+die('rd-d1','ACTION')+die('rd-d2','ZONE')+'</div>';
+    }
+    h += stage
+      + '<div style="text-align:center"><button id="rd-go" class="btn" style="margin:16px auto 0">'+(R.kind==='roue'?'🎡 Lancer la roue':'🎲 Lancer les dés')+'</button></div>'
+      + '<div id="rd-res" class="rd-res"></div>'
+      + '<div id="rd-after" style="display:none;text-align:center"><button id="rd-tm" class="btn ghost" style="margin:12px auto 0;display:none"></button>'
+      + '<button id="rd-next" class="btn" style="margin:12px auto 0;display:block;min-width:200px">'+(R.t+1>=R.rounds && R.lv===2 ? 'Terminer 🔥' : 'Suivant →')+'</button></div>'
+      + '<div style="display:flex;gap:8px;justify-content:center;margin-top:14px">'
+        + (R.lv>0 ? '<button class="btn ghost sm" id="rd-lvdn" style="margin:0;flex:1">⬇️ Niveau '+R.lv+'</button>' : '')
+        + (R.lv<2 ? '<button class="btn ghost sm" id="rd-lvup" style="margin:0;flex:1">⬆️ Niveau '+(R.lv+2)+'</button>' : '')
+        + '</div>'
+      + '<div style="text-align:center"><button class="btn ghost sm" id="rd-home" style="margin:10px auto 0">🏠 Accueil</button></div>';
+    root().innerHTML = h;
+    document.getElementById('rd-go').onclick = spin;
+    document.getElementById('rd-next').onclick = next;
+    var _u = document.getElementById('rd-lvup'), _d = document.getElementById('rd-lvdn');
+    if(_u) _u.onclick = function(){ jump(1); };
+    if(_d) _d.onclick = function(){ jump(-1); };
+    document.getElementById('rd-home').onclick = function(){ stopTimer(); try{ speechSynthesis.cancel(); }catch(e){} goTo('page-home'); };
+  }
+  function finish(text){
+    var g = R.cur; if(!g || g.done) return; g.done = true; g.text = text;
+    var res = document.getElementById('rd-res');
+    if(res){ res.innerHTML = fill(text, g.a, g.b); res.classList.add('on'); }
+    var go = document.getElementById('rd-go'); if(go) go.style.display='none';
+    document.getElementById('rd-after').style.display='block';
+    try{ vibrate([10,30,25]); playBeep(); }catch(e){}
+    var secs0 = (typeof extractTimer==='function') ? extractTimer(text) : null;
+    speak(plain(text, g.a, g.b), function(){
+      if(!secs0) return;
+      setTimeout(function(){
+        if(R.cur!==g || timerRun) return;
+        var tb2 = document.getElementById('rd-tm'); if(!tb2 || tb2.style.display==='none') return;
+        try{ playBeep(); }catch(e){} tb2.click();
+      }, 2000);
+    });
+    var secs = (typeof extractTimer==='function') ? extractTimer(text) : null;
+    var tb = document.getElementById('rd-tm');
+    if(secs && tb){
+      timerLeft = secs; tb.style.display='block'; tb.textContent='▶ '+fmt(secs);
+      tb.onclick = function(){
+        if(timerRun){ stopTimer(); tb.textContent='▶ '+fmt(timerLeft); return; }
+        timerRun = true; tb.textContent='⏸ '+fmt(timerLeft);
+        timerIv = setInterval(function(){
+          timerLeft--; tb.textContent='⏸ '+fmt(Math.max(0,timerLeft));
+          if(timerLeft<=0){ stopTimer(); tb.textContent='✅ Terminé'; try{ vibrate([200,100,200]); playBeep(); }catch(e){} }
+        },1000);
+      };
+    }
+  }
+  function spin(){
+    var g = R.cur; if(!g || g.spinning || g.done) return; g.spinning = true;
+    var go = document.getElementById('rd-go'); if(go) go.style.display='none';
+    try{ vibrate(15); }catch(e){}
+    if(R.kind==='roue'){
+      var n = R.segs.length, step = 360/n, pool = [];
+      R.segs.forEach(function(x,i){ if(R.used.indexOf(i)<0) pool.push(i); });
+      if(!pool.length){ R.used = []; pool = R.segs.map(function(x,i){ return i; }); }
+      var k = rnd(pool); R.used.push(k);
+      var base = (R.rot||0); base = base - (base % 360);
+      var target = base + 360*5 - k*step + (Math.random()*step*0.6 - step*0.3);
+      var w = document.getElementById('rd-wheel');
+      w.style.transition='transform 4.8s cubic-bezier(.12,.62,.08,1)'; w.style.transform='rotate('+target+'deg)';
+      R.rot = target;
+      setTimeout(function(){ if(R.cur===g) finish(R.segs[k][1]); }, 5000);
+    } else {
+      var lvl = rnd(LV[R.lv].mix), D = window._DICE;
+      var d = D.makeDice(lvl, g.a, g.b, false, R.lv<2);
+      var d1 = document.getElementById('rd-d1'), d2 = document.getElementById('rd-d2');
+      var aL = D.ACT[lvl].map(function(x){return x[0];}), zL = D.ZONE[lvl].map(function(x){return x[0];});
+      d1.classList.add('roll'); d2.classList.add('roll');
+      var t1 = setInterval(function(){ d1.firstChild.textContent = rnd(aL); }, 80);
+      var t2 = setInterval(function(){ d2.firstChild.textContent = d._dPos ? d._dZ : rnd(zL); }, 80);
+      setTimeout(function(){ clearInterval(t1); d1.classList.remove('roll'); d1.classList.add('land'); d1.firstChild.textContent = d._dA; try{ vibrate(15); }catch(e){} }, 1700);
+      setTimeout(function(){ clearInterval(t2); d2.classList.remove('roll'); d2.classList.add('land'); d2.firstChild.textContent = d._dZ; if(R.cur===g) finish(d.texte); }, 2500);
+    }
+  }
+  function showLevelUp(){
+    stopTimer();
+    var lv = LV[R.lv];
+    var mo = R.down ? 'moins' : 'plus'; var sub = R.kind==='roue' ? 'Nouvelle roue, gages '+mo+' intenses.' : 'Nouveaux dés, zones et actions '+mo+' intenses.';
+    root().innerHTML = '<div style="text-align:center;padding-top:70px;animation:rdRise .6s ease-out"><div style="font-size:64px">'+lv.emoji+'</div>'
+      + '<div style="font-size:12px;letter-spacing:.15em;color:var(--muted);margin-top:14px">'+(R.down?'ON REPREND UN PEU DE DOUCEUR':'LA TEMPÉRATURE MONTE')+'</div>'
+      + '<div style="font-size:26px;font-weight:700;color:var(--gold);margin:8px 0">Niveau '+(R.lv+1)+' — '+lv.name+'</div>'
+      + '<div style="font-size:14px;color:var(--muted);margin-bottom:26px">'+sub+'</div>'
+      + '<button class="btn" id="rd-cont" style="margin:0 auto">Continuer</button></div>';
+    try{ vibrate([30,60,30]); playBeep(); }catch(e){}
+    speak('Niveau '+(R.lv+1)+'. '+lv.name+'. '+sub);
+    document.getElementById('rd-cont').onclick = function(){ startLevel(); showTurn(); };
+  }
+  function jump(d){
+    var n = R.lv + d; if(n<0 || n>2) return;
+    stopTimer(); try{ speechSynthesis.cancel(); }catch(e){}
+    R.lv = n; R.down = d<0; showLevelUp();
+  }
+  function startLevel(){
+    R.t = 0; R.turn = 0; R.used = []; R.rot = 0;
+    if(R.kind==='roue') R.segs = buildWheel(R.lv);
+  }
+  function next(){
+    stopTimer(); try{ speechSynthesis.cancel(); }catch(e){}
+    R.t++; R.turn = R.t;
+    if(R.t >= R.rounds){
+      if(R.lv >= 2) return showEnd();
+      R.lv++; R.down = false; return showLevelUp();
+    }
+    showTurn();
+  }
+  function showEnd(){
+    stopTimer();
+    try{ window._recordGame && window._recordGame(); }catch(e){}
+    root().innerHTML = '<div style="text-align:center;padding-top:70px"><div style="font-size:64px">🔥</div><div style="font-size:26px;font-weight:700;color:var(--gold);margin:12px 0">Fin de partie</div>'
+      + '<div style="font-size:14px;color:var(--muted);margin-bottom:26px">Vous avez traversé les 3 niveaux. Bonne suite de soirée…</div>'
+      + '<button class="btn" id="rd-again" style="margin:0 auto 10px;display:block;min-width:200px">🔁 Rejouer</button><button class="btn ghost" id="rd-end-home" style="margin:0 auto;display:block;min-width:200px">🏠 Accueil</button></div>';
+    speak('Fin de partie. Bonne suite de soirée.');
+    document.getElementById('rd-again').onclick = function(){ begin(); };
+    document.getElementById('rd-end-home').onclick = function(){ goTo('page-home'); };
+  }
+  function begin(){
+    loadRD(); applyDice(); startMusic();
+    R = {kind:G._rdKind||'roue', rounds:G._rdRounds||6, lv:0, t:0, turn:0, used:[], rot:0, first:Math.floor(Math.random()*G.players.length)};
+    startLevel();
+    goTo('page-rd');
+    showTurn();
+  }
+
+  /* ——— Saisie des joueurs (seule étape avant le jeu) ——— */
+  window._rdPlayersPage = function(){
+    var sv = []; try{ sv = JSON.parse(localStorage.getItem('pulsations_rd_players')||'[]'); }catch(e){}
+    var pr = (G._loadedProfile && G._loadedProfile.players) || [];
+    var P = [0,1].map(function(i){ var x = sv[i] || pr[i] || {}; return {prenom:x.prenom||'', genre:x.genre||(i?'Femme':'Homme')}; });
+    var h = '<div style="text-align:center;margin-bottom:16px"><div style="font-size:24px;font-weight:700">'+(G._rdKind==='roue'?'🎡 Roue':'🎲 Dés')+'</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Qui joue ? Rien d\'autre à régler.</div></div>';
+    [0,1].forEach(function(i){
+      h += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px"><div style="font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:8px">JOUEUR '+(i+1)+'</div>'
+        + '<input type="text" class="rdp-n" data-i="'+i+'" placeholder="Prénom" autocomplete="off" value="'+esc(P[i].prenom)+'" style="width:100%;box-sizing:border-box;margin-bottom:10px">'
+        + '<div style="display:flex;gap:8px">'+['Homme','Femme','Trans'].map(function(g){ return '<button class="genre-btn rdp-g'+(P[i].genre===g?' sel':'')+'" data-i="'+i+'" data-g="'+g+'" style="flex:1">'+(g==='Homme'?'👨 Homme':g==='Femme'?'👩 Femme':'🏳️‍⚧️ Trans')+'</button>'; }).join('')+'</div></div>';
+    });
+    h += '<div id="rdp-err" style="color:#f08060;font-size:12.5px;text-align:center;min-height:18px"></div>'
+      + '<button class="btn" id="rdp-go" style="display:block;margin:6px auto 0;min-width:220px">Jouer 🔥</button>'
+      + '<button class="btn ghost sm" id="rdp-back" style="display:block;margin:12px auto 0">← Retour</button>';
+    document.getElementById('rdp-root').innerHTML = h;
+    var gen = [P[0].genre, P[1].genre];
+    Array.prototype.forEach.call(document.querySelectorAll('.rdp-g'), function(b){
+      b.onclick = function(){ var i = +b.getAttribute('data-i'); gen[i] = b.getAttribute('data-g'); Array.prototype.forEach.call(document.querySelectorAll('.rdp-g[data-i="'+i+'"]'), function(x){ x.classList.toggle('sel', x===b); }); };
+    });
+    document.getElementById('rdp-back').onclick = function(){ goTo('page-mode'); };
+    document.getElementById('rdp-go').onclick = function(){
+      var ns = Array.prototype.map.call(document.querySelectorAll('.rdp-n'), function(x){ return x.value.trim(); });
+      var err = document.getElementById('rdp-err');
+      if(!ns[0] || !ns[1]){ err.textContent = 'Entrez les deux prénoms.'; return; }
+      if(ns[0].toLowerCase()===ns[1].toLowerCase()){ err.textContent = 'Les deux prénoms doivent être différents.'; return; }
+      var all = ['oral_actif','oral_passif','masturb_actif','masturb_passif','kamasutra'];
+      G.players = [0,1].map(function(i){ return {prenom:ns[i], genre:gen[i], pratiques:all.slice(), favorites:[]}; });
+      try{ localStorage.setItem('pulsations_rd_players', JSON.stringify(G.players.map(function(p){ return {prenom:p.prenom, genre:p.genre}; }))); }catch(e){}
+      G._startedAt = Date.now(); G.level = 1; G.gageIdx = 0; G._prevGages = []; G.scores = {};
+      G.players.forEach(function(p){ G.scores[p.prenom]=0; });
+      begin();
+    };
+  };
+
+  /* ——— Onglet admin « Roue & Dés » : tout est modifiable ——— */
+  var admSel = 'w0';
+  var PH = 'Variables : {prenom} (qui agit), {partenaire}. Durée en gras : **1 minute** (le minuteur la reprend).';
+  var IS = 'width:100%;box-sizing:border-box;margin:0;font-size:13px';
+  function admRow(kind, key, i, x, two){
+    return '<div style="background:var(--card2,var(--card));border:1px solid var(--border);border-radius:11px;padding:9px;margin-bottom:8px">'
+      + '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:stretch"><input type="text" style="'+IS+';flex:1 1 0;min-width:0;width:auto" value="'+esc(x.l).replace(/"/g,'&quot;')+'" placeholder="'+(kind==='w'?'Libellé court (ex : 💋 Baiser)':'Nom affiché')+'" oninput="rdAdm.set(\''+kind+'\',\''+key+'\','+i+',\'l\',this.value)">'
+      + '<button class="btn ghost sm" style="margin:0;flex:0 0 44px;width:44px;min-width:0;padding:0" onclick="rdAdm.del(\''+kind+'\',\''+key+'\','+i+')">🗑</button></div>'
+      + '<textarea rows="'+(kind==='w'?3:1)+'" style="'+IS+';font-family:inherit;resize:vertical" placeholder="'+(kind==='w'?'Texte du gage':'Texte lu dans la phrase')+'" oninput="rdAdm.set(\''+kind+'\',\''+key+'\','+i+',\'t\',this.value)">'+esc(x.t)+'</textarea></div>';
+  }
+  function renderAdminRD(){
+    if(!RDD) loadRD();
+    var opts = '';
+    [0,1,2].forEach(function(i){ opts += '<option value="w'+i+'"'+(admSel==='w'+i?' selected':'')+'>🎡 Roue — niveau '+(i+1)+' ('+LV[i].name+')</option>'; });
+    [1,2,3,4,5].forEach(function(l){ opts += '<option value="d'+l+'"'+(admSel==='d'+l?' selected':'')+'>🎲 Dés — palier '+l+'</option>'; });
+    var h = '<div style="padding:4px 2px"><div style="font-weight:700;margin-bottom:4px">🎡 Roue & 🎲 Dés</div>'
+      + '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Contenu propre à ce mode, modifiable de A à Z (sauvegardé sur l\'appareil et inclus dans l\'export). Coquin = roue 1 / dés paliers 1-2 · Hot = roue 2 / dés 3-4 · Très hot (explicite) = roue 3 / dés palier 5.</div>'
+      + '<select style="width:100%;margin-bottom:12px" onchange="rdAdm.sel(this.value)">'+opts+'</select>';
+    if(admSel[0]==='w'){
+      var i = +admSel[1], list = RDD.wheel[i];
+      h += '<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">'+PH+' La roue affiche 8 cases tirées parmi cette liste (ajoutez-en au moins 8).</div>';
+      list.forEach(function(x,k){ h += admRow('w', String(i), k, x); });
+    } else {
+      var l = +admSel[1];
+      h += '<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Phrase : « {prenom}, <b>action</b> <b>zone</b> de {partenaire} — <b>durée</b>. » Exemple d\'action : « caresse », de zone : « le cou ».</div>'
+        + '<div style="font-weight:600;font-size:13px;margin:6px 0">Actions (nom affiché sur le dé / verbe de la phrase)</div>';
+      RDD.act[l].forEach(function(x,k){ h += admRow('a', String(l), k, x); });
+      h += '<button class="btn ghost sm" style="margin:0 0 12px" onclick="rdAdm.add(\'a\',\''+l+'\')">+ Action</button>'
+        + '<div style="font-weight:600;font-size:13px;margin:6px 0">Zones (nom affiché / texte avec article)</div>';
+      RDD.zone[l].forEach(function(x,k){ h += admRow('z', String(l), k, x); });
+      h += '<button class="btn ghost sm" style="margin:0 0 12px" onclick="rdAdm.add(\'z\',\''+l+'\')">+ Zone</button>'
+        + '<div style="font-weight:600;font-size:13px;margin:6px 0">Durée</div><input type="text" style="'+IS+'" value="'+esc(RDD.dur[l]).replace(/"/g,'&quot;')+'" oninput="rdAdm.dur('+l+',this.value)">';
+    }
+    if(admSel[0]==='w') h += '<button class="btn ghost sm" style="margin:0 0 4px" onclick="rdAdm.add(\'w\',\''+admSel[1]+'\')">+ Ajouter une case</button>';
+    h += '<button class="btn ghost sm" style="margin:16px 0 0;color:#f08060" onclick="rdAdm.reset()">↩️ Tout remettre par défaut</button></div>';
+    return h;
+  }
+  function listOf(kind, key){ return kind==='w' ? RDD.wheel[+key] : kind==='a' ? RDD.act[+key] : RDD.zone[+key]; }
+  window.rdAdm = {
+    sel: function(v){ admSel = v; adminTab('rd', null); },
+    set: function(kind,key,i,f,v){ listOf(kind,key)[i][f] = v; saveRD(); },
+    del: function(kind,key,i){ if(!confirm('Supprimer cet élément ?')) return; listOf(kind,key).splice(i,1); saveRD(); adminTab('rd', null); },
+    add: function(kind,key){ listOf(kind,key).push({l:'',t:''}); saveRD(); adminTab('rd', null); },
+    dur: function(l,v){ RDD.dur[l] = v; saveRD(); },
+    reset: function(){ if(!confirm('Remettre tout le contenu Roue & Dés par défaut ?')) return; try{ localStorage.removeItem(RDKEY); }catch(e){} RDD = null; loadRD(); adminTab('rd', null); }
+  };
+  var _atRD = window.adminTab;
+  window.adminTab = function(tab, btn){
+    if(tab==='rd'){
+      document.querySelectorAll('.admin-tab').forEach(function(b){ b.classList.remove('active'); });
+      var bb = btn || document.getElementById('atab-rd-nav'); if(bb) bb.classList.add('active');
+      var c = document.getElementById('admin-content'); if(c){ var y = window.scrollY; c.innerHTML = renderAdminRD(); window.scrollTo(0,y); }
+      return;
+    }
+    return _atRD.apply(this, arguments);
+  };
+
+  /* Voix + musique comme en mode classique */
+  var _og = window._ambOnGamePage;
+  window._ambOnGamePage = function(){ return !!document.querySelector('#page-rd.active') || (typeof _og==='function' && _og.apply(this, arguments)); };
+  function voiceBtn(){
+    var b = document.getElementById('rd-voice-btn'); if(!b) return;
+    var on = (typeof voiceNarrationOn!=='undefined') && voiceNarrationOn;
+    b.style.display = ('speechSynthesis' in window) ? 'inline-block' : 'none';
+    b.textContent = on ? '🔊' : '🔇'; b.style.borderColor = on ? 'var(--gold)' : 'var(--border)'; b.style.color = on ? 'var(--gold)' : 'var(--muted)';
+  }
+  window.rdVoice = function(){
+    voiceNarrationOn = !voiceNarrationOn;
+    try{ localStorage.setItem('voice_narration_v33', voiceNarrationOn?'1':'0'); }catch(e){}
+    voiceBtn();
+    if(!voiceNarrationOn){ try{ speechSynthesis.cancel(); }catch(e){} }
+    else if(R && R.cur && R.cur.done && R.cur.text){ speak(plain(R.cur.text, R.cur.a, R.cur.b)); }
+  };
+  function startMusic(){
+    try{
+      _ambWant = true; _ambDecided = true;
+      var a = _ambEl(); if(_ambCtx) _ambCtx.resume(); _ambSetVol(_AMB_VOL);
+      var pr = a.play(); if(pr && pr.catch) pr.catch(function(){ _ambBtn(); });
+    }catch(e){}
+  }
+  var _goRD = window.goTo;
+  window.goTo = function(id){ var r = _goRD.apply(this, arguments); if(id==='page-rd'){ voiceBtn(); try{ _ambBtn(); }catch(e){} } return r; };
+  var _lg = window.launchGame;
+  window.launchGame = function(){
+    if(!G._rd) return _lg.apply(this, arguments);
+    applyPartnerOrder();
+    G._startedAt = Date.now(); G.level = 1; G.gageIdx = 0; G._prevGages = []; G.scores = {};
+    G.players.forEach(function(p){ G.scores[p.prenom]=0; });
+    begin();
+  };
+})();
+</script>
+
 </body>
 </html>
