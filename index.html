@@ -18523,6 +18523,24 @@ function toggleAmbient(){
 (function(){
   window.isTestGame = function(){ return !!(G && G._testGame && ADMIN_ON); };
 
+  /* Un profil nommé « Test » est toujours un profil test (même créé avant l'option, ou sans l'avoir cochée) */
+  (function(){
+    var ol = window.loadProfiles;
+    window.loadProfiles = function(){
+      var arr = ol.apply(this, arguments);
+      try{ arr.forEach(function(p){ if(p && /^\s*test\s*$/i.test(p.name||'')) p.test = true; }); }catch(e){}
+      return arr;
+    };
+    try{
+      var raw = JSON.parse(localStorage.getItem(PROFILE_KEY)||'[]');
+      if(raw.some(function(p){ return p && /^\s*test\s*$/i.test(p.name||'') && !p.test; })){
+        raw.forEach(function(p){ if(p && /^\s*test\s*$/i.test(p.name||'')) p.test = true; });
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(raw));
+      }
+    }catch(e){}
+    try{ renderProfileQuick(); }catch(e){}
+  })();
+
   /* — Assistant de profil : case « profil test » à l'étape finale — */
   var _rpw = window.renderProfileWizard;
   window.renderProfileWizard = function(){
@@ -18602,6 +18620,7 @@ function toggleAmbient(){
   // Une partie test n'est jamais sauvegardée : pas de « Reprendre la partie » après coup
   ['saveGameState','autoSaveGame'].forEach(function(n){ var o=window[n]; if(typeof o!=='function') return; window[n]=function(){ if(window.isTestGame()) return; return o.apply(this, arguments); }; });
   window.addEventListener('pagehide', function(){ try{ if(G && G._testGame){ _endTest(); } }catch(e){} });
+  try{ renderProfileQuick(); }catch(e){}
   /* — Hors mode admin : le profil test n'existe nulle part (suggestions en jeu, sauvegardes, listes) — */
   (function(){
     var og = window.getProfilePersonsByGenre;
