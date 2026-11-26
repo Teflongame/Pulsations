@@ -9170,7 +9170,7 @@ function pickFinale(player, usedKamaArr, all5, excludeTexts) {
       return r && r.g.niveau===5 && !r.g._kama;
     }).map(function(r){ return r.g; });
     var curatedValid5 = shuffle(curated5.filter(function(g){
-      return !g.solo && excludeTexts.indexOf(g.texte)<0 && gageOk(g,player,5);
+      return !g.solo && excludeTexts.indexOf(g.texte)<0 && gageOk(g,player,5,true);
     }));
     if(curatedValid5.length) return {type:'gage', data:curatedValid5[0]};
   }
@@ -9237,7 +9237,7 @@ function pickNonPenKamaGage(player, all5){
     return r && r.g.niveau===5 && !r.g._kama;
   }).map(function(r){ return r.g; });
   var curatedValid = shuffle(curated.filter(function(g){
-    return !g.solo && gageOk(g, player, 5) && okContention(g) &&
+    return !g.solo && gageOk(g, player, 5, true) && okContention(g) &&
       !(g.pratiques && g.pratiques.some(function(p){ return excluded.indexOf(p)>=0; }));
   }));
   if(curatedValid.length) return curatedValid[0];
@@ -9975,6 +9975,14 @@ function prepareGages() {
         }
         return true;
       }
+      // Gages présélectionnés en admin (« Prochaine partie ») : exemptés du filtre de PRATIQUES du profil
+      // (ils sortent même si les joueurs n'ont pas coché la pratique) ; genre, accessoires, niveau, contention restent vérifiés.
+      function _baseOkNG(g){
+        if(g.niveau!==lvl || levelUsedTexts[g.texte] || gameUsedTexts[g.texte]) return false;
+        if(!gageOk(g,player,lvl,true)) return false;
+        if(g.texte&&g.texte.slice(0,2)==='🎓') return false;
+        return true;
+      }
       var cands = all.filter(_baseOk); // ensemble complet des gages éligibles pour ce joueur (sert aussi au pool de secours "Changer")
       var reserved=[]; // gages "spéciaux" (kâmasûtra / surprise pimentée / guide) — réservés DANS le quota, jamais en plus
 
@@ -10040,7 +10048,7 @@ function prepareGages() {
       // admin, valides pour ce joueur — garantis à 100% jusqu'à la capacité restante, AVANT le guide.
       var afterSpecial = maxN - reserved.length;
       var ngCurated = (nextGamePool[G_duration]||[]).map(_ngLookup).filter(function(r){ return r && r.g.niveau===lvl; }).map(function(r){ return r.g; });
-      var curatedValid = ngCurated.length ? ngCurated.filter(_baseOk) : [];
+      var curatedValid = ngCurated.length ? ngCurated.filter(_baseOkNG) : [];
       var curatedPicks = [];
       if(curatedValid.length > 0 && afterSpecial > 0){
         curatedPicks = buildVariedPool(curatedValid, Math.min(curatedValid.length, afterSpecial), player);
@@ -13939,7 +13947,7 @@ function _ngSwapRender(){
   if(S.tab==='autre'){
     var lab=_ngPratLabels(), ids=Object.keys(lab).sort(function(a,b){ return lab[a].localeCompare(lab[b]); });
     h+='<select id="ngs-prat" onchange="_ngSwap.prat=this.value;_ngSwapRenderList()" style="width:100%;margin-bottom:8px"><option value="">Choisis une pratique…</option>'+ids.map(function(id){ return '<option value="'+id+'"'+(S.prat===id?' selected':'')+'>'+_esc(lab[id])+'</option>'; }).join('')+'</select>';
-    h+='<div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.4">Gages d\'une pratique que vous n\'avez pas cochée : ils restent filtrés par accessoires, genre et niveau.</div>';
+    h+='<div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.4">Gages d\'une pratique que vous n\'avez pas cochée : ils restent filtrés par accessoires, genre et niveau.'+(R.mode==='classique'?' <b style="color:#ffb3bd">⚠️ Mode Classique : l\'ajout sera refusé si la pratique n\'est pas choisie par les joueurs.</b>':'')+'</div>';
   } else {
     h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px"><input type="checkbox" id="ngs-gen"'+(S.generic?' checked':'')+' onchange="_ngSwap.generic=this.checked;_ngSwapRenderList()"> Inclure aussi les gages sensuels sans pratique précise</label>';
   }
@@ -13963,8 +13971,29 @@ function _ngSwapRenderList(){
       +(tags.length?'<div style="font-size:10.5px;color:var(--muted);margin-bottom:2px">'+_esc(tags.join(' · '))+'</div>':'')+_ngTxt(g.texte,actor,partner)+'</div>';
   }).join('') || '<div style="font-size:12px;color:var(--muted);padding:10px">'+empty+'</div>';
 }
+// Mode Classique : on n'ajoute que des gages dont la pratique est cochée par les joueurs (profil chargé ou cases cochées).
+// Exception : les gages présélectionnés par l'admin pour la prochaine partie.
+function _ngPratGuard(R, g){
+  if(R.mode!=='classique') return null;
+  var gp=(g.pratiques||[]); if(!gp.length) return null;
+  var chosen=[]; R.players.forEach(function(p){ chosen=chosen.concat(p.pratiques||[]); });
+  if(gp.some(function(x){ return chosen.indexOf(x)>=0; })) return null;
+  var pre=(nextGamePool[R.dur]||[]).map(_ngLookup).some(function(r){ return r && r.g && r.g.texte===g.texte; });
+  if(pre) return null;
+  var lab=_ngPratLabels(), names=gp.map(function(x){ return lab[x]||x; }).join(', ');
+  return '⚠️ Mode Classique : la pratique « '+names+' » n\'est pas choisie par '+R.players.map(function(p){ return p.prenom; }).join(' ni ')+'. Ce gage ne peut pas être ajouté (sauf s\'il est présélectionné dans « Prochaine partie »).';
+}
 function ngSwapPick(k){
   var R=_ngPrev.res, S=_ngSwap, cur=R.snap[S.l][S.i], g=(S._cands||[])[k]; if(!g||!cur) return;
+  var _err=_ngPratGuard(R,g);
+  if(_err){
+    var eb=document.getElementById('ngs-err');
+    if(!eb){ var ov=document.getElementById('ng-swap-ov'); if(ov){ eb=document.createElement('div'); eb.id='ngs-err'; eb.style.cssText='position:sticky;top:0;z-index:5;background:#3a1218;border:1px solid #e0556a;color:#ffb3bd;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.45;margin-bottom:10px'; ov.insertBefore(eb, ov.firstChild); } }
+    if(eb){ eb.textContent=_err; eb.scrollIntoView({block:'nearest'}); }
+    if(typeof showFavToast==='function') showFavToast('⚠️ Pratique non choisie par les joueurs');
+    try{ vibrate([40,60,40]); }catch(e){}
+    return;
+  }
   // Garde-fou final : jamais de doublon, même exact ou équivalent.
   var nk=_ngNorm(g.texte), dupe=false;
   [1,2,3,4,5].forEach(function(l){ (R.snap[l]||[]).forEach(function(x,j){ if(!(l===S.l&&j===S.i) && (x.texte===g.texte||_ngNorm(x.texte)===nk)) dupe=true; }); });
@@ -18532,7 +18561,7 @@ function toggleAmbient(){
     var div = document.getElementById('profiles-list'); if(!div) return;
     var ps = loadProfiles();
     var cards = div.querySelectorAll('.profile-card');
-    if(!ADMIN_ON){ ps.forEach(function(p,i){ if(p.test && cards[i]) cards[i].remove(); }); return; }
+    if(!ADMIN_ON){ ps.forEach(function(p,i){ if(p.test && cards[i]) cards[i].remove(); }); if(ps.length && ps.every(function(p){ return p.test; })) div.innerHTML = '<div class="profile-empty">Aucun profil sauvegardé.<br>Jouez une partie et revenez sauvegarder.</div>'; return; }
     ps.forEach(function(p,i){ if(p.test && cards[i]){ var n = cards[i].querySelector('.profile-name'); if(n) n.insertAdjacentHTML('beforeend',' <span style="font-size:10px;background:rgba(120,160,255,.2);border:1px solid rgba(120,160,255,.5);border-radius:6px;padding:1px 6px;color:#9db8ff">🧪 TEST</span>'); } });
     if(!ps.some(function(p){ return p.test; })){
       div.insertAdjacentHTML('beforeend','<button class="btn ghost sm" style="margin-top:10px;width:100%" onclick="newTestProfile()">🧪 Créer le profil test</button>');
@@ -18561,10 +18590,44 @@ function toggleAmbient(){
     if(!G._testGame){ if(c) c.remove(); return; }
     if(!c){ c = document.createElement('div'); c.id='test-chip'; c.textContent='🧪 TEST'; c.style.cssText='position:fixed;top:6px;left:6px;z-index:8000;font-size:10px;font-weight:700;letter-spacing:.06em;background:rgba(120,160,255,.25);border:1px solid rgba(120,160,255,.6);color:#bcd0ff;border-radius:8px;padding:2px 8px;pointer-events:none'; document.body.appendChild(c); }
   }
+  /* — Fin du mode test : retour accueil → tout redevient normal, plus aucune trace à l'accueil — */
+  function _endTest(){
+    G._testGame = false;
+    try{ if(G._loadedProfile && G._loadedProfile.test) G._loadedProfile = null; }catch(e){}
+    try{ clearSavedGame(); clearGameSave(); }catch(e){}
+    var rb=document.getElementById('resume-banner'); if(rb) rb.remove();
+    var rw=document.getElementById('resume-btn-wrap'); if(rw) rw.style.display='none';
+    var tc=document.getElementById('test-chip'); if(tc) tc.remove();
+  }
+  // Une partie test n'est jamais sauvegardée : pas de « Reprendre la partie » après coup
+  ['saveGameState','autoSaveGame'].forEach(function(n){ var o=window[n]; if(typeof o!=='function') return; window[n]=function(){ if(window.isTestGame()) return; return o.apply(this, arguments); }; });
+  window.addEventListener('pagehide', function(){ try{ if(G && G._testGame){ _endTest(); } }catch(e){} });
+  /* — Hors mode admin : le profil test n'existe nulle part (suggestions en jeu, sauvegardes, listes) — */
+  (function(){
+    var og = window.getProfilePersonsByGenre;
+    if(typeof og==='function') window.getProfilePersonsByGenre = function(){
+      if(ADMIN_ON) return og.apply(this, arguments);
+      var ol = window.loadProfiles;
+      window.loadProfiles = function(){ return ol().filter(function(p){ return !p.test; }); };
+      try{ return og.apply(this, arguments); } finally{ window.loadProfiles = ol; }
+    };
+    // une sauvegarde de profil hors admin (ex. « Sauvegarder ce profil de couple ») ne doit jamais écraser le profil test
+    var os = window.saveProfilesStorage;
+    window.saveProfilesStorage = function(arr){
+      try{
+        if(!ADMIN_ON && Array.isArray(arr) && !arr.some(function(p){ return p && p.test; })){
+          var old = JSON.parse(localStorage.getItem(PROFILE_KEY)||'[]').filter(function(p){ return p && p.test; })[0];
+          if(old) arr = arr.concat([old]);
+        }
+      }catch(e){}
+      return os.call(this, arr);
+    };
+  })();
   var _go = window.goTo;
   window.goTo = function(id){
-    if(id==='page-home' && G._testGame){ G._testGame = false; }
+    if(id==='page-home' && G._testGame){ _endTest(); }
     var r = _go.apply(this, arguments); _testChip();
+    if(id==='page-home'){ var tc=document.getElementById('test-chip'); if(tc) tc.remove(); }
     if(id==='page-home' || id==='page-profiles'){ try{ renderProfileQuick(); if(id==='page-profiles') renderProfilesPage(); }catch(e){} }
     return r;
   };
