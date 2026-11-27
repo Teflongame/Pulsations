@@ -8845,9 +8845,12 @@ function _anatomyOk(g, player){
     if(!ok(player) || !ok(partner)) return true;
     var t = String(g.texte).toLowerCase();
     if(t.indexOf('{joueur3}')>=0 || t.indexOf('{joueur4}')>=0) return true;
-    if(/\//.test(t.replace(/\*\*[^*]*\*\*/g,'')) || /\(e\)/.test(t)) return true;
-    var tgtP = /fellation|\b(son|ses|le|les|du)\s+(gland|pénis|penis|testicule|testicules|sexe masculin|frein|frenulum|filet|sillon)|\bsa (queue|bite|verge|tige)|\bla (tige|queue|verge)\b|sperme de \{partenaire\}|\bsuce(?:s|r|z)?\s+\{partenaire\}|sexe de \{partenaire\}[^.]*\b(il|lui)\b/.test(t);
-    var tgtV = /cunnilingus|\b(son|ses|le|la|les)\s+(clitoris|vagin|vulve|point g)|lèvres vaginales|chatte/.test(t);
+    // Les formes inclusives (« le/la », « il/elle », « (e) ») ne dispensent plus du contrôle d'anatomie.
+    // Seules les alternatives d'anatomie (« clitoris/gland », « fellation/cunnilingus ») sont résolues à l'affichage selon le genre de la cible.
+    var _t2 = t.replace(/\*\*[^*]*\*\*/g,'').replace(/\(e\)|\(s\)/g,'').replace(/\b(il\/elle|elle\/il|lui\/elle|elle\/lui|le\/la|la\/le|lui\/elle|celui\/celle|celle\/celui)\b/g,'');
+    if(/\//.test(_t2) || /\b(clitoris|gland|pénis|vagin|fellation|cunnilingus|prostate|point g)\s+ou\s+(clitoris|gland|pénis|vagin|fellation|cunnilingus|prostate|point g|frein)/.test(t)) return true;
+    var tgtP = /fellation|en érection|\b(son|ses|le|les|du|un|une|chaque|ce|cet|entre)\s+(gland|pénis|penis|testicule|testicules|couilles|bite|queue|verge|sexe masculin|frein|frenulum|filet|sillon)|\bsa (queue|bite|verge|tige)|\bla (tige|queue|verge)\b|sperme de \{partenaire\}|\bsuce(?:s|r|z)?\s+\{partenaire\}|sexe de \{partenaire\}[^.]*\b(il|lui)\b/.test(t);
+    var tgtV = /cunnilingus|\b(son|ses|le|la|les|un|une|chaque|du|de la|au|à la)\s+(clitoris|vagin|vulve|point g)|lèvres vaginales|chatte/.test(t);
     var ownP = /\b(ton|ta|tes)\s+(gland|pénis|penis|testicule|testicules|queue|bite|verge)/.test(t);
     var ownV = /\b(ton|ta|tes)\s+(clitoris|vagin|vulve|chatte)/.test(t);
     if((tgtP && tgtV) || (ownP && ownV)) return true;
@@ -19459,5 +19462,85 @@ function toggleAmbient(){
 })();
 </script>
 
+<script>
+/* ═══ Anatomie : « clitoris/gland », « fellation/cunnilingus »… sont résolus selon le genre de la personne concernée ═══ */
+(function(){
+  var FEM = ['clitoris','lèvres vaginales','cunnilingus','vagin','vulve','point g'];
+  var MAL = ['gland','pénis','penis','fellation','frein','prostate','testicules','testicule','périnée'];
+  var ALL = FEM.concat(MAL).sort(function(a,b){ return b.length-a.length; }).map(function(x){ return x.replace(/ /g,'\\s+'); }).join('|');
+  var RX = new RegExp('\\b(?:'+ALL+')(?:\\s*(?:/|\\sou\\s(?:au\\s|à\\sla\\s|le\\s|la\\s)?)\\s*(?:'+ALL+'))+','gi');
+  function sexOf(term){ var t = term.toLowerCase().replace(/\s+/g,' ').replace(/^(au|à la|le|la) /,''); return FEM.indexOf(t)>=0 ? 'Femme' : 'Homme'; }
+  function resolve(t, actor, partner){
+    if(!t || typeof t!=='string' || t.indexOf('/')<0 && t.toLowerCase().indexOf(' ou ')<0) return t;
+    t = t.replace(/(le )?point g\s*\/\s*masse la prostate/gi, function(m){ return (partner && partner.genre==='Homme') ? 'la prostate' : (partner && partner.genre==='Femme') ? 'le point G' : m; });
+    return t.replace(RX, function(m, off){
+      var pre = t.slice(Math.max(0, off-40), off).toLowerCase();
+      var own = /\b(ton|ta|tes|mon|ma|mes)\s+(\w+\s+)?$/.test(pre) || /(profiter|recevoir|reçois|reçu)[^.{}]*$/.test(pre) && pre.indexOf('{partenaire}')<0;
+      var who = own ? actor : partner; if(!who || (who.genre!=='Homme' && who.genre!=='Femme')) return m;
+      var terms = m.split(/\s*(?:\/|\sou\s(?:au\s|à\sla\s|le\s|la\s)?)\s*/);
+      var keep = terms.filter(function(x){ return sexOf(x)===who.genre; });
+      return keep.length ? keep[0] : m;
+    });
+  }
+  window._anatResolve = resolve;
+  var _g = window.gageText;
+  window.gageText = function(g){
+    var t = _g.apply(this, arguments);
+    try{
+      if(!g || !G || !G.players || G.players.length!==2) return t;
+      var a = G.players.filter(function(p){ return p.prenom===g._p; })[0];
+      if(!a) return t;
+      var b = G.players.filter(function(p){ return p!==a; })[0];
+      return resolve(t, a, b);
+    }catch(e){ return t; }
+  };
+})();
+</script>
+
+<script>
+/* Anti-veille : garde l'écran allumé pendant le jeu */
+(function(){
+  var lock=null, vid=null, started=false;
+  var PAGES=/^page-(game|rd|story)/;
+  function onGame(){
+    var a=document.querySelector('.page.active, .page.show, [id^="page-"].active');
+    if(a) return PAGES.test(a.id);
+    var els=document.querySelectorAll('[id^="page-"]');
+    for(var i=0;i<els.length;i++){ var e=els[i]; if(PAGES.test(e.id) && e.offsetParent!==null && getComputedStyle(e).display!=='none') return true; }
+    return false;
+  }
+  function mkVid(){
+    if(vid) return vid;
+    vid=document.createElement('video');
+    vid.setAttribute('playsinline',''); vid.setAttribute('muted',''); vid.setAttribute('loop','');
+    vid.muted=true; vid.loop=true; vid.playsInline=true;
+    vid.addEventListener('pause',function(){ if(started && onGame()) setTimeout(function(){ try{ vid.play().catch(function(){}); }catch(e){} },200); });
+    vid.addEventListener('ended',function(){ try{ vid.currentTime=0; vid.play().catch(function(){}); }catch(e){} });
+    vid.style.cssText='position:fixed;width:2px;height:2px;opacity:0.01;pointer-events:none;left:0;top:0;z-index:-1';
+    vid.src='data:video/mp4;base64,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';
+    document.body.appendChild(vid);
+    return vid;
+  }
+  function acquire(){
+    try{
+      if(navigator.wakeLock && document.visibilityState==='visible' && (!lock || lock.released)){
+        navigator.wakeLock.request('screen').then(function(l){ lock=l; l.addEventListener('release',function(){ lock=null; }); }).catch(function(){});
+      }
+    }catch(e){}
+    try{ var v=mkVid(); if(v.paused){ var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); } }catch(e){}
+  }
+  function release(){
+    try{ if(lock){ lock.release(); lock=null; } }catch(e){}
+    try{ if(vid && !vid.paused) vid.pause(); }catch(e){}
+  }
+  function tick(){ if(!started) return; if(onGame()) acquire(); else release(); }
+  function first(){ started=true; tick(); }
+  ['touchstart','touchend','pointerup','click','keydown'].forEach(function(ev){ document.addEventListener(ev,first,{passive:true,capture:true}); });
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') tick(); });
+  setInterval(tick,2000);
+  var _g=window.goTo; if(typeof _g==='function'){ window.goTo=function(){ var r=_g.apply(this,arguments); setTimeout(tick,150); return r; }; }
+  window._wakeTick=tick;
+})();
+</script>
 </body>
 </html>
